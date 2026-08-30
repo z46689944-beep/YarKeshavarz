@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176b3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+<title>یار کشاورز</title>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" data-route="home" role="button" tabindex="0">
+    <img src="logo.png" alt="لوگوی یار کشاورز">
+    <div><strong>یار کشاورز</strong><small id="pageTitle">خانه</small></div>
+  </div>
+  <button class="icon-btn" data-route="assistant" aria-label="یار هوشمند">🤖</button>
+</header>
+<main id="app"></main>
+<input id="restoreInput" type="file" accept="application/json" hidden>
+<nav class="bottom-nav" aria-label="منوی اصلی">
+  <button data-route="home"><span>🏠</span><small>خانه</small></button>
+  <button data-route="lands"><span>🌾</span><small>زمین‌ها</small></button>
+  <button class="fab" data-route="add" aria-label="ثبت جدید"><span>＋</span></button>
+  <button data-route="inventory"><span>📦</span><small>انبار</small></button>
+  <button data-route="assistant"><span>🤖</span><small>یار</small></button>
+</nav>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
