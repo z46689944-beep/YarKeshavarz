@@ -90,24 +90,24 @@ function renderHome(){
   title.textContent="خانه";
   const t=totals();
   const low=state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity));
+  const area=state.lands.reduce((a,x)=>a+num(x.area),0);
   app.innerHTML=`
-  <section class="hero"><h2>سلام، به یار کشاورز خوش آمدید 🌱</h2><p>نسخه ۳ نهایی — مرکز مدیریت زمین، کشت، مالی و انبار</p></section>
+  <section class="hero"><span class="hero-badge">داشبورد کشاورزی</span><h2>سلام، کشاورز 🌱</h2><p>همه‌چیز برای مدیریت زمین، کشت و هزینه‌ها در یک نگاه.</p></section>
   <div class="grid">
-    <div class="card"><div class="muted">زمین‌ها</div><div class="metric">${state.lands.length}</div></div>
-    <div class="card"><div class="muted">مجموع مساحت</div><div class="metric">${state.lands.reduce((a,x)=>a+num(x.area),0).toLocaleString("fa-IR")}</div></div>
-    <div class="card"><div class="muted">هزینه</div><div class="metric">${money(t.cost)}</div></div>
-    <div class="card"><div class="muted">درآمد</div><div class="metric">${money(t.income)}</div></div>
+    <div class="card"><div class="row"><span class="section-icon">🌾</span><span class="muted">زمین‌ها</span></div><strong class="metric">${state.lands.length.toLocaleString('fa-IR')}</strong></div>
+    <div class="card"><div class="row"><span class="section-icon">📐</span><span class="muted">مساحت</span></div><strong class="metric">${area.toLocaleString('fa-IR')}</strong><small class="muted">هکتار</small></div>
+    <div class="card"><div class="row"><span class="section-icon">💸</span><span class="muted">هزینه</span></div><strong class="metric">${money(t.cost)}</strong></div>
+    <div class="card"><div class="row"><span class="section-icon">📈</span><span class="muted">درآمد</span></div><strong class="metric">${money(t.income)}</strong></div>
   </div>
   <div class="section-title"><h3>دسترسی سریع</h3></div>
   <div class="grid">
-    <button class="card" data-route="lands">🗺️<h3>زمین‌های من</h3></button>
-    <button class="card" data-route="inventory">📦<h3>انبار</h3></button>
-    <button class="card" data-route="add">➕<h3>ثبت اطلاعات</h3></button>
-    <button class="card" data-route="assistant">🤖<h3>یار هوشمند</h3></button>
+    <button class="card quick-card" data-route="lands"><span class="quick-icon">🗺️</span><div><h3>زمین‌های من</h3><small class="muted">مشاهده و مدیریت زمین‌ها</small></div></button>
+    <button class="card quick-card" data-route="add"><span class="quick-icon">➕</span><div><h3>ثبت زمین</h3><small class="muted">یک زمین جدید اضافه کن</small></div></button>
+    <button class="card quick-card" data-route="inventory"><span class="quick-icon">📦</span><div><h3>انبار</h3><small class="muted">موجودی و مصرف</small></div></button>
+    <button class="card quick-card" data-route="assistant"><span class="quick-icon">🤖</span><div><h3>گفت‌وگو با یار</h3><small class="muted">سؤالت را آزادانه بپرس</small></div></button>
   </div>
-  ${low.length?`<div class="section-title"><h3>🔔 هشدار انبار</h3></div><div class="list">${low.map(i=>`<div class="alert">${esc(i.name)} — موجودی ${num(i.quantity)} ${esc(i.unit||"واحد")}</div>`).join("")}</div>`:""}
-  <div class="section-title"><h3>آخرین فعالیت‌ها</h3></div>
-  <div class="list">${recentActivity()}</div>`;
+  ${low.length?`<div class="section-title"><h3>🔔 نیاز به توجه</h3></div><div class="list">${low.map(i=>`<div class="alert"><strong>${esc(i.name)}</strong> — موجودی ${num(i.quantity)} ${esc(i.unit||"واحد")}</div>`).join("")}</div>`:""}
+  <div class="section-title"><h3>آخرین فعالیت‌ها</h3></div><div class="list">${recentActivity()}</div>`;
 }
 function recentActivity(){
   const all=[
@@ -119,15 +119,8 @@ function recentActivity(){
 
 function renderLands(){
   title.textContent="زمین‌های من";
-  app.innerHTML=`<div class="section-title"><h2>🗺️ زمین‌های من</h2><button class="primary" data-route="add">➕ زمین جدید</button></div>
-  <div class="list">${state.lands.length?state.lands.map(l=>{
-    const t=totalsForLand(l.id);
-    return `<article class="card">
-      <div class="row"><div><h3>${esc(l.name)}</h3><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><strong>${num(l.area).toLocaleString("fa-IR")} ${esc(l.areaUnit||"هکتار")}</strong></div>
-      <p class="muted">${esc(l.region||"منطقه ثبت نشده")} · ${esc(l.crop||"محصول ثبت نشده")}</p>
-      <div class="row"><span>هزینه: ${money(t.cost)}</span><span>سود/زیان: ${money(t.profit)}</span></div>
-      <div class="actions"><button class="primary" data-open-land="${l.id}">📁 پرونده زمین</button><button class="danger" data-delete-land="${l.id}">حذف</button></div>
-    </article>`}).join(""):`<div class="empty card">هنوز زمینی ثبت نشده است.<br><br><button class="primary" data-route="add">اولین زمین را ثبت کن</button></div>`}</div>`;
+  app.innerHTML=`<div class="section-title"><div><h2>زمین‌های من</h2><span class="muted">${state.lands.length.toLocaleString('fa-IR')} زمین ثبت شده</span></div><button class="primary" data-route="add">➕ زمین جدید</button></div>
+  <div class="list">${state.lands.length?state.lands.map(l=>{const t=totalsForLand(l.id);return `<article class="card land-card"><div class="land-cover"><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><div class="land-body"><div class="row"><div><div class="land-title">${esc(l.name)}</div><span class="muted">${esc(l.region||"منطقه ثبت نشده")}</span></div><span class="badge">${esc(l.crop||"بدون محصول")}</span></div><div class="land-meta"><div><small>مساحت</small><strong>${num(l.area).toLocaleString('fa-IR')} هکتار</strong></div><div><small>هزینه</small><strong>${money(t.cost)}</strong></div><div><small>سود/زیان</small><strong class="${t.profit>=0?'stat-positive':'stat-negative'}">${money(t.profit)}</strong></div></div><div class="actions"><button class="primary" data-open-land="${l.id}">مشاهده پرونده</button><button class="danger" data-delete-land="${l.id}">حذف</button></div></div></article>`}).join(""):`<div class="empty card">هنوز زمینی ثبت نشده است.<br><br><button class="primary" data-route="add">اولین زمین را ثبت کن</button></div>`}</div>`;
 }
 
 function renderAdd(){
@@ -170,7 +163,7 @@ function renderLand(){
     weather:`<div class="card"><h3>🌦️ آب‌وهوای واقعی زمین</h3><p class="muted">ابتدا موقعیت زمین را با GPS ثبت کن؛ سپس برنامه آب‌وهوای همان مختصات را از سرویس زنده می‌گیرد.</p><div class="actions"><button class="primary" data-weather="${l.id}">📍 دریافت موقعیت و آب‌وهوا</button><button class="secondary" data-route="measure">📐 اندازه‌گیری زمین</button></div><div id="weatherBox" class="section-title">${l.lat?`<span class="badge">موقعیت ثبت شده</span>`:`<span class="muted">موقعیت GPS ثبت نشده</span>`}</div></div>`, 
     assistant:`${assistantForLand(l)}`
   }[landTab] || "";
-  app.innerHTML=`<div class="card"><div class="row"><div><h2>${esc(l.name)}</h2><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><button class="secondary" data-route="lands">بازگشت</button></div></div>
+  app.innerHTML=`<div class="card land-detail-hero"><div class="land-detail-cover"></div><div class="land-detail-info"><div class="row"><div><h2>${esc(l.name)}</h2><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><button class="secondary" data-route="lands">بازگشت</button></div></div></div>
   <div class="tabs">${["overview","crops","finance","calculator","inventory","suggestions","weather","assistant"].map(x=>`<button class="${x===landTab?"active":""}" data-land-tab="${x}">${tabLabel(x)}</button>`).join("")}</div>
   ${content}`;
 }
@@ -233,12 +226,12 @@ function renderInventory(){
 }
 
 function renderAssistant(){
-  title.textContent="یار هوشمند";
-  app.innerHTML=`<section class="hero"><h2>🤖 یار هوشمند</h2><p>سؤال خودت را بنویس. یار از اطلاعات ثبت‌شده همین برنامه پاسخ می‌دهد.</p></section>
-  <div class="card form"><div class="field"><label>سؤال شما</label><input id="aiQuestion" placeholder="مثلاً برای کدام زمین بیشترین هزینه را داشته‌ام؟"></div><button class="primary" data-ask-ai>پرسیدن از یار 🤖</button></div>
-  <div class="card"><h3>سؤال‌های آماده</h3><div class="actions">${["برای کدام زمین بیشترین هزینه را داشته‌ام؟","چه چیزهایی از انبار کم دارم؟","وضعیت سود زمین‌ها چطور است؟","مجموع هزینه‌ها چقدر است؟"].map(q=>`<button class="secondary" data-question="${esc(q)}">${esc(q)}</button>`).join("")}</div></div>
-  <div id="assistantAnswer" class="card"><p class="muted">سؤال خودت را بنویس و روی «پرسیدن از یار» بزن.</p></div>`;
+  title.textContent="یار کشاورز";
+  const history=JSON.parse(localStorage.getItem('yk-chat')||'[]');
+  app.innerHTML=`<section class="hero"><span class="hero-badge">دستیار کشاورزی</span><h2>با یار کشاورز حرف بزن 🤖</h2><p>سؤالت را به زبان خودت بپرس؛ لازم نیست از سؤال‌های آماده انتخاب کنی.</p></section><div class="card chat"><div id="chatMessages" class="chat-messages">${history.length?history.map(m=>`<div class="bubble ${m.role==='user'?'user':'ai'}">${m.html}</div>`).join(''):`<div class="bubble ai">سلام! من یار کشاورزم 🌱<br>هر چیزی درباره زمین‌ها، هزینه‌ها، انبار یا کشت‌هایت می‌خواهی بپرس.</div>`}</div><div class="ai-status">یار بر اساس اطلاعات ثبت‌شده در همین برنامه پاسخ می‌دهد.</div><div class="chat-compose"><input id="aiQuestion" autocomplete="off" placeholder="مثلاً برای زمین شمالی چه هزینه‌هایی ثبت شده؟"><button class="primary" data-ask-ai aria-label="ارسال">➤</button></div></div><div class="card"><h3>شروع مکالمه</h3><div class="actions"><button class="secondary" data-question="وضعیت زمین‌های من چطور است؟">وضعیت زمین‌ها</button><button class="secondary" data-question="چه چیزهایی از انبار کم دارم؟">انبار</button><button class="secondary" data-question="مجموع هزینه و درآمد من چقدر است؟">مالی</button></div></div>`;
+  const box=$('#chatMessages'); if(box)box.scrollTop=box.scrollHeight;
 }
+function saveChat(history){localStorage.setItem('yk-chat',JSON.stringify(history.slice(-30)));}
 function generateAnswer(q){
   const text=(q||"").trim(); if(!text)return "لطفاً سؤال را بنویس.";
   const t=totals(); const low=state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity));
@@ -256,7 +249,8 @@ function generateAnswer(q){
   if(/زمین|اطلاعات/.test(text)){ return state.lands.length?`تعداد زمین‌های ثبت‌شده <strong>${state.lands.length}</strong> است: ${state.lands.map(l=>esc(l.name)).join("، ")}.`:"هنوز زمینی ثبت نشده است."; }
   return `من سؤال را دریافت کردم. فعلاً می‌توانم درباره زمین‌ها، هزینه و درآمد، سود/زیان و موجودی انبار بر اساس اطلاعات ثبت‌شده پاسخ بدهم.`;
 }
-function askAI(){ const input=$("#aiQuestion"); if(!input)return; const q=input.value; $("#assistantAnswer").innerHTML=`<h3>🤖 پاسخ یار</h3><p>${generateAnswer(q)}</p>`; }
+function askAI(){ const input=$("#aiQuestion"); if(!input)return; const q=input.value.trim(); if(!q)return; const history=JSON.parse(localStorage.getItem('yk-chat')||'[]'); const answer=generateAnswer(q); history.push({role:'user',html:esc(q)},{role:'ai',html:answer}); saveChat(history); renderAssistant(); }
+function answerGeneral(q){ const input=$("#aiQuestion"); if(input){input.value=q;askAI();}else{const history=JSON.parse(localStorage.getItem('yk-chat')||'[]');history.push({role:'user',html:esc(q)},{role:'ai',html:generateAnswer(q)});saveChat(history);renderAssistant();}}
 function assistantForLand(l){
   const t=totalsForLand(l.id);
   return `<div class="card"><h3>🤖 یار هوشمند — ${esc(l.name)}</h3><p class="muted">اطلاعات همین زمین در دسترس رابط هوشمند است.</p>
