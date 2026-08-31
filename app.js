@@ -80,6 +80,8 @@ function setRoute(r){
   else if(r==="lands") renderLands();
   else if(r==="inventory") renderInventory();
   else if(r==="assistant") renderAssistant();
+  else if(r==="news") renderNews();
+  else if(r==="ads") renderAds();
   else if(r==="measure") renderMeasure();
   else if(r==="land") renderLand();
   else renderHome();
@@ -91,24 +93,28 @@ function renderHome(){
   const t=totals();
   const low=state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity));
   const area=state.lands.reduce((a,x)=>a+num(x.area),0);
+  const mainLand=state.lands[0];
   app.innerHTML=`
-  <section class="hero"><span class="hero-badge">داشبورد کشاورزی</span><h2>سلام، کشاورز 🌱</h2><p>همه‌چیز برای مدیریت زمین، کشت و هزینه‌ها در یک نگاه.</p></section>
+  <section class="hero"><span class="hero-badge">داشبورد هوشمند</span><h2>مدیریت مزرعه، ساده و حرفه‌ای</h2><p>زمین، آب‌وهوا، موجودی و امور مالی را یک‌جا ببین و سریع تصمیم بگیر.</p><div class="actions"><button class="primary" data-route="lands">مشاهده زمین‌ها</button><button class="secondary" data-route="assistant">گفت‌وگو با یار</button></div></section>
   <div class="grid">
-    <div class="card"><div class="row"><span class="section-icon">🌾</span><span class="muted">زمین‌ها</span></div><strong class="metric">${state.lands.length.toLocaleString('fa-IR')}</strong></div>
-    <div class="card"><div class="row"><span class="section-icon">📐</span><span class="muted">مساحت</span></div><strong class="metric">${area.toLocaleString('fa-IR')}</strong><small class="muted">هکتار</small></div>
-    <div class="card"><div class="row"><span class="section-icon">💸</span><span class="muted">هزینه</span></div><strong class="metric">${money(t.cost)}</strong></div>
+    <div class="card"><div class="row"><span class="section-icon">🌾</span><span class="muted">زمین‌ها</span></div><strong class="metric">${state.lands.length.toLocaleString('fa-IR')}</strong><small class="muted">قطعه فعال</small></div>
+    <div class="card"><div class="row"><span class="section-icon">📐</span><span class="muted">مساحت کل</span></div><strong class="metric">${area.toLocaleString('fa-IR',{maximumFractionDigits:2})}</strong><small class="muted">هکتار</small></div>
+    <div class="card"><div class="row"><span class="section-icon">💰</span><span class="muted">هزینه</span></div><strong class="metric">${money(t.cost)}</strong></div>
     <div class="card"><div class="row"><span class="section-icon">📈</span><span class="muted">درآمد</span></div><strong class="metric">${money(t.income)}</strong></div>
   </div>
   <div class="section-title"><h3>دسترسی سریع</h3></div>
   <div class="grid">
     <button class="card quick-card" data-route="lands"><span class="quick-icon">🗺️</span><div><h3>زمین‌های من</h3><small class="muted">مشاهده و مدیریت زمین‌ها</small></div></button>
-    <button class="card quick-card" data-route="add"><span class="quick-icon">➕</span><div><h3>ثبت زمین</h3><small class="muted">یک زمین جدید اضافه کن</small></div></button>
+    <button class="card quick-card" data-route="add"><span class="quick-icon">＋</span><div><h3>ثبت جدید</h3><small class="muted">زمین، کشت و اطلاعات</small></div></button>
     <button class="card quick-card" data-route="inventory"><span class="quick-icon">📦</span><div><h3>انبار</h3><small class="muted">موجودی و مصرف</small></div></button>
-    <button class="card quick-card" data-route="assistant"><span class="quick-icon">🤖</span><div><h3>گفت‌وگو با یار</h3><small class="muted">سؤالت را آزادانه بپرس</small></div></button>
+    <button class="card quick-card" data-route="news"><span class="quick-icon">📰</span><div><h3>اخبار کشاورزی</h3><small class="muted">مطالب و اطلاع‌رسانی</small></div></button>
   </div>
-  ${low.length?`<div class="section-title"><h3>🔔 نیاز به توجه</h3></div><div class="list">${low.map(i=>`<div class="alert"><strong>${esc(i.name)}</strong> — موجودی ${num(i.quantity)} ${esc(i.unit||"واحد")}</div>`).join("")}</div>`:""}
+  <div class="section-title"><h3>امروز</h3><button class="secondary" data-route="ads">پیشنهادها</button></div>
+  ${mainLand?`<div class="card"><div class="row"><div><span class="badge">زمین منتخب</span><h3 style="margin-top:8px">${esc(mainLand.name)}</h3><p class="muted">${esc(mainLand.crop||'محصول ثبت نشده')} · ${num(mainLand.area).toLocaleString('fa-IR')} ${esc(mainLand.areaUnit||'هکتار')}</p></div><button class="primary" data-open-land="${mainLand.id}">جزئیات</button></div></div>`:''}
+  ${low.length?`<div class="section-title"><h3>🔔 نیاز به توجه</h3></div><div class="list">${low.map(i=>`<div class="alert"><strong>${esc(i.name)}</strong> — موجودی ${num(i.quantity)} ${esc(i.unit||"واحد")}</div>`).join('')}</div>`:''}
   <div class="section-title"><h3>آخرین فعالیت‌ها</h3></div><div class="list">${recentActivity()}</div>`;
 }
+
 function recentActivity(){
   const all=[
     ...state.transactions.map(x=>({...x,label:x.type==="expense"?"هزینه":"درآمد",text:x.title,amount:x.amount,date:x.date})),
@@ -216,21 +222,60 @@ function polygonArea(points){
 function clearMeasure(){measurePoints=[];measuredHectares=0;if(measureLayer)measureLayer.clearLayers();if(measurePolygon){measureMap.removeLayer(measurePolygon);measurePolygon=null;}$('#measureResult').textContent='هنوز نقطه‌ای ثبت نشده است.';}
 function locateUser(){if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude}=pos.coords;if(measureMap){measureMap.setView([latitude,longitude],17);addMeasurePoint(latitude,longitude);}},err=>alert('دسترسی به موقعیت داده نشد. GPS و اجازه Location را فعال کن.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
 function useMeasuredArea(){if(measuredHectares<=0){alert('ابتدا حداقل ۳ نقطه از مرز زمین را ثبت کن.');return;}localStorage.setItem('yk-v03-measured-area',String(measuredHectares));setRoute('add');setTimeout(()=>{const f=$('#landArea');if(f){f.value=measuredHectares.toFixed(3);f.focus();}},50);}
-function weatherForLand(id){const l=land(id);if(!l)return;if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}const box=$('#weatherBox');if(box)box.innerHTML='<span class="muted">در حال دریافت موقعیت...</span>';navigator.geolocation.getCurrentPosition(async pos=>{l.lat=pos.coords.latitude;l.lon=pos.coords.longitude;save();if(box)box.innerHTML='<span class="muted">در حال دریافت آب‌وهوای زنده...</span>';try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto`;const r=await fetch(url);if(!r.ok)throw new Error();const d=await r.json();const c=d.current;box.innerHTML=`<div class="grid"><div class="card">🌡️ دما<strong class="metric">${c.temperature_2m}°</strong></div><div class="card">💧 رطوبت<strong class="metric">${c.relative_humidity_2m}%</strong></div><div class="card">💨 باد<strong class="metric">${c.wind_speed_10m}</strong></div><div class="card">🌧️ بارش<strong class="metric">${c.precipitation}</strong></div></div><p class="muted">مختصات: ${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}</p>`;}catch(e){box.innerHTML='<div class="alert">آب‌وهوای زنده دریافت نشد. اتصال اینترنت را بررسی کن.</div>';}} ,err=>{if(box)box.innerHTML='<div class="alert">اجازه دسترسی به موقعیت داده نشد. Location گوشی را روشن و اجازه مرورگر را فعال کن.</div>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
+function weatherForLand(id){
+ const l=land(id);if(!l)return;if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}
+ const box=$('#weatherBox');if(box)box.innerHTML='<div class="card weather-card"><div class="muted">در حال دریافت آب‌وهوای زمین...</div></div>';
+ navigator.geolocation.getCurrentPosition(async pos=>{
+  l.lat=pos.coords.latitude;l.lon=pos.coords.longitude;save();
+  try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&forecast_days=3&timezone=auto`;const r=await fetch(url);if(!r.ok)throw new Error();const d=await r.json();const c=d.current, days=d.daily;
+   const icon=weatherIcon(c.weather_code), name=weatherName(c.weather_code);let fc='';for(let i=0;i<days.time.length;i++){fc+=`<div><small>${new Date(days.time[i]).toLocaleDateString('fa-IR',{weekday:'short'})}</small><strong>${weatherIcon(days.weather_code[i])}</strong><span>${Math.round(days.temperature_2m_max[i])}° / ${Math.round(days.temperature_2m_min[i])}°</span><small>${days.precipitation_probability_max[i]||0}% بارش</small></div>`}
+   box.innerHTML=`<div class="card weather-card"><div class="weather-main"><div><span class="badge" style="background:rgba(255,255,255,.14);color:#fff">${name}</span><div class="weather-temp">${Math.round(c.temperature_2m)}°</div><div class="muted">دمای فعلی زمین</div></div><div class="weather-icon">${icon}</div></div><div class="weather-grid"><div><small>رطوبت</small><strong>${c.relative_humidity_2m}%</strong></div><div><small>باد</small><strong>${Math.round(c.wind_speed_10m)} km/h</strong></div><div><small>بارش</small><strong>${c.precipitation} mm</strong></div></div><div class="forecast">${fc}</div></div>`;
+  }catch(e){box.innerHTML='<div class="alert">آب‌وهوای زنده دریافت نشد. اتصال اینترنت را بررسی کن.</div>';}
+ },()=>{if(box)box.innerHTML='<div class="alert">اجازه دسترسی به موقعیت داده نشد. Location گوشی را فعال کن.</div>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function weatherIcon(code){if(code===0)return'☀️';if([1,2].includes(code))return'🌤️';if(code===3)return'☁️';if([45,48].includes(code))return'🌫️';if([51,53,55,56,57].includes(code))return'🌦️';if([61,63,65,66,67,80,81,82].includes(code))return'🌧️';if([71,73,75,77,85,86].includes(code))return'🌨️';if([95,96,99].includes(code))return'⛈️';return'🌤️';}
+function weatherName(code){if(code===0)return'آفتابی';if([1,2].includes(code))return'نیمه‌ابری';if(code===3)return'ابری';if([45,48].includes(code))return'مه‌آلود';if([51,53,55,56,57].includes(code))return'نم‌نم باران';if([61,63,65,66,67,80,81,82].includes(code))return'بارانی';if([71,73,75,77,85,86].includes(code))return'برفی';if([95,96,99].includes(code))return'رعدوبرق';return'متغیر';}
 
 function renderInventory(){
   title.textContent="انبار";
-  app.innerHTML=`<div class="section-title"><h2>📦 انبار حرفه‌ای</h2><button class="primary" data-add-item>➕ کالا</button></div>
-  <div class="grid"><div class="card"><div class="muted">اقلام</div><div class="metric">${state.inventory.length}</div></div><div class="card"><div class="muted">کمبود</div><div class="metric">${state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity)).length}</div></div></div>
-  <div class="section-title"><h3>موجودی</h3></div><div class="list">${state.inventory.length?state.inventory.map(i=>`<div class="card"><div class="row"><strong>${esc(i.name)}</strong><span class="badge">${esc(i.category||"سایر")}</span></div><div class="row"><span>${num(i.quantity)} ${esc(i.unit||"واحد")} · حداقل ${num(i.minQuantity)}</span><div class="actions"><button class="secondary" data-stock="${i.id}">ورود/مصرف</button></div></div></div>`).join(""):`<div class="empty card">هنوز کالایی در انبار ثبت نشده است.</div>`}</div>`;
+  const low=state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity));
+  app.innerHTML=`<div class="section-title"><div><h2>انبار</h2><span class="muted">مدیریت سریع موجودی و مصرف</span></div><button class="primary" data-add-item>＋ ثبت کالا</button></div>
+  <div class="grid"><div class="card"><div class="muted">کل اقلام</div><div class="metric">${state.inventory.length.toLocaleString('fa-IR')}</div></div><div class="card"><div class="muted">نیاز به خرید</div><div class="metric ${low.length?'stat-negative':'stat-positive'}">${low.length.toLocaleString('fa-IR')}</div></div></div>
+  ${low.length?`<div class="card alert"><strong>لیست خرید پیشنهادی</strong><p class="muted" style="margin:5px 0 0">${low.map(i=>esc(i.name)).join(' · ')}</p></div>`:''}
+  <div class="section-title"><h3>موجودی</h3></div><div class="list">${state.inventory.length?state.inventory.map(i=>`<div class="card"><div class="inventory-item"><div class="stock-icon">${categoryIcon(i.category)}</div><div><strong>${esc(i.name)}</strong><div class="muted">${esc(i.category||'سایر')} · حداقل ${num(i.minQuantity)} ${esc(i.unit||'واحد')}</div></div><div class="stock-qty">${num(i.quantity).toLocaleString('fa-IR')}<small class="muted"> ${esc(i.unit||'واحد')}</small></div></div><div class="inventory-actions"><button class="secondary" data-stock="${i.id}">↕ تغییر موجودی</button><button class="secondary" data-consume-item="${i.id}">− مصرف</button></div></div>`).join(''):`<div class="empty card">هنوز کالایی ثبت نشده است.<br><button class="primary" data-add-item style="margin-top:12px">＋ افزودن اولین کالا</button></div>`}</div>`;
+}
+function categoryIcon(c){return ({'بذر':'🌱','کود':'🧪','سم':'🧴','سوخت':'⛽','روغن':'🛢️','ابزار':'🛠️','قطعه':'⚙️'})[c]||'📦';}
+function showModal(titleText, body){
+  document.getElementById('modalRoot')?.remove();
+  const root=document.createElement('div');root.id='modalRoot';root.className='modal-backdrop';root.innerHTML=`<div class="modal-sheet"><div class="modal-head"><h2>${titleText}</h2><button class="modal-close" data-close-modal>×</button></div>${body}</div>`;document.body.appendChild(root);
+}
+function closeModal(){document.getElementById('modalRoot')?.remove();}
+function addInventoryItem(){
+  showModal('ثبت کالای جدید',`<form id="inventoryForm" class="form"><div class="field"><label>نام کالا</label><input name="name" required placeholder="مثلاً کود اوره"></div><div class="field"><label>دسته</label><select name="category"><option>بذر</option><option>کود</option><option>سم</option><option>سوخت</option><option>روغن</option><option>ابزار</option><option>قطعه</option><option>سایر</option></select></div><div class="grid"><div class="field"><label>واحد</label><input name="unit" value="کیلو"></div><div class="field"><label>موجودی اولیه</label><input name="quantity" type="number" min="0" step="0.01" value="0"></div></div><div class="field"><label>حداقل موجودی</label><input name="minQuantity" type="number" min="0" step="0.01" value="0"></div><div class="actions"><button class="primary">ذخیره کالا</button><button type="button" class="secondary" data-close-modal>انصراف</button></div></form>`);
+}
+function stockDialog(id){
+ const i=state.inventory.find(x=>x.id===id);if(!i)return;showModal(`تغییر موجودی · ${esc(i.name)}`,`<form id="stockForm" class="form" data-id="${i.id}"><div class="alert">موجودی فعلی: <strong>${num(i.quantity)} ${esc(i.unit||'واحد')}</strong></div><div class="field"><label>مقدار تغییر</label><input name="delta" type="number" step="0.01" placeholder="مثلاً 25 یا -5" required></div><p class="muted">عدد مثبت = ورود، عدد منفی = مصرف</p><div class="actions"><button class="primary">ثبت تغییر</button><button type="button" class="secondary" data-close-modal>انصراف</button></div></form>`);
 }
 
 function renderAssistant(){
   title.textContent="یار کشاورز";
   const history=JSON.parse(localStorage.getItem('yk-chat')||'[]');
-  app.innerHTML=`<section class="hero"><span class="hero-badge">دستیار کشاورزی</span><h2>با یار کشاورز حرف بزن 🤖</h2><p>سؤالت را به زبان خودت بپرس؛ لازم نیست از سؤال‌های آماده انتخاب کنی.</p></section><div class="card chat"><div id="chatMessages" class="chat-messages">${history.length?history.map(m=>`<div class="bubble ${m.role==='user'?'user':'ai'}">${m.html}</div>`).join(''):`<div class="bubble ai">سلام! من یار کشاورزم 🌱<br>هر چیزی درباره زمین‌ها، هزینه‌ها، انبار یا کشت‌هایت می‌خواهی بپرس.</div>`}</div><div class="ai-status">یار بر اساس اطلاعات ثبت‌شده در همین برنامه پاسخ می‌دهد.</div><div class="chat-compose"><input id="aiQuestion" autocomplete="off" placeholder="مثلاً برای زمین شمالی چه هزینه‌هایی ثبت شده؟"><button class="primary" data-ask-ai aria-label="ارسال">➤</button></div></div><div class="card"><h3>شروع مکالمه</h3><div class="actions"><button class="secondary" data-question="وضعیت زمین‌های من چطور است؟">وضعیت زمین‌ها</button><button class="secondary" data-question="چه چیزهایی از انبار کم دارم؟">انبار</button><button class="secondary" data-question="مجموع هزینه و درآمد من چقدر است؟">مالی</button></div></div>`;
-  const box=$('#chatMessages'); if(box)box.scrollTop=box.scrollHeight;
+  app.innerHTML=`<div class="card"><div class="assistant-brand"><div class="assistant-avatar">✦</div><div><h2 style="margin:0">یار کشاورز</h2><span class="badge">دستیار کشاورزی</span></div></div><p class="muted" style="margin-top:14px">با زبان خودت حرف بزن؛ سؤال آماده لازم نیست.</p></div><div class="card chat"><div id="chatMessages" class="chat-messages">${history.length?history.map(m=>`<div class="bubble ${m.role==='user'?'user':'ai'}">${m.html}</div>`).join(''):`<div class="bubble ai">سلام! من یار کشاورزم. ✦<br>هر چیزی درباره زمین، کشت، هزینه یا انبارت می‌خواهی بپرس.</div>`}</div><div class="ai-status">نسخه فعلی پاسخ‌ها را از اطلاعات ثبت‌شدهٔ داخل برنامه می‌سازد؛ اتصال به هوش مصنوعی واقعی را در مرحله بعد انجام می‌دهیم.</div><div class="chat-compose"><input id="aiQuestion" autocomplete="off" placeholder="مثلاً وضعیت زمین‌های من چطور است؟"><button class="primary" data-ask-ai aria-label="ارسال">➤</button></div></div>`;
+  const box=$('#chatMessages');if(box)box.scrollTop=box.scrollHeight;
 }
+
+function renderNews(){
+ title.textContent="اخبار";
+ app.innerHTML=`<div class="section-title"><div><h2>اخبار کشاورزی</h2><span class="muted">مطالب کاربردی و اطلاع‌رسانی</span></div></div><div class="news-grid">
+ <article class="card news-card"><div class="news-image" style="background-image:url('wheat-hero.jpg')"></div><div class="news-body"><span class="badge">کشت و زراعت</span><h3>راهنمای پایش وضعیت گندم در طول فصل</h3><p class="muted">نکات کاربردی برای بررسی رشد، آبیاری و علائم ظاهری مزرعه.</p><span class="news-meta">مطالعه ۳ دقیقه‌ای</span></div></article>
+ <article class="card news-card"><div class="news-image" style="background-image:url('UI-MOCKUP-V3.png')"></div><div class="news-body"><span class="badge">مدیریت مزرعه</span><h3>چطور هزینه‌های مزرعه را بهتر کنترل کنیم؟</h3><p class="muted">ثبت منظم هزینه‌ها و موجودی، تصمیم‌گیری مالی را ساده‌تر می‌کند.</p><span class="news-meta">مطالعه ۴ دقیقه‌ای</span></div></article>
+ </div>`;
+}
+function renderAds(){
+ title.textContent="پیشنهادها";
+ app.innerHTML=`<div class="section-title"><div><h2>پیشنهادهای کشاورزی</h2><span class="muted">تبلیغات و پیشنهادهای مرتبط</span></div></div><div class="ads-grid"><article class="card ad-card"><div class="ad-image" style="background-image:url('wheat-hero.jpg')"></div><div class="ad-body"><span class="ad-badge">پیشنهاد ویژه</span><h3>تخفیف نهاده‌های کشاورزی</h3><p class="muted">پیشنهادهای مرتبط با محصول و فصل کشت را اینجا ببین.</p><button class="primary">مشاهده پیشنهاد</button></div></article><article class="card ad-card"><div class="ad-body"><span class="ad-badge">خدمات مزرعه</span><h3>خدمات و ابزارهای مورد نیاز کشاورز</h3><p class="muted">این بخش برای تبلیغات واقعی و هدفمند آماده شده است.</p><button class="secondary">اطلاعات بیشتر</button></div></article></div>`;
+}
+
 function saveChat(history){localStorage.setItem('yk-chat',JSON.stringify(history.slice(-30)));}
 function generateAnswer(q){
   const text=(q||"").trim(); if(!text)return "لطفاً سؤال را بنویس.";
@@ -288,17 +333,22 @@ document.addEventListener("click", e=>{
   if(q) answerGeneral(q.dataset.question);
   const lq=e.target.closest("[data-land-question]");
   if(lq) answerLand(lq.dataset.landQuestion);
+  if(e.target.closest("[data-close-modal]")){closeModal();return;}
+  const consumeItem=e.target.closest("[data-consume-item]"); if(consumeItem){const i=state.inventory.find(x=>x.id===consumeItem.dataset.consumeItem);if(i){showModal(`مصرف · ${esc(i.name)}`,`<form id="stockForm" class="form" data-id="${i.id}" data-mode="consume"><div class="field"><label>مقدار مصرف</label><input name="delta" type="number" min="0" step="0.01" required placeholder="مثلاً 5"></div><p class="muted">مقدار به صورت خودکار از موجودی کم می‌شود.</p><div class="actions"><button class="primary">ثبت مصرف</button><button type="button" class="secondary" data-close-modal>انصراف</button></div></form>`);}}
   if(e.target.closest("[data-ask-ai]")){askAI();return;}
   const suggest=e.target.closest("[data-calc-suggestions]");
   if(suggest) alert("برای پیشنهاد دقیق محصول، منبع معتبر آب‌وهوا/بازار باید متصل شود؛ فعلاً از نمایش عدد ساختگی خودداری می‌کنیم.");
 });
 
+document.addEventListener("click", e=>{if(e.target.classList.contains("modal-backdrop"))closeModal();});
 document.addEventListener("keydown", e=>{ if(e.key==="Enter" && e.target.id==="aiQuestion"){e.preventDefault();askAI();} });
 document.addEventListener("change", e=>{
   if(e.target.name==="ownership"){const rent=e.target.value==="rent";$("#rentFields").hidden=!rent; if(!rent){["ownerName","rentAmount","rentPeriod"].forEach(n=>{const el=document.querySelector(`[name="${n}"]`);if(el)el.value="";});}}
 });
 document.addEventListener("submit", e=>{
   e.preventDefault();
+  if(e.target.id==="inventoryForm"){const f=new FormData(e.target);state.inventory.push({id:uid("item"),name:f.get("name"),category:f.get("category"),unit:f.get("unit")||"واحد",quantity:num(f.get("quantity")),minQuantity:num(f.get("minQuantity")),createdAt:new Date().toISOString()});save();closeModal();renderInventory();return;}
+  if(e.target.id==="stockForm"){const i=state.inventory.find(x=>x.id===e.target.dataset.id);if(!i)return;let d=num(new FormData(e.target).get("delta")); if(e.target.dataset.mode==="consume") d=-Math.abs(d); i.quantity=Math.max(0,num(i.quantity)+d);save();closeModal();renderInventory();return;}
   if(e.target.id==="landForm"){
     const f=new FormData(e.target);
     const l={id:uid("land"),name:f.get("name"),area:num(f.get("area")),areaUnit:f.get("areaUnit"),region:f.get("region"),ownership:f.get("ownership"),ownerName:f.get("ownerName"),rentAmount:num(f.get("rentAmount")),rentPeriod:f.get("rentPeriod"),soil:f.get("soil"),water:f.get("water"),irrigation:f.get("irrigation"),crop:f.get("crop"),notes:f.get("notes"),createdAt:new Date().toISOString()};
@@ -319,21 +369,6 @@ $("#restoreInput").addEventListener("change", async e=>{
   e.target.value="";
 });
 
-function addInventoryItem(){
-  const name=prompt("نام کالا:"); if(!name)return;
-  const category=prompt("دسته (بذر/کود/سم/سوخت/روغن/ابزار/قطعه/سایر):","سایر")||"سایر";
-  const unit=prompt("واحد:","کیلو")||"واحد";
-  const quantity=num(prompt("موجودی اولیه:","0"));
-  const minQuantity=num(prompt("حداقل موجودی:","0"));
-  state.inventory.push({id:uid("item"),name,category,unit,quantity,minQuantity,createdAt:new Date().toISOString()});
-  save();renderInventory();
-}
-function stockDialog(id){
-  const i=state.inventory.find(x=>x.id===id); if(!i)return;
-  const type=prompt("برای ورود عدد مثبت و برای مصرف عدد منفی وارد کنید:", "0");
-  if(type===null)return; const delta=num(type); i.quantity=Math.max(0,num(i.quantity)+delta);
-  save();renderInventory();
-}
 function cropDialog(landId){
   const product=prompt("نام محصول:"); if(!product)return;
   const date=prompt("تاریخ کشت (مثلاً ۱۴۰۵/۰۶/۰۱):","")||"";
