@@ -1,1 +1,52 @@
-<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#173b2a"><meta name="description" content="یار کشاورز؛ مدیریت حرفه‌ای مزرعه و اندازه‌گیری زمین"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"><title>یار کشاورز</title></head><body><div id="app"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script></body></html>
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#173b2a"><meta name="description" content="یار کشاورز؛ مدیریت حرفه‌ای مزرعه و اندازه‌گیری زمین"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"><title>یار کشاورز</title>
+<link rel="stylesheet" href="v23-upgrade.css">
+</head><body>
+<!-- V2.3 PRO upgrade hooks -->
+<section id="yk-v23-measurement" class="yk-v23-panel" aria-label="اندازه‌گیری حرفه‌ای زمین">
+  <div class="yk-v23-panel-head">
+    <div>
+      <span class="yk-v23-kicker">اندازه‌گیری حرفه‌ای</span>
+      <h2>زمینت را سریع پیدا و دقیق اندازه‌گیری کن</h2>
+    </div>
+    <span class="yk-v23-badge">نقشه + GPS + ترکیبی</span>
+  </div>
+  <div class="yk-v23-search">
+    <input id="yk-v23-place-search" placeholder="نام روستا، شهر، منطقه یا مختصات را وارد کنید">
+    <button id="yk-v23-search-btn" type="button">پیدا کردن زمین</button>
+  </div>
+  <div class="yk-v23-actions">
+    <button type="button" data-measure-mode="map">📍 روی نقشه</button>
+    <button type="button" data-measure-mode="gps">🛰️ پیمایش GPS</button>
+    <button type="button" data-measure-mode="hybrid">🔀 ترکیبی</button>
+  </div>
+  <div class="yk-v23-metrics">
+    <div><span>مساحت</span><strong id="yk-v23-area">—</strong></div>
+    <div><span>هکتار</span><strong id="yk-v23-hectare">—</strong></div>
+    <div><span>محیط</span><strong id="yk-v23-perimeter">—</strong></div>
+    <div><span>دقت GPS</span><strong id="yk-v23-accuracy">—</strong></div>
+  </div>
+  <div id="yk-v23-map-help">ابتدا محل زمین را جستجو کن، سپس حالت اندازه‌گیری را انتخاب کن.</div>
+</section>
+
+<section id="yk-v23-weather" class="yk-v23-panel" aria-label="آب‌وهوای حرفه‌ای">
+  <div class="yk-v23-panel-head">
+    <div>
+      <span class="yk-v23-kicker">آب‌وهوای کشاورزی</span>
+      <h2>هوا را برای کار امروز بهتر بشناس</h2>
+    </div>
+    <span class="yk-v23-badge" id="yk-v23-weather-status">در حال آماده‌سازی</span>
+  </div>
+  <div class="yk-v23-weather-grid">
+    <div class="yk-v23-weather-main">
+      <span id="yk-v23-weather-icon">☁️</span>
+      <strong id="yk-v23-temp">—°</strong>
+      <span id="yk-v23-condition">وضعیت هوا</span>
+    </div>
+    <div><span>رطوبت</span><strong id="yk-v23-humidity">—</strong></div>
+    <div><span>باد</span><strong id="yk-v23-wind">—</strong></div>
+    <div><span>بارش</span><strong id="yk-v23-rain">—</strong></div>
+    <div><span>طلوع / غروب</span><strong id="yk-v23-sun">—</strong></div>
+  </div>
+  <div class="yk-v23-hourly" id="yk-v23-hourly"></div>
+</section>
+<div id="app"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script><script src="v23-upgrade.js"></script></body></html>
