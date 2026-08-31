@@ -1,0 +1,27 @@
+
+/* V2.4 premium visual layer */
+:root{--yk-green:#155b3a;--yk-green2:#2f8b61;--yk-cream:#f6f7f3;--yk-line:#e2e9e4}
+body{background:linear-gradient(180deg,#f7faf7 0,#eef4ef 100%)}
+.card,.hero{border:1px solid var(--yk-line);box-shadow:0 8px 26px rgba(25,65,45,.08)}
+.hero{background:linear-gradient(135deg,#f4fbf4,#e5f1e7)}
+button,.primary{transition:transform .15s ease,box-shadow .15s ease}
+button:active{transform:scale(.98)}
+nav button{font-size:21px;line-height:1}
+nav button span{font-family:Arial,sans-serif}
+.v24-weather{margin:10px 0;padding:18px;border-radius:22px;background:linear-gradient(135deg,#164f36,#2e7958);color:#fff;box-shadow:0 14px 32px rgba(21,91,58,.2)}
+.v24-weather .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.v24-weather .temp{font-size:38px;font-weight:900}
+.v24-weather .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.v24-weather .meta div{padding:10px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.08)}
+.v24-weather small{opacity:.78}.v24-hourly{display:flex;gap:8px;overflow:auto;margin-top:12px}
+.v24-hourly div{min-width:68px;text-align:center;padding:9px;border-radius:13px;background:rgba(255,255,255,.08)}
+.v24-measure{padding:16px;border-radius:22px;background:#fff;border:1px solid var(--yk-line);box-shadow:0 10px 28px rgba(25,65,45,.08)}
+.v24-measure-search{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}
+.v24-measure-search input{margin:0}
+.v24-measure-search button{border:0;border-radius:12px;background:var(--yk-green);color:#fff;padding:0 15px;font-weight:800}
+.v24-map{height:330px;border-radius:18px;overflow:hidden;border:1px solid var(--yk-line);margin-top:10px}
+.v24-measure-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.v24-measure-actions button{border:0;border-radius:12px;padding:10px 12px;background:#edf5ef;color:var(--yk-green);font-weight:800}
+.v24-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.v24-metrics div{background:#f7faf7;border-radius:14px;padding:10px}.v24-metrics small{display:block;color:#718076}.v24-metrics b{font-size:17px;color:#183e2b}
+@media(max-width:600px){.v24-weather .meta{grid-template-columns:repeat(2,1fr)}.v24-measure-search{grid-template-columns:1fr}.v24-map{height:300px}.v24-metrics{grid-template-columns:1fr 1fr}}
