@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "YarKeshavarz",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "YarKeshavarz",
+  "start_url": "/",
+  "theme_color": "#176b3a",
+  "description": "سامانه هوشمند مدیریت زمین، آب‌وهوا، مزرعه و دستیار هوش مصنوعی کشاورزان"
+}
