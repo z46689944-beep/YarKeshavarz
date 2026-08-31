@@ -27,22 +27,7 @@ let landTab = "overview";
 function uid(prefix="id"){ return prefix + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function esc(v=""){ return String(v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 function money(n){ return Number(n||0).toLocaleString("fa-IR") + " " + state.settings.currency; }
-function num(v){
-  if(v===null || v===undefined || v==="") return 0;
-  let s=String(v)
-    .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
-    .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
-    .replace(/[٬،,\s]/g, "")
-    .replace(/٫/g, ".");
-  return Number(s)||0;
-}
-function formatMoneyInput(el){
-  if(!el) return;
-  const raw=String(el.value||"");
-  const digits=raw.replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9]/g,"");
-  if(!digits){ el.value=""; return; }
-  el.value=Number(digits).toLocaleString("en-US");
-}
+function num(v){ return Number(v)||0; }
 
 function loadState(){
   try{
@@ -105,16 +90,24 @@ function renderHome(){
   title.textContent="خانه";
   const t=totals();
   const low=state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity));
-  const totalArea=state.lands.reduce((a,x)=>a+num(x.area),0);
   app.innerHTML=`
-  <section class="hero"><h2>سلام کشاورز عزیز 🌱</h2><p>به یار کشاورز خوش آمدید؛ مدیریت زمین، کشت، هزینه، انبار و تصمیم‌های مزرعه در یکجا.</p><button class="primary" data-route="add">＋ افزودن قطعه زمین</button></section>
-  <div class="section-title"><h3>قطعه زمین‌های من</h3><button class="secondary" data-route="lands">مشاهده همه</button></div>
-  <div class="list">${state.lands.length?state.lands.slice(0,3).map(l=>`<button class="card row" data-open-land="${l.id}"><span><strong>${esc(l.name)}</strong><small class="muted">${esc(l.region||"منطقه ثبت نشده")} · ${esc(l.crop||"محصول ثبت نشده")}</small></span><span class="badge">${num(l.area).toLocaleString("fa-IR")} ${esc(l.areaUnit||"هکتار")}</span></button>`).join(""):`<div class="empty card">هنوز زمینی ثبت نشده است.</div>`}</div>
-  ${low.length?`<div class="section-title"><h3>🔔 هشدارهای مهم</h3></div><div class="alert">${low.map(i=>`🔔 ${esc(i.name)} رو به اتمام است — ${num(i.quantity)} ${esc(i.unit||"واحد")}`).join("<br>")}</div>`:""}
-  <div class="section-title"><h3>خلاصه وضعیت مزرعه</h3></div>
-  <div class="grid"><div class="card"><div class="muted">🌾 تعداد زمین</div><div class="metric">${state.lands.length.toLocaleString("fa-IR")}</div></div><div class="card"><div class="muted">📐 کل مساحت</div><div class="metric">${totalArea.toLocaleString("fa-IR")} هکتار</div></div><div class="card"><div class="muted">💰 هزینه کل</div><div class="metric">${money(t.cost)}</div></div><div class="card"><div class="muted">📈 درآمد کل</div><div class="metric">${money(t.income)}</div></div></div>
-  <div class="card" style="background:linear-gradient(135deg,#eef7f1,#fff)"><div class="row"><div><h3>🤖 یار هوشمند کشاورز</h3><p class="muted">هر سؤالی درباره زمین‌ها، هزینه‌ها، انبار و کشت داری، بپرس.</p></div><button class="primary" data-route="assistant">گفتگو با یار</button></div></div>
-  <div class="section-title"><h3>دسترسی سریع</h3></div><div class="grid"><button class="card" data-route="lands">🗺️<h3>زمین‌ها</h3></button><button class="card" data-route="inventory">📦<h3>انبار</h3></button><button class="card" data-route="measure">📐<h3>پیمایش زمین</h3></button><button class="card" data-route="assistant">🤖<h3>یار هوشمند</h3></button></div>`;
+  <section class="hero"><h2>سلام، به یار کشاورز خوش آمدید 🌱</h2><p>نسخه ۳ نهایی — مرکز مدیریت زمین، کشت، مالی و انبار</p></section>
+  <div class="grid">
+    <div class="card"><div class="muted">زمین‌ها</div><div class="metric">${state.lands.length}</div></div>
+    <div class="card"><div class="muted">مجموع مساحت</div><div class="metric">${state.lands.reduce((a,x)=>a+num(x.area),0).toLocaleString("fa-IR")}</div></div>
+    <div class="card"><div class="muted">هزینه</div><div class="metric">${money(t.cost)}</div></div>
+    <div class="card"><div class="muted">درآمد</div><div class="metric">${money(t.income)}</div></div>
+  </div>
+  <div class="section-title"><h3>دسترسی سریع</h3></div>
+  <div class="grid">
+    <button class="card" data-route="lands">🗺️<h3>زمین‌های من</h3></button>
+    <button class="card" data-route="inventory">📦<h3>انبار</h3></button>
+    <button class="card" data-route="add">➕<h3>ثبت اطلاعات</h3></button>
+    <button class="card" data-route="assistant">🤖<h3>یار هوشمند</h3></button>
+  </div>
+  ${low.length?`<div class="section-title"><h3>🔔 هشدار انبار</h3></div><div class="list">${low.map(i=>`<div class="alert">${esc(i.name)} — موجودی ${num(i.quantity)} ${esc(i.unit||"واحد")}</div>`).join("")}</div>`:""}
+  <div class="section-title"><h3>آخرین فعالیت‌ها</h3></div>
+  <div class="list">${recentActivity()}</div>`;
 }
 function recentActivity(){
   const all=[
@@ -146,7 +139,7 @@ function renderAdd(){
     <input type="hidden" name="areaUnit" value="هکتار">
     <div class="field"><label>منطقه / روستا / شهر</label><input name="region" placeholder="برای آب‌وهوا بهتر است موقعیت دقیق زمین ثبت شود"></div>
     <div class="field"><label>نوع مالکیت</label><div class="ownership-grid"><label class="choice"><input type="radio" name="ownership" value="own" checked> 🏠 مالک زمین هستم</label><label class="choice"><input type="radio" name="ownership" value="rent"> 🤝 زمین را اجاره کرده‌ام</label></div></div>
-    <div id="rentFields" class="card form rent-only" hidden><strong>اطلاعات اجاره</strong><div class="field"><label>نام مالک</label><input name="ownerName"></div><div class="field"><label>مبلغ اجاره</label><input name="rentAmount" class="money-input" inputmode="numeric" type="text" autocomplete="off" placeholder="مثلاً 16,000,000"></div><div class="field"><label>مدت اجاره</label><input name="rentPeriod" placeholder="مثلاً یک سال"></div></div>
+    <div id="rentFields" class="card form rent-only" hidden><strong>اطلاعات اجاره</strong><div class="field"><label>نام مالک</label><input name="ownerName"></div><div class="field"><label>مبلغ اجاره</label><input name="rentAmount" type="number" min="0"></div><div class="field"><label>مدت اجاره</label><input name="rentPeriod" placeholder="مثلاً یک سال"></div></div>
     <div class="field"><label>نوع خاک</label><input name="soil"></div><div class="field"><label>وضعیت / منبع آب</label><input name="water"></div><div class="field"><label>نوع آبیاری</label><input name="irrigation"></div><div class="field"><label>محصول فعلی</label><input name="crop"></div><div class="field"><label>توضیحات</label><textarea name="notes"></textarea></div>
     <button class="primary">ذخیره زمین</button>
   </form>`;
@@ -161,13 +154,12 @@ function renderLand(){
   const tx=state.transactions.filter(x=>x.landId===l.id);
   const inventory=state.inventory;
   const content={
-    overview:`<div class="land-summary">
-      <div class="summary-box"><div class="muted">📐 مساحت زمین</div><strong>${num(l.area).toLocaleString("fa-IR")} ${esc(l.areaUnit||"هکتار")}</strong><small class="muted">${Math.round(num(l.area)*10000).toLocaleString("fa-IR")} مترمربع</small></div>
-      <div class="summary-box weather-mini"><div class="muted">🌦️ آب‌وهوای این زمین</div><strong>${l.lat?"موقعیت ثبت شده":"هنوز ثبت نشده"}</strong><small class="muted">${l.lat?"آماده دریافت پیش‌بینی":"از بخش آب‌وهوا ثبت کن"}</small></div>
-      <div class="summary-box"><div class="muted">💰 هزینه</div><strong>${money(t.cost)}</strong></div>
-      <div class="summary-box"><div class="muted">📈 سود/زیان</div><strong>${money(t.profit)}</strong></div>
+    overview:`<div class="grid">
+      <div class="card"><div class="muted">مساحت</div><div class="metric">${num(l.area).toLocaleString("fa-IR")}</div><span class="muted">${esc(l.areaUnit||"هکتار")}</span></div>
+      <div class="card"><div class="muted">هزینه</div><div class="metric">${money(t.cost)}</div></div>
+      <div class="card"><div class="muted">درآمد</div><div class="metric">${money(t.income)}</div></div>
+      <div class="card"><div class="muted">سود/زیان</div><div class="metric">${money(t.profit)}</div></div>
     </div>
-    <div class="actions"><button class="primary" data-land-tab="weather">🌦️ آب‌وهوای این زمین</button><button class="secondary" data-land-tab="assistant">🤖 یار هوشمند این زمین</button></div>
     <div class="section-title"><h3>📋 مشخصات</h3></div>
     <div class="card list">${detail("مالکیت",l.ownership==="rent"?"اجاره‌ای":"مالک")}${detail("منطقه",l.region)}${detail("خاک",l.soil)}${detail("آب",l.water)}${detail("آبیاری",l.irrigation)}${detail("محصول فعلی",l.crop)}</div>`,
     crops:`<div class="actions"><button class="primary" data-add-crop="${l.id}">🌱 ثبت کشت جدید</button></div><div class="section-title"><h3>سوابق کشت</h3></div><div class="list">${crops.length?crops.map(c=>`<div class="card"><div class="row"><strong>${esc(c.product)}</strong><span>${esc(c.date||"")}</span></div><p class="muted">بذر: ${num(c.seedQty)} ${esc(c.seedUnit||"واحد")}</p></div>`).join(""):`<div class="empty card">هنوز کشت ثبت نشده است.</div>`}</div>`,
@@ -178,7 +170,7 @@ function renderLand(){
     weather:`<div class="card"><h3>🌦️ آب‌وهوای واقعی زمین</h3><p class="muted">ابتدا موقعیت زمین را با GPS ثبت کن؛ سپس برنامه آب‌وهوای همان مختصات را از سرویس زنده می‌گیرد.</p><div class="actions"><button class="primary" data-weather="${l.id}">📍 دریافت موقعیت و آب‌وهوا</button><button class="secondary" data-route="measure">📐 اندازه‌گیری زمین</button></div><div id="weatherBox" class="section-title">${l.lat?`<span class="badge">موقعیت ثبت شده</span>`:`<span class="muted">موقعیت GPS ثبت نشده</span>`}</div></div>`, 
     assistant:`${assistantForLand(l)}`
   }[landTab] || "";
-  app.innerHTML=`<section class="land-head"><div class="row"><div><h2>${esc(l.name)}</h2><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><button class="secondary" data-route="lands">بازگشت</button></div><p>پرونده کامل این قطعه؛ متراژ، موقعیت، آب‌وهوا، کشت، مالی و یار هوشمند.</p></section>
+  app.innerHTML=`<div class="card"><div class="row"><div><h2>${esc(l.name)}</h2><span class="badge">${l.ownership==="rent"?"🤝 اجاره‌ای":"🏠 مالک"}</span></div><button class="secondary" data-route="lands">بازگشت</button></div></div>
   <div class="tabs">${["overview","crops","finance","calculator","inventory","suggestions","weather","assistant"].map(x=>`<button class="${x===landTab?"active":""}" data-land-tab="${x}">${tabLabel(x)}</button>`).join("")}</div>
   ${content}`;
 }
@@ -189,9 +181,9 @@ function calculator(l){
   return `<div class="card"><h3>🧮 محاسبه‌گر حرفه‌ای</h3>
   <p class="muted">زمین: ${esc(l.name)} · ${num(l.area)} ${esc(l.areaUnit||"هکتار")} · ${l.ownership==="rent"?"اجاره‌ای":"مالک"}</p>
   <form id="calcForm" class="form">
-  ${["بذر","کود","سم","آب","کارگر","سوخت","روغن","ماشین‌آلات","اجاره زمین","سایر"].map((x,i)=>`<div class="field"><label>${x}</label><input name="c${i}" class="money-input" inputmode="numeric" type="text" autocomplete="off" value="${x==="اجاره زمین"&&l.ownership!=="rent"?"0":""}"></div>`).join("")}
+  ${["بذر","کود","سم","آب","کارگر","سوخت","روغن","ماشین‌آلات","اجاره زمین","سایر"].map((x,i)=>`<div class="field"><label>${x}</label><input name="c${i}" type="number" min="0" step="0.01" value="${x==="اجاره زمین"&&l.ownership!=="rent"?"0":""}"></div>`).join("")}
   <div class="field"><label>مقدار تولید مورد انتظار</label><input name="production" type="number" min="0" step="0.01"></div>
-  <div class="field"><label>قیمت فروش هر واحد</label><input name="salePrice" class="money-input" inputmode="numeric" type="text" autocomplete="off" placeholder="مثلاً 16,000,000"></div>
+  <div class="field"><label>قیمت فروش هر واحد</label><input name="salePrice" type="number" min="0" step="0.01"></div>
   <button class="primary">محاسبه سود/زیان</button></form>
   <div id="calcResult"></div></div>`;
 }
@@ -231,25 +223,7 @@ function polygonArea(points){
 function clearMeasure(){measurePoints=[];measuredHectares=0;if(measureLayer)measureLayer.clearLayers();if(measurePolygon){measureMap.removeLayer(measurePolygon);measurePolygon=null;}$('#measureResult').textContent='هنوز نقطه‌ای ثبت نشده است.';}
 function locateUser(){if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude}=pos.coords;if(measureMap){measureMap.setView([latitude,longitude],17);addMeasurePoint(latitude,longitude);}},err=>alert('دسترسی به موقعیت داده نشد. GPS و اجازه Location را فعال کن.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
 function useMeasuredArea(){if(measuredHectares<=0){alert('ابتدا حداقل ۳ نقطه از مرز زمین را ثبت کن.');return;}localStorage.setItem('yk-v03-measured-area',String(measuredHectares));setRoute('add');setTimeout(()=>{const f=$('#landArea');if(f){f.value=measuredHectares.toFixed(3);f.focus();}},50);}
-function weatherForLand(id){
-  const l=land(id); if(!l)return;
-  const box=$("#weatherBox");
-  if(box)box.innerHTML='<span class="muted">در حال دریافت آب‌وهوا...</span>';
-  const useSaved=Number.isFinite(num(l.lat))&&Number.isFinite(num(l.lon));
-  const fetchWeather=async(lat,lon)=>{
-    l.lat=lat; l.lon=lon; save();
-    try{
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,weather_code&forecast_days=16&timezone=auto`;
-      const r=await fetch(url); if(!r.ok)throw new Error(); const d=await r.json(); const c=d.current;
-      const days=(d.daily?.time||[]).slice(0,7).map((day,i)=>`<div class="weather-day"><small>${esc(day)}</small><strong>${d.daily.temperature_2m_max[i]}° / ${d.daily.temperature_2m_min[i]}°</strong><span>🌧️ ${d.daily.precipitation_probability_max[i]??0}%</span></div>`).join('');
-      if(box)box.innerHTML=`<div class="grid"><div class="card"><div class="muted">🌡️ دما</div><strong class="metric">${c.temperature_2m}°</strong></div><div class="card"><div class="muted">💧 رطوبت</div><strong class="metric">${c.relative_humidity_2m}%</strong></div><div class="card"><div class="muted">💨 باد</div><strong class="metric">${c.wind_speed_10m}</strong></div><div class="card"><div class="muted">🌧️ بارش</div><strong class="metric">${c.precipitation}</strong></div></div><h4>پیش‌بینی ۷ روز آینده</h4><div class="weather-days">${days}</div><p class="muted">مختصات زمین: ${lat.toFixed(5)}, ${lon.toFixed(5)} · پیش‌بینی سرویس برای این مختصات</p>`;
-    }catch(e){if(box)box.innerHTML='<div class="alert">آب‌وهوای زنده دریافت نشد. اتصال اینترنت را بررسی کن.</div>';}
-  };
-  if(useSaved){fetchWeather(num(l.lat),num(l.lon)); return;}
-  if(!navigator.geolocation){if(box)box.innerHTML='<div class="alert">GPS در این دستگاه در دسترس نیست.</div>';return;}
-  if(box)box.innerHTML='<span class="muted">برای ثبت موقعیت این زمین، GPS را فعال کن...</span>';
-  navigator.geolocation.getCurrentPosition(pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude),()=>{if(box)box.innerHTML='<div class="alert">اجازه Location داده نشد. موقعیت مکانی گوشی را فعال کن.</div>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
-}
+function weatherForLand(id){const l=land(id);if(!l)return;if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}const box=$('#weatherBox');if(box)box.innerHTML='<span class="muted">در حال دریافت موقعیت...</span>';navigator.geolocation.getCurrentPosition(async pos=>{l.lat=pos.coords.latitude;l.lon=pos.coords.longitude;save();if(box)box.innerHTML='<span class="muted">در حال دریافت آب‌وهوای زنده...</span>';try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto`;const r=await fetch(url);if(!r.ok)throw new Error();const d=await r.json();const c=d.current;box.innerHTML=`<div class="grid"><div class="card">🌡️ دما<strong class="metric">${c.temperature_2m}°</strong></div><div class="card">💧 رطوبت<strong class="metric">${c.relative_humidity_2m}%</strong></div><div class="card">💨 باد<strong class="metric">${c.wind_speed_10m}</strong></div><div class="card">🌧️ بارش<strong class="metric">${c.precipitation}</strong></div></div><p class="muted">مختصات: ${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}</p>`;}catch(e){box.innerHTML='<div class="alert">آب‌وهوای زنده دریافت نشد. اتصال اینترنت را بررسی کن.</div>';}} ,err=>{if(box)box.innerHTML='<div class="alert">اجازه دسترسی به موقعیت داده نشد. Location گوشی را روشن و اجازه مرورگر را فعال کن.</div>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
 
 function renderInventory(){
   title.textContent="انبار";
@@ -326,14 +300,6 @@ document.addEventListener("click", e=>{
 });
 
 document.addEventListener("keydown", e=>{ if(e.key==="Enter" && e.target.id==="aiQuestion"){e.preventDefault();askAI();} });
-document.addEventListener("input", e=>{
-  if(e.target.classList.contains("money-input")) formatMoneyInput(e.target);
-});
-
-document.addEventListener("focusin", e=>{
-  if(e.target.classList.contains("money-input")) formatMoneyInput(e.target);
-});
-
 document.addEventListener("change", e=>{
   if(e.target.name==="ownership"){const rent=e.target.value==="rent";$("#rentFields").hidden=!rent; if(!rent){["ownerName","rentAmount","rentPeriod"].forEach(n=>{const el=document.querySelector(`[name="${n}"]`);if(el)el.value="";});}}
 });
