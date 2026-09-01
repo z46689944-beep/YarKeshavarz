@@ -65,3 +65,16 @@ body.measure-active .measure-bottom{z-index:5200!important;bottom:12px!important
 .measure-help{font-size:10px;color:var(--muted);text-align:center;padding:3px 4px 0;line-height:1.7}
 .measured-card{margin:12px 0}.measure-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.measure-detail-grid>div{background:#f4f8f5;border-radius:12px;padding:9px;text-align:center}.measure-detail-grid span{display:block;color:var(--muted);font-size:9px}.measure-detail-grid b{display:block;font-size:12px;margin-top:4px}.measure-badge{display:inline-block;margin-top:7px;background:#edf7f0;color:var(--green);border-radius:10px;padding:5px 8px;font-size:10px;font-weight:800}
 @media(max-width:560px){.measure-detail-grid{grid-template-columns:repeat(3,1fr)}.measure-bottom{bottom:12px!important}.measure-help{font-size:9px}.bottom-nav button{font-size:31px!important;width:100%;height:58px}.bottom-nav button span{font-size:10px!important}}
+
+/* V3.2 — unmistakable navigation, measurement save and weather usability */
+.bottom-nav button svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;display:block;flex:none}
+.bottom-nav button span{font-size:10px!important}
+.bottom-nav{height:86px!important;padding-top:5px!important}
+.measured-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#edf7f0;border-color:#cce2d4;margin-bottom:10px}
+.measured-banner b{display:block;font-size:13px}.measured-banner span{display:block;color:var(--muted);font-size:10px;margin-top:4px;line-height:1.8}
+.measure-page{touch-action:manipulation}.measure-bottom{bottom:14px!important}
+.measure-register{min-height:46px;font-size:14px!important}
+.measure-register:disabled{background:#7e8d86!important;color:#fff!important;opacity:.65!important}
+.weather-shell{padding-bottom:10px}.weather-toolbar{position:relative}.weather-picker select{min-height:42px}
+.weather-empty.card{min-height:190px}.weather-error.card{min-height:160px}
+@media(max-width:560px){.bottom-nav{height:86px!important}.bottom-nav button svg{width:30px;height:30px}.bottom-nav button span{font-size:10px!important}.bottom-nav button{gap:3px!important}.measured-banner{align-items:flex-start}.measured-banner .secondary{white-space:nowrap;padding:8px}.measure-bottom{left:8px!important;right:8px!important;bottom:10px!important}}
