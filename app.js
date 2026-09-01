@@ -81,9 +81,8 @@ function setRoute(r){
   else if(r==="inventory") renderInventory();
   else if(r==="assistant") renderAssistant();
   else if(r==="measure") renderMeasure();
-  else if(r==="weather") renderWeather();
-  else if(r==="photos") renderPhotos();
   else if(r==="land") renderLand();
+  else if(r==="photos") renderPhotos();
   else renderHome();
   document.querySelectorAll(".bottom-nav [data-route]").forEach(b=>b.classList.toggle("active",b.dataset.route===r));
 }
@@ -266,43 +265,15 @@ function toggleMeasureSatellite(){
 }
 function useMeasuredArea(){if(measuredHectares<=0){alert('ابتدا حداقل ۳ نقطه از مرز زمین را ثبت کن.');return;}localStorage.setItem('yk-v03-measured-area',String(measuredHectares));setRoute('add');setTimeout(()=>{const f=$('#landArea');if(f){f.value=measuredHectares.toFixed(3);f.focus();}},50);}
 
-
-function renderWeather(){
-  title.textContent="آب‌وهوا";
-  app.innerHTML=`<section class="hero premium-weather">
-    <div class="weather-main"><div><div class="muted">آب‌وهوای موقعیت فعلی</div><div id="wxTemp" class="metric">—°</div><h2 id="wxDesc">در حال دریافت...</h2></div><div id="wxIcon" class="weather-icon">🌤️</div></div>
-    <div class="weather-grid">
-      <div class="card"><span class="muted">رطوبت</span><strong id="wxHum">—</strong></div>
-      <div class="card"><span class="muted">باد</span><strong id="wxWind">—</strong></div>
-      <div class="card"><span class="muted">بارش</span><strong id="wxRain">—</strong></div>
-      <div class="card"><span class="muted">شاخص</span><strong id="wxCode">—</strong></div>
-    </div>
-    <div class="section-title"><h3>پیش‌بینی ساعتی</h3></div><div id="wxHours" class="weather-hours"></div>
-  </section>
-  <div class="card"><div class="row"><span class="muted">موقعیت</span><strong id="wxLoc">در حال تعیین موقعیت...</strong></div><button class="primary" data-refresh-weather>🔄 به‌روزرسانی</button></div>`;
-  loadWeatherPage();
-}
-async function loadWeatherPage(){
-  const codeMap={0:["صاف","☀️"],1:["نیمه‌صاف","🌤️"],2:["نیمه‌ابری","🌤️"],3:["ابری","☁️"],45:["مه","🌫️"],48:["مه یخ‌زن","🌫️"],51:["نم‌نم","🌦️"],53:["نم‌نم","🌦️"],55:["نم‌نم شدید","🌦️"],61:["بارانی","🌧️"],63:["بارانی","🌧️"],65:["بارش شدید","🌧️"],71:["برفی","🌨️"],73:["برفی","🌨️"],75:["برف شدید","🌨️"],80:["رگبار","🌦️"],81:["رگبار","🌦️"],82:["رگبار شدید","🌧️"],95:["رعدوبرق","⛈️"],96:["رعدوبرق و تگرگ","⛈️"],99:["رعدوبرق شدید","⛈️"]};
-  let lat=35.7,lon=51.4;
-  try{const p=await new Promise((res,rej)=>navigator.geolocation?.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:8000,maximumAge:60000}));lat=p.coords.latitude;lon=p.coords.longitude;}catch(e){}
-  try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&timezone=auto&forecast_days=2`;
-    const d=await (await fetch(u)).json(),c=d.current,cc=codeMap[c.weather_code]||["متغیر","🌤️"];
-    $("#wxTemp").textContent=Math.round(c.temperature_2m)+"°";$("#wxDesc").textContent=cc[0];$("#wxIcon").textContent=cc[1];
-    $("#wxHum").textContent=Math.round(c.relative_humidity_2m)+"٪";$("#wxWind").textContent=Math.round(c.wind_speed_10m)+" km/h";$("#wxRain").textContent=c.precipitation+" mm";$("#wxCode").textContent=cc[0];
-    $("#wxLoc").textContent=lat.toFixed(5)+" , "+lon.toFixed(5);
-    $("#wxHours").innerHTML=Array.from({length:12},(_,i)=>{const h=codeMap[d.hourly.weather_code[i]]||["","🌤️"];return `<div><small>${d.hourly.time[i].slice(11,16)}</small><b>${h[1]}</b><strong>${Math.round(d.hourly.temperature_2m[i])}°</strong><small>${d.hourly.precipitation_probability[i]}٪</small></div>`}).join("");
-  }catch(e){$("#wxDesc").textContent="اتصال آب‌وهوا برقرار نشد."}
-}
 function renderPhotos(){
-  title.textContent="عکس‌های مزرعه";
-  app.innerHTML=`<section class="card"><div class="section-title"><h2>📸 عکس زمین</h2><span class="badge">کیفیت اصلی</span></div>
-  <div id="photoPreview" class="photo-preview"><div class="photo-empty">📷</div></div>
-  <label class="upload-photo" for="photoInput">📷 گرفتن عکس / انتخاب از گالری</label><input id="photoInput" type="file" accept="image/*" capture="environment" style="display:none">
-  <button class="secondary" id="removePhoto">حذف عکس</button></section>`;
-  $("#photoInput").onchange=e=>{const f=e.target.files?.[0];if(f)$("#photoPreview").innerHTML=`<img src="${URL.createObjectURL(f)}" alt="عکس زمین">`};
-  $("#removePhoto").onclick=()=>{$("#photoPreview").innerHTML='<div class="photo-empty">📷</div>';$("#photoInput").value=""};
+  title.textContent="عکس";
+  app.innerHTML=`<div class="section-title"><h2>📸 عکس‌های مزرعه</h2></div>
+  <div class="card"><p class="muted">عکس زمین، محصول یا تجهیزات را از دوربین یا گالری انتخاب کن.</p>
+  <label style="display:block;text-align:center;padding:14px;border-radius:14px;background:#eaf4ed;color:#145c3a;font-weight:900;cursor:pointer" for="ykPhotoInput">📷 افزودن عکس</label>
+  <input id="ykPhotoInput" type="file" accept="image/*" capture="environment" style="display:none">
+  <div id="ykPhotoPreview" style="margin-top:12px"></div></div>`;
+  const input=$("#ykPhotoInput"), preview=$("#ykPhotoPreview");
+  if(input) input.addEventListener("change",e=>{const f=e.target.files?.[0]; if(!f)return; const url=URL.createObjectURL(f); preview.innerHTML=`<img src="${url}" alt="عکس مزرعه" style="width:100%;border-radius:16px;max-height:420px;object-fit:contain;background:#eef4ef">`;});
 }
 
 function renderInventory(){
@@ -378,8 +349,6 @@ document.addEventListener("click", e=>{
   const lq=e.target.closest("[data-land-question]");
   if(lq) answerLand(lq.dataset.landQuestion);
   if(e.target.closest("[data-ask-ai]")){askAI();return;}
-  const rw=e.target.closest("[data-refresh-weather]");
-  if(rw){loadWeatherPage();return;}
   const suggest=e.target.closest("[data-calc-suggestions]");
   if(suggest) alert("برای پیشنهاد دقیق محصول، منبع معتبر آب‌وهوا/بازار باید متصل شود؛ فعلاً از نمایش عدد ساختگی خودداری می‌کنیم.");
 });
@@ -404,7 +373,8 @@ document.addEventListener("submit", e=>{
   }
 });
 
-$("#restoreInput").addEventListener("change", async e=>{
+const restoreInput = $("#restoreInput");
+if(restoreInput) restoreInput.addEventListener("change", async e=>{
   const file=e.target.files[0]; if(!file)return;
   try{const data=JSON.parse(await file.text());state=normalize(data);state.version="3.0";save();setRoute("home");alert("پشتیبان با موفقیت بازیابی شد.");}catch(err){alert("فایل پشتیبان معتبر نیست.");}
   e.target.value="";
