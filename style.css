@@ -196,3 +196,39 @@ main, #app, .app, .page-container {
   .modern-nav .nav-item svg{width:28px !important;height:28px !important;}
   .modern-nav .nav-item{font-size:10px !important;}
 }
+
+/* V9 — visible full-page wheat background */
+:root{
+  --yk-bg-image:url("wheat-hero.jpg");
+}
+html{
+  min-height:100%;
+  background:#dfe9d9 url("wheat-hero.jpg") center center / cover fixed no-repeat !important;
+}
+body{
+  min-height:100vh !important;
+  margin:0 !important;
+  background:
+    linear-gradient(rgba(245,248,242,.58),rgba(238,244,233,.68)),
+    url("wheat-hero.jpg") center center / cover fixed no-repeat !important;
+  background-attachment:fixed !important;
+}
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-10;
+  pointer-events:none;
+  background:rgba(236,243,231,.20);
+}
+main,#app,.app,.page,.page-container,.screen,.content,.content-area,
+.view,.route,.route-page,.container{
+  background:transparent !important;
+}
+.card,.panel,.section-card,.land-card,.hero-card,.modal,.sheet,.form-card,
+.weather-card,.news-card,.ad-card,.account-card{
+  background:rgba(255,255,255,.88) !important;
+  box-shadow:0 10px 30px rgba(25,55,30,.12) !important;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
