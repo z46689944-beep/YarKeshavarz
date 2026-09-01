@@ -56,3 +56,50 @@
   .measure-stats span{font-size:9px}
   .finish,.measure-register{font-size:13px;padding:12px}
 }
+
+
+/* ===== Mobile Weather + Measurement stability patch ===== */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+main{width:100%;max-width:900px;margin:0 auto;padding:14px 12px 112px}
+.weather-shell{width:100%;max-width:760px;margin:0 auto;gap:10px}
+.weather-toolbar{min-height:52px}
+.weather-toolbar h2{font-size:19px;line-height:1.4}
+.weather-page-head{min-height:176px;padding:18px 18px;border-radius:20px}
+.weather-page-head h2{font-size:18px}
+.weather-temp-row strong{font-size:46px}
+.weather-big-icon{font-size:62px}
+.weather-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.weather-stats>div{min-width:0;padding:10px 5px}
+.weather-stats b{font-size:14px;overflow-wrap:anywhere}
+.weather-stats span{font-size:9px}
+.farm-advice{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:17px}
+.farm-advice p{margin:4px 0 0;font-size:11px;line-height:1.8}
+.weather-section{min-width:0;overflow:hidden}
+.hourly-row{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;direction:rtl;padding-bottom:5px}
+.hour-card{flex:0 0 78px;min-width:78px}
+.forecast-list{display:grid;gap:7px}
+.forecast-card{display:grid;grid-template-columns:minmax(0,1.5fr) 42px 60px 72px;align-items:center;gap:7px;padding:10px 8px;border:1px solid var(--line);border-radius:14px;background:#f8faf9}
+.forecast-card>*{min-width:0}
+.forecast-day b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.forecast-day small,.forecast-rain small{display:block;font-size:9px;color:var(--muted);margin-top:3px}
+.forecast-icon{font-size:26px;text-align:center}.forecast-temp{display:flex;flex-direction:column;align-items:center}.forecast-temp strong{font-size:17px}.forecast-temp span{font-size:11px;color:var(--muted)}.forecast-rain{font-size:11px;text-align:center}
+.sun-card{margin-top:2px}
+@media(max-width:560px){
+  main{padding:12px 10px 112px}
+  .weather-toolbar{gap:6px}.weather-toolbar h2{font-size:17px}.refresh-weather{font-size:11px;padding:8px 9px}
+  .weather-picker{padding:9px 10px}.weather-picker select{min-width:0;font-size:12px}
+  .weather-page-head{min-height:158px;padding:15px;border-radius:18px}.weather-page-head h2{font-size:16px}.weather-temp-row strong{font-size:42px}.weather-big-icon{font-size:54px}.weather-location{font-size:9px}
+  .weather-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.weather-stats>div{padding:10px 7px}
+  .forecast-card{grid-template-columns:minmax(0,1.35fr) 38px 52px 62px;padding:9px 7px}
+  .forecast-day b{font-size:11px}.forecast-rain{font-size:10px}
+}
+@media(max-width:390px){.forecast-card{grid-template-columns:minmax(0,1fr) 34px 48px 56px}.weather-page-head{min-height:150px}.weather-temp-row strong{font-size:39px}}
+
+.measure-page{inset:0;bottom:0;overflow:hidden}
+.measure-map{touch-action:none}
+.measure-bottom{left:8px;right:8px;bottom:calc(78px + env(safe-area-inset-bottom));padding:9px 10px;border-radius:18px;max-width:680px;margin:auto}
+.measure-stats{gap:4px}.measure-stats>div{min-width:0}.measure-stats b{font-size:15px}.measure-stats span{font-size:9px}
+.measure-bottom .finish,.measure-bottom .measure-register{min-height:44px;font-size:13px}
+.measure-register{display:block!important}
+.floating{top:68px}
+@media(max-width:560px){.measure-overlay{top:10px;left:8px;right:8px}.measure-overlay input{min-width:0}.measure-bottom{bottom:calc(76px + env(safe-area-inset-bottom));padding:8px}.measure-bottom .finish,.measure-bottom .measure-register{padding:11px}.floating{top:62px;right:8px}.floating button{width:40px;height:40px}}
