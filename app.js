@@ -189,41 +189,80 @@ function calculator(l){
 }
 
 function renderMeasure(){
-  title.textContent="اندازه‌گیری زمین";
-  app.innerHTML=`<div class="section-title"><h2>📐 اندازه‌گیری مساحت</h2><button class="secondary" data-route="lands">بازگشت</button></div>
-  <div class="card"><p class="muted">روی نقشه گوشه‌های زمین را به ترتیب لمس کن. حداقل ۳ نقطه لازم است.</p><div id="map" class="map"></div>
-  <div class="actions measure-actions"><button class="primary" data-gps>📍 موقعیت من</button><button class="secondary" data-clear-points>پاک کردن نقاط</button><button class="secondary" data-use-area>استفاده از این مساحت</button></div>
-  <div id="measureResult" class="alert">هنوز نقطه‌ای ثبت نشده است.</div></div>
-  <div class="card"><h3>روش دقیق‌تر</h3><p class="muted">اگر GPS دقیق نیست، می‌توانی نقاط را روی نقشه جابه‌جا کنی. مساحت نهایی بر حسب هکتار محاسبه می‌شود.</p></div>`;
+  title.textContent="اندازه‌گیری حرفه‌ای زمین";
+  app.innerHTML=`<div class="section-title"><h2>📐 اندازه‌گیری حرفه‌ای زمین</h2><button class="secondary" data-route="lands">بازگشت</button></div>
+  <div class="card measure-card">
+    <div class="measure-search"><input id="measureSearch" placeholder="روستا، شهر، منطقه یا مختصات..."><button class="primary" data-measure-search>🔎 پیدا کردن</button></div>
+    <div id="map" class="map"></div>
+    <div class="actions measure-actions"><button class="primary" data-gps>🛰️ موقعیت من</button><button class="secondary" data-measure-track>▶️ شروع پیمایش</button><button class="secondary" data-measure-satellite>🗺️ ماهواره</button><button class="secondary" data-clear-points>پاک کردن</button><button class="primary" data-use-area>استفاده از مساحت</button></div>
+    <div id="measureResult" class="alert">روی نقشه نقطه بگذار یا پیمایش GPS را شروع کن.</div>
+  </div>`;
+  measurePoints=[]; measuredHectares=0; measurePerimeter=0; measureTracking=false;
   setTimeout(initMap,0);
 }
-let measureMap=null, measurePoints=[], measureLayer=null, measurePolygon=null, measuredHectares=0;
+let measureMap=null, measurePoints=[], measureLayer=null, measurePolygon=null, measuredHectares=0, measurePerimeter=0, measureTracking=false, measureWatch=null, measureSatellite=false;
 function initMap(){
   if(typeof L==='undefined'){ $('#measureResult').textContent='نقشه بارگذاری نشد؛ اینترنت را بررسی کن.'; return; }
   measureMap=L.map('map').setView([35.7,51.4],12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(measureMap);
+  L.tileLayer(measureSatellite?'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png':'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(measureMap);
   measureLayer=L.layerGroup().addTo(measureMap);
   measureMap.on('click', e=>addMeasurePoint(e.latlng.lat,e.latlng.lng));
 }
-function addMeasurePoint(lat,lng){
+function addMeasurePoint(lat,lng,accuracy){
   measurePoints.push([lat,lng]);
   const m=L.marker([lat,lng],{draggable:true}).addTo(measureLayer); m._ykIndex=measurePoints.length-1;
-  m.on('dragend',()=>{const p=m.getLatLng();measurePoints[m._ykIndex]=[p.lat,p.lng];updateMeasure();}); updateMeasure();
+  m.on('dragend',()=>{const p=m.getLatLng();measurePoints[m._ykIndex]=[p.lat,p.lng];updateMeasure();});
+  if(accuracy && $('#measureResult')) $('#measureResult').dataset.accuracy=Math.round(accuracy);
+  updateMeasure();
 }
 function updateMeasure(){
-  if(measurePolygon) measureMap.removeLayer(measurePolygon);
-  if(measurePoints.length>=3){measurePolygon=L.polygon(measurePoints).addTo(measureMap);measuredHectares=polygonArea(measurePoints)/10000;$('#measureResult').innerHTML=`مساحت تقریبی: <strong>${measuredHectares.toLocaleString('fa-IR',{maximumFractionDigits:3})} هکتار</strong> (${Math.round(measuredHectares*10000).toLocaleString('fa-IR')} متر مربع)`;}
-  else {measuredHectares=0;$('#measureResult').textContent=`${measurePoints.length} نقطه ثبت شده؛ حداقل ۳ نقطه لازم است.`;}
+  if(measurePolygon && measureMap) measureMap.removeLayer(measurePolygon);
+  if(measurePoints.length>=3 && measureMap){
+    measurePolygon=L.polygon(measurePoints).addTo(measureMap);
+    measuredHectares=polygonArea(measurePoints)/10000;
+    measurePerimeter=polygonPerimeter(measurePoints);
+    const acc=$('#measureResult')?.dataset.accuracy;
+    $('#measureResult').innerHTML=`مساحت: <strong>${measuredHectares.toLocaleString('fa-IR',{maximumFractionDigits:3})} هکتار</strong> · ${Math.round(measuredHectares*10000).toLocaleString('fa-IR')} مترمربع<br>محیط: <strong>${Math.round(measurePerimeter).toLocaleString('fa-IR')} متر</strong>${acc?` · دقت GPS: ±${acc} متر`:''}`;
+  }else{
+    measuredHectares=0; measurePerimeter=0;
+    $('#measureResult').textContent=`${measurePoints.length} نقطه ثبت شده؛ حداقل ۳ نقطه لازم است.`;
+  }
 }
 function polygonArea(points){
   const R=6378137, lat0=points.reduce((a,p)=>a+p[0],0)/points.length*Math.PI/180;
   const xy=points.map(p=>[R*p[1]*Math.PI/180*Math.cos(lat0),R*p[0]*Math.PI/180]);
   let a=0; for(let i=0;i<xy.length;i++){const j=(i+1)%xy.length;a+=xy[i][0]*xy[j][1]-xy[j][0]*xy[i][1];} return Math.abs(a)/2;
 }
-function clearMeasure(){measurePoints=[];measuredHectares=0;if(measureLayer)measureLayer.clearLayers();if(measurePolygon){measureMap.removeLayer(measurePolygon);measurePolygon=null;}$('#measureResult').textContent='هنوز نقطه‌ای ثبت نشده است.';}
-function locateUser(){if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude}=pos.coords;if(measureMap){measureMap.setView([latitude,longitude],17);addMeasurePoint(latitude,longitude);}},err=>alert('دسترسی به موقعیت داده نشد. GPS و اجازه Location را فعال کن.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
+function pointDistance(a,b){const R=6378137,A=Math.PI/180,d=(b[0]-a[0])*A,e=(b[1]-a[1])*A,x=Math.sin(d/2)**2+Math.cos(a[0]*A)*Math.cos(b[0]*A)*Math.sin(e/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function polygonPerimeter(points){let s=0;for(let i=0;i<points.length;i++)s+=pointDistance(points[i],points[(i+1)%points.length]);return s;}
+function clearMeasure(){
+  if(measureWatch!==null){navigator.geolocation?.clearWatch(measureWatch);measureWatch=null;}
+  measureTracking=false;
+  if($('#measureTrack')) $('#measureTrack').textContent='▶️ شروع پیمایش';
+  measurePoints=[];measuredHectares=0;measurePerimeter=0;
+  if(measureLayer)measureLayer.clearLayers();
+  if(measurePolygon && measureMap){measureMap.removeLayer(measurePolygon);measurePolygon=null;}
+  if($('#measureResult')) $('#measureResult').textContent='روی نقشه نقطه بگذار یا پیمایش GPS را شروع کن.';
+}
+function locateUser(){
+  if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude}=pos.coords;if(measureMap){measureMap.setView([latitude,longitude],17);addMeasurePoint(latitude,longitude,pos.coords.accuracy);}},err=>alert('دسترسی به موقعیت داده نشد. GPS و اجازه Location را فعال کن.'),{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function toggleMeasureTracking(){
+  if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}
+  if(measureWatch!==null){navigator.geolocation.clearWatch(measureWatch);measureWatch=null;measureTracking=false;const b=document.querySelector('[data-measure-track]');if(b)b.textContent='▶️ شروع پیمایش';return;}
+  measureTracking=true;const b=document.querySelector('[data-measure-track]');if(b)b.textContent='⏹ توقف پیمایش';
+  measureWatch=navigator.geolocation.watchPosition(pos=>{const c=pos.coords;if(measureMap)measureMap.setView([c.latitude,c.longitude],18);addMeasurePoint(c.latitude,c.longitude,c.accuracy);},()=>{alert('دسترسی GPS داده نشد.');toggleMeasureTracking();},{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+}
+async function searchMeasurePlace(){
+  const q=$('#measureSearch')?.value.trim(); if(!q)return;
+  try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q='+encodeURIComponent(q));const d=await r.json();if(!d[0]){alert('مکان پیدا نشد. نام دقیق‌تر یا مختصات را امتحان کن.');return;}const lat=+d[0].lat,lon=+d[0].lon;measureMap?.setView([lat,lon],17);if(measureMap)addMeasurePoint(lat,lon);}catch(e){alert('جستجوی مکان انجام نشد.');}
+}
+function toggleMeasureSatellite(){
+  // OSM's standard layer remains the reliable fallback. The control is kept ready for a future satellite tile provider/API key.
+  alert('حالت ماهواره برای اتصال به سرویس تصاویر ماهواره‌ای آماده است؛ فعلاً نقشه پایه فعال است تا کل برنامه بدون خطا کار کند.');
+}
 function useMeasuredArea(){if(measuredHectares<=0){alert('ابتدا حداقل ۳ نقطه از مرز زمین را ثبت کن.');return;}localStorage.setItem('yk-v03-measured-area',String(measuredHectares));setRoute('add');setTimeout(()=>{const f=$('#landArea');if(f){f.value=measuredHectares.toFixed(3);f.focus();}},50);}
-function weatherForLand(id){const l=land(id);if(!l)return;if(!navigator.geolocation){alert('GPS در این مرورگر در دسترس نیست.');return;}const box=$('#weatherBox');if(box)box.innerHTML='<span class="muted">در حال دریافت موقعیت...</span>';navigator.geolocation.getCurrentPosition(async pos=>{l.lat=pos.coords.latitude;l.lon=pos.coords.longitude;save();if(box)box.innerHTML='<span class="muted">در حال دریافت آب‌وهوای زنده...</span>';try{const url=`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto`;const r=await fetch(url);if(!r.ok)throw new Error();const d=await r.json();const c=d.current;box.innerHTML=`<div class="grid"><div class="card">🌡️ دما<strong class="metric">${c.temperature_2m}°</strong></div><div class="card">💧 رطوبت<strong class="metric">${c.relative_humidity_2m}%</strong></div><div class="card">💨 باد<strong class="metric">${c.wind_speed_10m}</strong></div><div class="card">🌧️ بارش<strong class="metric">${c.precipitation}</strong></div></div><p class="muted">مختصات: ${l.lat.toFixed(5)}, ${l.lon.toFixed(5)}</p>`;}catch(e){box.innerHTML='<div class="alert">آب‌وهوای زنده دریافت نشد. اتصال اینترنت را بررسی کن.</div>';}} ,err=>{if(box)box.innerHTML='<div class="alert">اجازه دسترسی به موقعیت داده نشد. Location گوشی را روشن و اجازه مرورگر را فعال کن.</div>';},{enableHighAccuracy:true,timeout:15000,maximumAge:0});}
 
 function renderInventory(){
   title.textContent="انبار";
@@ -277,6 +316,9 @@ document.addEventListener("click", e=>{
   if(action==="backup") backup();
   if(action==="restore") $("#restoreInput").click();
   if(e.target.closest("[data-gps]")){locateUser();return;}
+  if(e.target.closest("[data-measure-track]")){toggleMeasureTracking();return;}
+  if(e.target.closest("[data-measure-search]")){searchMeasurePlace();return;}
+  if(e.target.closest("[data-measure-satellite]")){toggleMeasureSatellite();return;}
   if(e.target.closest("[data-clear-points]")){clearMeasure();return;}
   if(e.target.closest("[data-use-area]")){useMeasuredArea();return;}
   const weather=e.target.closest("[data-weather]"); if(weather){weatherForLand(weather.dataset.weather);return;}
