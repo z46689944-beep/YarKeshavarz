@@ -1,0 +1,53 @@
+
+/* YAR KESHAVARZ V3.1 — PREMIUM VISUAL SYSTEM */
+:root{
+ --yk-primary:#145c3a;--yk-primary2:#2d8a5b;--yk-deep:#0f3f2b;
+ --yk-bg:#f5f8f5;--yk-card:#fff;--yk-text:#16352a;--yk-muted:#718078;
+ --yk-line:#e1e9e3;--yk-shadow:0 14px 40px rgba(17,60,40,.10);
+}
+body{background:linear-gradient(180deg,#f8faf8 0,#eef4ef 100%)!important;color:var(--yk-text)}
+*{box-sizing:border-box}
+img{image-rendering:auto}
+.v31-section{margin:16px auto;max-width:1050px;padding:18px;background:rgba(255,255,255,.94);border:1px solid var(--yk-line);border-radius:26px;box-shadow:var(--yk-shadow)}
+.v31-title{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}
+.v31-title h2{margin:0;font-size:22px;color:var(--yk-deep)}
+.v31-title small{color:var(--yk-muted)}
+.v31-btn{border:0;border-radius:14px;padding:11px 15px;font-weight:850;cursor:pointer;background:var(--yk-primary);color:#fff}
+.v31-btn.alt{background:#edf5ef;color:var(--yk-primary)}
+.v31-map{height:370px;border-radius:20px;overflow:hidden;background:#e8eee9;position:relative}
+.v31-map iframe{width:100%;height:100%;border:0}
+.v31-measure-tools{display:grid;grid-template-columns:1fr auto auto;gap:9px;margin-bottom:10px}
+.v31-input{min-height:48px;border:1px solid var(--yk-line);border-radius:14px;padding:0 14px;background:#fff;font-size:14px}
+.v31-modes{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.v31-modes button{border:1px solid var(--yk-line);border-radius:12px;background:#f4f8f5;color:var(--yk-primary);padding:10px 13px;font-weight:800}
+.v31-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:10px}
+.v31-stat{padding:13px;border:1px solid var(--yk-line);border-radius:16px;background:linear-gradient(145deg,#fff,#f5f9f6)}
+.v31-stat small{display:block;color:var(--yk-muted);margin-bottom:5px}.v31-stat b{font-size:18px}
+.v31-weather{color:#fff;background:linear-gradient(135deg,#104d35,#2d8058);overflow:hidden;position:relative}
+.v31-weather:after{content:"";position:absolute;inset:-100px -40px auto auto;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+.v31-weather-main{display:flex;justify-content:space-between;align-items:center;gap:16px;position:relative;z-index:1}
+.v31-weather-temp{font-size:48px;font-weight:950;line-height:1}.v31-weather-desc{font-size:14px;opacity:.85;margin-top:8px}
+.v31-weather-icon{font-size:56px;filter:drop-shadow(0 7px 14px rgba(0,0,0,.15))}
+.v31-weather-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-top:15px;position:relative;z-index:1}
+.v31-weather-grid>div{padding:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);border-radius:15px}
+.v31-weather-grid small{display:block;opacity:.72;margin-bottom:5px}.v31-weather-grid b{font-size:15px}
+.v31-hourly{display:flex;gap:8px;overflow:auto;margin-top:12px;position:relative;z-index:1}
+.v31-hourly>div{min-width:76px;text-align:center;padding:10px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.v31-photo-box{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+.v31-photo-preview{min-height:250px;border-radius:22px;background:linear-gradient(135deg,#e7eee8,#d8e5dc);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.v31-photo-preview img{width:100%;height:100%;min-height:250px;object-fit:cover}
+.v31-photo-empty{font-size:54px;opacity:.55}
+.v31-photo-controls{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.v31-photo-controls label{display:block;padding:15px;border-radius:16px;background:#eef6f0;color:var(--yk-primary);font-weight:850;text-align:center;cursor:pointer}
+.v31-photo-controls input{display:none}
+.v31-icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.v31-icon-card{padding:15px 10px;text-align:center;border:1px solid var(--yk-line);border-radius:18px;background:#fff}
+.v31-icon-card svg{width:34px;height:34px;stroke:var(--yk-primary);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.v31-icon-card span{display:block;margin-top:8px;font-size:12px;font-weight:800;color:var(--yk-text)}
+@media(max-width:700px){
+ .v31-section{margin:10px 8px;padding:14px;border-radius:21px}
+ .v31-measure-tools{grid-template-columns:1fr}.v31-stats{grid-template-columns:1fr 1fr}
+ .v31-weather-grid{grid-template-columns:repeat(2,1fr)}.v31-weather-temp{font-size:40px}
+ .v31-photo-box{grid-template-columns:1fr}.v31-icon-grid{grid-template-columns:repeat(3,1fr)}
+ .v31-map{height:300px}
+}
