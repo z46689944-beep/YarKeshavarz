@@ -111,3 +111,13 @@ main{padding-bottom:90px !important;overflow-x:hidden !important;}
 .bottom-nav .nav-svg{width:42px!important;height:42px!important;display:grid!important;place-items:center!important;}
 .bottom-nav .nav-svg svg{width:34px!important;height:34px!important;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .bottom-nav .nav-item.active .nav-svg svg{stroke-width:2.35;}
+
+/* V6 distinct KeshavarYar page */
+.yar-hero{display:flex;align-items:center;gap:16px;padding:20px!important;}
+.yar-mark{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:34px;background:linear-gradient(135deg,#183d2b,#2f7d4f);color:#fff;flex:0 0 58px;}
+.yar-suggestions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 16px;}
+.yar-chat{display:grid;gap:10px;}
+.yar-chat textarea{width:100%;box-sizing:border-box;resize:vertical;}
+.yar-bubble{padding:12px 14px;border-radius:16px;background:#f3f7f4;line-height:1.8;}
+.yar-bubble.answer{background:#eaf5ed;}
+@media(max-width:480px){.yar-suggestions{grid-template-columns:1fr;}.yar-hero{align-items:flex-start;}}
