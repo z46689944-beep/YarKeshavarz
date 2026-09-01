@@ -78,3 +78,29 @@ body.measure-active .measure-bottom{z-index:5200!important;bottom:12px!important
 .weather-shell{padding-bottom:10px}.weather-toolbar{position:relative}.weather-picker select{min-height:42px}
 .weather-empty.card{min-height:190px}.weather-error.card{min-height:160px}
 @media(max-width:560px){.bottom-nav{height:86px!important}.bottom-nav button svg{width:30px;height:30px}.bottom-nav button span{font-size:10px!important}.bottom-nav button{gap:3px!important}.measured-banner{align-items:flex-start}.measured-banner .secondary{white-space:nowrap;padding:8px}.measure-bottom{left:8px!important;right:8px!important;bottom:10px!important}}
+
+/* FINAL NAV v4 — Home / News / KeshavarYar / Ads / Account */
+.bottom-nav{
+  height:78px !important;
+  grid-template-columns:repeat(5,1fr) !important;
+  padding:8px 8px calc(8px + env(safe-area-inset-bottom)) !important;
+}
+.bottom-nav .nav-item{
+  min-width:0;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+}
+.bottom-nav .nav-svg{
+  width:34px !important;
+  height:34px !important;
+  display:grid !important;
+  place-items:center !important;
+  font-size:29px !important;
+  line-height:1 !important;
+}
+main{padding-bottom:90px !important;overflow-x:hidden !important;}
