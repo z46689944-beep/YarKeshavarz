@@ -154,3 +154,45 @@ main, #app, .app, .page-container {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
+
+/* V8 — modern SVG navigation */
+.modern-nav{
+  height:82px !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  padding:7px 8px calc(7px + env(safe-area-inset-bottom)) !important;
+  border-top:1px solid rgba(35,70,45,.10) !important;
+  box-shadow:0 -10px 28px rgba(20,50,30,.10) !important;
+}
+.modern-nav .nav-item{
+  border:0 !important;
+  background:transparent !important;
+  color:#6b756e !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:4px !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  border-radius:16px !important;
+  transition:transform .18s ease, background .18s ease, color .18s ease !important;
+}
+.modern-nav .nav-item svg{
+  width:31px !important;
+  height:31px !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.8 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+}
+.modern-nav .nav-item.active{
+  color:#237a45 !important;
+  background:rgba(35,122,69,.10) !important;
+  transform:translateY(-2px);
+}
+.modern-nav .nav-item:active{transform:scale(.94);}
+@media(max-width:380px){
+  .modern-nav .nav-item svg{width:28px !important;height:28px !important;}
+  .modern-nav .nav-item{font-size:10px !important;}
+}
