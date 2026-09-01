@@ -104,3 +104,10 @@ body.measure-active .measure-bottom{z-index:5200!important;bottom:12px!important
   line-height:1 !important;
 }
 main{padding-bottom:90px !important;overflow-x:hidden !important;}
+
+/* FINAL NAV ICONS — large consistent SVG */
+.bottom-nav{height:86px!important;grid-template-columns:repeat(5,1fr)!important;padding:7px 8px calc(7px + env(safe-area-inset-bottom))!important;}
+.bottom-nav .nav-item{gap:2px!important;font-size:11px!important;}
+.bottom-nav .nav-svg{width:42px!important;height:42px!important;display:grid!important;place-items:center!important;}
+.bottom-nav .nav-svg svg{width:34px!important;height:34px!important;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.bottom-nav .nav-item.active .nav-svg svg{stroke-width:2.35;}
