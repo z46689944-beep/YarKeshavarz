@@ -21,3 +21,38 @@
 .forecast-list{display:grid;gap:7px}.forecast-card{display:grid;grid-template-columns:1.5fr .55fr .8fr .8fr;align-items:center;gap:7px;padding:10px;border-radius:14px;background:#f6f9f7}.forecast-day b{display:block;font-size:12px}.forecast-day small{display:block;color:var(--muted);font-size:9px;margin-top:3px}.forecast-icon{font-size:29px;text-align:center}.forecast-temp{text-align:center}.forecast-temp strong{font-size:17px}.forecast-temp span{font-size:12px;color:var(--muted);margin-right:4px}.forecast-rain{text-align:left;font-size:11px;color:var(--green)}.forecast-rain small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
 .sun-card{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sun-card>div{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px;text-align:center}.sun-card span{display:block;color:var(--muted);font-size:10px}.sun-card b{display:block;margin-top:5px;font-size:14px}.weather-note{font-size:10px;line-height:1.8;color:var(--muted);text-align:center;margin:2px 8px}.weather-loading,.weather-error,.weather-empty{display:grid;place-items:center;text-align:center;gap:8px;padding:30px 16px}.weather-loading span,.weather-error span{font-size:11px;color:var(--muted)}.spinner{width:28px;height:28px;border:3px solid #dce8e1;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}.empty-icon{font-size:52px}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:560px){.bottom-nav{height:82px}.bottom-nav button{font-size:27px}.bottom-nav button span{font-size:10px}.weather-stats{grid-template-columns:repeat(2,1fr)}.weather-page-head{min-height:195px;padding:19px}.weather-temp-row strong{font-size:50px}.weather-big-icon{font-size:64px}.forecast-card{grid-template-columns:1.4fr .5fr .8fr .8fr}}
+
+/* Final mobile fit + measurement registration */
+.measure-register:disabled{opacity:.48;cursor:not-allowed;filter:grayscale(.2)}
+@media(max-width:560px){
+  main{padding:12px 10px 100px;max-width:100%;overflow-x:hidden}
+  .weather-shell{gap:10px}
+  .weather-toolbar{align-items:flex-start}
+  .weather-toolbar h2{font-size:18px}
+  .refresh-weather{font-size:11px;padding:9px 10px}
+  .weather-picker{padding:9px 10px}
+  .weather-picker label{font-size:11px}
+  .weather-picker select{font-size:12px;min-width:0}
+  .weather-page-head{min-height:165px;padding:17px;border-radius:20px}
+  .weather-page-head h2{font-size:17px}
+  .weather-temp-row strong{font-size:44px}
+  .weather-temp-row span{font-size:11px}
+  .weather-location{font-size:9px;margin-top:9px}
+  .weather-big-icon{font-size:58px}
+  .weather-stats{grid-template-columns:repeat(2,1fr);gap:7px}
+  .weather-stats>div{padding:10px 6px;border-radius:14px}
+  .weather-stats span{font-size:10px}
+  .weather-stats b{font-size:14px}
+  .farm-advice{padding:11px 12px}
+  .farm-advice p{font-size:10px;line-height:1.7}
+  .weather-section{padding:11px;border-radius:17px}
+  .hour-card{min-width:72px;padding:9px 6px}
+  .forecast-list{display:grid;gap:7px}
+  .forecast-card{min-width:0!important;padding:10px!important;grid-template-columns:1.5fr .7fr .9fr .8fr!important}
+  .sun-card{gap:7px!important;padding:10px!important}
+  .weather-note{font-size:9px!important;line-height:1.8}
+  .measure-bottom{left:7px;right:7px;bottom:7px;padding:9px}
+  .measure-stats b{font-size:14px}
+  .measure-stats span{font-size:9px}
+  .finish,.measure-register{font-size:13px;padding:12px}
+}
