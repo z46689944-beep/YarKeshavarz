@@ -25,7 +25,7 @@ main{padding:8px 14px}.screen{display:none;animation:in .2s ease}.screen.active{
 .photo{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}.photo-preview{min-height:250px;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,#e5eee8,#d5e2d9);display:grid;place-items:center}.photo-preview img{width:100%;height:100%;min-height:250px;object-fit:cover}.photo-preview span{font-size:58px;opacity:.45}.file{display:none}.upload{display:block;text-align:center;padding:14px;border-radius:15px;background:#edf6f0;color:var(--g);font-weight:900;cursor:pointer}
 .inventory{display:grid;grid-template-columns:1fr 1fr;gap:12px}.inv-card{padding:17px;border-radius:20px;border:1px solid var(--line);background:#fff}.qty{display:flex;align-items:center;justify-content:center;gap:18px;margin:17px 0}.qty button{width:43px;height:43px;border:0;border-radius:13px;background:#edf6f0;color:var(--g);font-size:24px;font-weight:900}.qty b{font-size:25px;min-width:40px;text-align:center}
 .news{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.news article{border:1px solid var(--line);border-radius:19px;padding:15px;background:#fff}.news .tag{display:inline-block;padding:5px 8px;border-radius:999px;background:#edf6f0;color:var(--g);font-size:11px;font-weight:900}.profile{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center}.profilepic{width:100px;height:100px;border-radius:28px;background:#e7f1ea;display:grid;place-items:center;font-size:42px;overflow:hidden}.profilepic img{width:100%;height:100%;object-fit:cover}
-.bottom{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.96);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom));display:flex;justify-content:center}.nav{width:min(760px,100%);display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.nav button{border:0;background:transparent;color:#76817b;padding:6px 2px;border-radius:12px;font-size:10px;font-weight:800}.nav button span{display:block;font-size:20px;margin-bottom:3px}.nav button.active{background:#edf6f0;color:var(--g)}
+.bottom{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.96);backdrop-filter:blur(15px);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-left)) max(8px,env(safe-area-inset-bottom));display:flex;justify-content:center}.nav{width:min(820px,100%);display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.nav button{border:0;background:transparent;color:#76817b;padding:6px 2px;border-radius:12px;font-size:10px;font-weight:800}.nav button span{display:block;font-size:20px;margin-bottom:3px}.nav button.active{background:#edf6f0;color:var(--g)}
 .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-15px);opacity:0;pointer-events:none;background:#17372a;color:#fff;padding:11px 16px;border-radius:14px;z-index:80;transition:.25s}.toast.show{opacity:1;transform:translateX(-50%)}
 @media(max-width:650px){.grid,.news,.inventory,.photo{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}.weather-grid{grid-template-columns:1fr 1fr}.profile{grid-template-columns:90px 1fr}.profilepic{width:82px;height:82px}.nav button span{font-size:18px}}
 </style>
@@ -34,12 +34,12 @@ main{padding:8px 14px}.screen{display:none;animation:in .2s ease}.screen.active{
 <div id="toast" class="toast"></div>
 <div class="app">
 <header class="top">
- <div class="brand"><div><h1>یار کشاورز</h1><small>ابزار هوشمند مدیریت مزرعه</small></div><div class="avatar">🌾</div></div>
+ <div class="brand"><div><h1>یار کشاورز</h1><small>ابزار هوشمند مدیریت مزرعه · نسخه تمیز و یک‌فایلی</small></div><div class="avatar">🌾</div></div>
 </header>
 <main>
 
 <section id="home" class="screen active">
- <div class="hero"><h2>خوش آمدی</h2><p>همه ابزارهای مهم مزرعه در یک برنامه؛ ساده، سریع و حرفه‌ای.</p><div class="hero-actions"><button class="btn" onclick="go('measure')">📐 اندازه‌گیری زمین</button><button class="btn light" onclick="go('weather')">🌤️ آب‌وهوا</button></div></div>
+ <div class="hero"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2>خوش آمدی</h2><p>همه ابزارهای مهم مزرعه در یک برنامه؛ ساده، سریع و حرفه‌ای.</p><div class="hero-actions"><button class="btn" onclick="go('measure')">📐 اندازه‌گیری زمین</button><button class="btn light" onclick="go('weather')">🌤️ آب‌وهوا</button></div><div style="font-size:44px;filter:drop-shadow(0 8px 12px #145b3a22)">🌾</div></div></div>
  <div class="grid">
   <div class="card" onclick="go('measure')"><div class="iconbox">📐</div><h3>متراژ حرفه‌ای زمین</h3><div class="muted">پیدا کردن مکان، ثبت نقطه و پیمایش GPS</div></div>
   <div class="card" onclick="go('warehouse')"><div class="iconbox">📦</div><h3>انبار</h3><div class="muted">ورودی و مصرف کاملاً جدا</div></div>
@@ -54,7 +54,9 @@ main{padding:8px 14px}.screen{display:none;animation:in .2s ease}.screen.active{
   <div class="row"><input id="search" class="input" placeholder="روستا، شهر، منطقه یا مختصات..."><button class="btn" onclick="findPlace()">پیدا کردن</button></div>
   <div id="map"><div class="map-fallback">برای نقشه تعاملی، اتصال اینترنت لازم است.<br>می‌توانی از جستجو یا GPS استفاده کنی.</div></div>
   <div class="row" style="margin-top:9px"><button class="btn" onclick="startGPS()">🛰️ شروع پیمایش GPS</button><button class="btn light" onclick="addCurrent()">📍 ثبت نقطه</button><button class="btn danger" onclick="clearMeasure()">پاک کردن</button></div>
+  <div class="muted" style="margin-top:8px">نکته: روی گوشه‌های زمین ضربه بزن یا GPS را روشن کن؛ بعد از ۳ نقطه مساحت دقیق‌تر نمایش داده می‌شود.</div>
   <div class="stats"><div class="stat"><small>مساحت</small><b id="area">—</b></div><div class="stat"><small>هکتار</small><b id="ha">—</b></div><div class="stat"><small>محیط</small><b id="per">—</b></div></div>
+  <div class="muted" id="coords" style="margin-top:8px">موقعیت: —</div>
  </div>
 </section>
 
@@ -95,6 +97,7 @@ main{padding:8px 14px}.screen{display:none;animation:in .2s ease}.screen.active{
  <button data-go="weather" onclick="go('weather')"><span>☀</span>هوا</button>
  <button data-go="photo" onclick="go('photo')"><span>▣</span>عکس</button>
  <button data-go="warehouse" onclick="go('warehouse')"><span>▤</span>انبار</button>
+ <button data-go="news" onclick="go('news')"><span>▥</span>اخبار</button>
  <button data-go="profile" onclick="go('profile')"><span>●</span>اکانت</button>
 </div></nav>
 </div>
@@ -155,20 +158,21 @@ async function findPlace(){
  try{
   const d=await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q='+encodeURIComponent(q))).json();
   if(!d[0])return toast('مکان پیدا نشد');
-  current.lat=+d[0].lat;current.lon=+d[0].lon;
+  current.lat=+d[0].lat;current.lon=+d[0].lon;showCoords();
   if(!map)await initMap();
   if(map){map.setView([current.lat,current.lon],17);L.marker([current.lat,current.lon]).addTo(markerLayer)}
   toast('زمین پیدا شد');
  }catch(e){toast('جستجو انجام نشد')}
 }
-function addCurrent(){addPoint(current.lat,current.lon,current.acc);toast('نقطه ثبت شد')}
+function showCoords(){const e=$('coords');if(e)e.textContent=`موقعیت: ${current.lat.toFixed(6)}, ${current.lon.toFixed(6)}${current.acc?` | دقت GPS: ${Math.round(current.acc)} m`:''}`}
+function addCurrent(){addPoint(current.lat,current.lon,current.acc);showCoords();toast('نقطه ثبت شد')}
 function startGPS(){
  if(!navigator.geolocation)return toast('GPS در دسترس نیست');
  if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;toast('پیمایش متوقف شد');return}
- watch=navigator.geolocation.watchPosition(p=>{current={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};if(map)map.setView([current.lat,current.lon],18);addPoint(current.lat,current.lon,current.acc)},()=>toast('اجازه GPS داده نشد'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+ watch=navigator.geolocation.watchPosition(p=>{current={lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy};showCoords();if(map)map.setView([current.lat,current.lon],18);addPoint(current.lat,current.lon,current.acc)},()=>toast('اجازه GPS داده نشد'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
  toast('پیمایش GPS شروع شد');
 }
-function clearMeasure(){points=[];if(markerLayer)markerLayer.clearLayers();if(polygon){map.removeLayer(polygon);polygon=null}calc()}
+function clearMeasure(){if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null}points=[];if(markerLayer)markerLayer.clearLayers();if(polygon){map.removeLayer(polygon);polygon=null}calc()}
 async function loadWeather(){
  const set=(id,v)=>$(id).textContent=v;
  const load=(lat,lon)=>fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&hourly=temperature_2m,precipitation_probability,weather_code&timezone=auto&forecast_days=2`).then(r=>r.json());
@@ -184,10 +188,10 @@ async function loadWeather(){
   $('hours').innerHTML='';for(let i=0;i<12;i++){const hc=codes[d.hourly.weather_code[i]]||['','🌤️'];$('hours').innerHTML+=`<div class="hour"><small>${d.hourly.time[i].slice(11,16)}</small><br>${hc[1]}<br><b>${Math.round(d.hourly.temperature_2m[i])}°</b><br><small>${d.hourly.precipitation_probability[i]}٪</small></div>`}
  }catch(e){set('desc','اتصال آب‌وهوا برقرار نشد')}
 }
-$('photoFile').onchange=e=>{const f=e.target.files[0];if(f)$('preview').innerHTML=`<img src="${URL.createObjectURL(f)}">`};
+$('photoFile').onchange=e=>{const f=e.target.files[0];if(f){$('preview').innerHTML=`<img src="${URL.createObjectURL(f)}">`;toast('عکس با کیفیت اصلی نمایش داده شد')}};
 function removePhoto(){$('preview').innerHTML='<span>📷</span>';$('photoFile').value=''}
 function changeQty(k,n){inv[k]=Math.max(0,inv[k]+n);$('q'+k).textContent=inv[k]}
-function saveInv(k){localStorage.setItem('yk_inv',JSON.stringify(inv));renderInv();toast(k==='in'?'ورودی ثبت شد':'مصرف ثبت شد')}
+function saveInv(k){if(k==='out'&&inv.out>inv.in){toast('مصرف نمی‌تواند از کل ورودی بیشتر باشد');inv.out=inv.in;$('qout').textContent=inv.out;return}localStorage.setItem('yk_inv',JSON.stringify(inv));renderInv();toast(k==='in'?'ورودی ثبت شد':'مصرف ثبت شد')}
 function renderInv(){$('tin').textContent=inv.in;$('tout').textContent=inv.out;$('balance').textContent=Math.max(0,inv.in-inv.out)}
 function saveProfile(){localStorage.setItem('yk_profile',JSON.stringify({name:$('pname').value,email:$('pemail').value}));toast('پروفایل ذخیره شد')}
 const prof=JSON.parse(localStorage.getItem('yk_profile')||'{}');$('pname').value=prof.name||'';$('pemail').value=prof.email||'';renderInv();
