@@ -121,3 +121,36 @@ main{padding-bottom:90px !important;overflow-x:hidden !important;}
 .yar-bubble{padding:12px 14px;border-radius:16px;background:#f3f7f4;line-height:1.8;}
 .yar-bubble.answer{background:#eaf5ed;}
 @media(max-width:480px){.yar-suggestions{grid-template-columns:1fr;}.yar-hero{align-items:flex-start;}}
+
+/* V7 premium agricultural background */
+html, body {
+  min-height: 100%;
+}
+body {
+  background:
+    linear-gradient(rgba(248, 250, 246, .78), rgba(248, 250, 246, .88)),
+    url("wheat-hero.jpg") center center / cover fixed no-repeat !important;
+  background-color: #eef3ea !important;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(235,242,229,.30));
+}
+main, #app, .app, .page-container {
+  background: transparent !important;
+}
+.card, .panel, .section-card, .weather-card, .land-card, .hero-card,
+.modal, .sheet, .form-card {
+  background: rgba(255,255,255,.90) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.bottom-nav {
+  background: rgba(255,255,255,.94) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
