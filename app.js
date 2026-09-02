@@ -12,7 +12,7 @@ function normalize(x){x=x||{};return {...clone(base),...x,lands:Array.isArray(x.
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function land(id){return state.lands.find(x=>x.id===id)}
 function totals(id){let tx=state.transactions.filter(x=>!id||x.landId===id),cost=tx.filter(x=>x.type==='expense').reduce((a,x)=>a+num(x.amount),0),income=tx.filter(x=>x.type==='income').reduce((a,x)=>a+num(x.amount),0);return {cost,income,profit:income-cost}}
-function go(r){if(r==='assistant')r='yar';if(r==='account')r='profile';route=r;document.body.classList.toggle('measure-active',r==='measure');if(r==='land')renderLand();else if(r==='lands')renderLands();else if(r==='add')renderAdd();else if(r==='measure')renderMeasure();else if(r==='weather')renderWeather();else if(r==='profile')renderProfile();else if(r==='ads')renderAds();else if(r==='news')renderNews();else if(r==='inventory')renderInventory();else if(r==='yar')renderYar();else renderHome();document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',(b.dataset.route===r)||(b.dataset.route==='account'&&r==='profile')||(b.dataset.route==='assistant'&&r==='yar')))}
+function go(r){if(r==='assistant')r='yar';route=r;document.body.classList.toggle('measure-active',r==='measure');if(r==='land')renderLand();else if(r==='lands')renderLands();else if(r==='add')renderAdd();else if(r==='measure')renderMeasure();else if(r==='weather')renderWeather();else if(r==='profile')renderProfile();else if(r==='account')renderAccount();else if(r==='ads')renderAds();else if(r==='news')renderNews();else if(r==='inventory')renderInventory();else if(r==='yar')renderYar();else renderHome();document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',(b.dataset.route===r)||(b.dataset.route==='assistant'&&r==='yar')))}
 function head(h){title.textContent=h}
 function renderHome(){head('خانه');let t=totals(),area=state.lands.reduce((a,l)=>a+num(l.area),0);app.innerHTML=`<section class="hero"><h1>یار کشاورز</h1><p>مدیریت حرفه‌ای زمین، کشت، هزینه و درآمد</p></section><div class="grid"><div class="card"><span class="muted">زمین‌ها</span><div class="metric">${state.lands.length.toLocaleString('fa-IR')}</div></div><div class="card"><span class="muted">مساحت</span><div class="metric">${area.toLocaleString('fa-IR')}</div><span class="small muted">هکتار</span></div><div class="card"><span class="muted">هزینه</span><div class="metric">${money(t.cost)}</div></div><div class="card"><span class="muted">درآمد</span><div class="metric">${money(t.income)}</div></div></div><div class="section-head"><h3>دسترسی سریع</h3></div><div class="quick"><button class="card" data-route="add">＋<br>ثبت زمین</button><button class="card" data-route="measure">⌖<br>اندازه‌گیری</button><button class="card" data-route="weather">☼<br>آب‌وهوا</button><button class="card" data-route="inventory">▦<br>انبار</button></div><div class="section-head"><h3>زمین‌های اخیر</h3><button class="secondary" data-route="lands">مشاهده همه</button></div><div class="list">${state.lands.slice(0,3).map(l=>landCard(l)).join('')||'<div class="empty card">هنوز زمینی ثبت نشده است.</div>'}</div>`}
 function landCard(l){let t=totals(l.id);return `<article class="card land-card"><div class="row"><div><h3>${esc(l.name)}</h3><span class="badge">${l.ownership==='rent'?'اجاره‌ای':'مالک'}</span></div><b>${num(l.area).toLocaleString('fa-IR')} هکتار</b></div><p class="muted">${esc(l.region||'موقعیت ثبت نشده')} · ${esc(l.crop||'کشت ثبت نشده')}</p>${l.areaM2?`<div class="measure-badge">📐 ${Math.round(num(l.areaM2)).toLocaleString('fa-IR')} مترمربع اندازه‌گیری‌شده</div>`:''}<div class="row small"><span>هزینه ${money(t.cost)}</span><span>سود ${money(t.profit)}</span></div><div class="actions"><button class="primary" data-open-land="${l.id}">پرونده زمین</button></div></article>`}
@@ -23,7 +23,40 @@ function row(k,v){return `<div class="row"><span class="muted">${k}</span><b>${e
 function compressImage(file,cb){if(!file)return;let r=new FileReader();r.onload=()=>{let im=new Image();im.onload=()=>{let c=document.createElement('canvas'),max=1280,s=Math.min(1,max/Math.max(im.width,im.height));c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.82))};im.src=r.result};r.readAsDataURL(file)}
 function renderInventory(){head('انبار');app.innerHTML=`<div class="section-head"><h2>انبار</h2><button class="primary" data-add-item>＋ کالا</button></div><div class="grid"><div class="card"><span class="muted">اقلام</span><div class="metric">${state.inventory.length}</div></div><div class="card"><span class="muted">کمبود</span><div class="metric">${state.inventory.filter(i=>num(i.quantity)<=num(i.minQuantity)).length}</div></div></div><div class="list">${state.inventory.map(i=>`<div class="card"><div class="row"><b>${esc(i.name)}</b><span class="badge">${esc(i.unit||'واحد')}</span></div><p>موجودی: <b>${num(i.quantity)}</b></p><div class="actions"><button class="secondary" data-stock-in="${i.id}">📥 ورود</button><button class="danger" data-stock-out="${i.id}">📤 مصرف/خروج</button></div></div>`).join('')||'<div class="empty card">انبار خالی است.</div>'}</div>`}
 function renderYar(){head('کشاورزیار');app.innerHTML=`<section class="yar-hero card"><div class="yar-mark">✦</div><div><span class="eyebrow">دستیار هوشمند مزرعه</span><h2>سلام، من کشاورزیارم</h2><p class="muted">برای زمین، کشت، هزینه، انبار و گزارش‌ها کنارت هستم.</p></div></section><div class="list"><div class="card"><h3>💬 از کشاورزیار بپرس</h3><div class="yar-suggestions"><button class="secondary" data-yar-question="برای این زمین چه محصولی مناسب است؟">چه محصولی بکارم؟</button><button class="secondary" data-yar-question="هزینه‌های این زمین را بررسی کن.">هزینه‌ها را بررسی کن</button><button class="secondary" data-yar-question="موجودی انبار من چه چیزهایی کم دارد؟">انبار چه کم دارد؟</button><button class="secondary" data-yar-question="یک گزارش کوتاه از وضعیت مزرعه بده.">گزارش مزرعه</button></div><div class="yar-chat"><div class="yar-bubble">فعلاً نسخه پایه‌ام فعال است؛ سوالت را بنویس تا بر اساس اطلاعات ثبت‌شده راهنمایی‌ات کنم.</div><textarea id="yarInput" rows=3 placeholder="مثلاً: برای زمین میلان پنج چه محصولی بهتر است؟"></textarea><button class="primary" id="yarSend">ارسال به کشاورزیار</button><div id="yarReply"></div></div></div><div class="card"><h3>🌾 اطلاعاتی که می‌توانم بررسی کنم</h3><div class="grid"><div><b>${state.lands.length}</b><span class="muted"> زمین ثبت‌شده</span></div><div><b>${state.inventory.length}</b><span class="muted"> قلم انبار</span></div><div><b>${state.crops.length}</b><span class="muted"> سابقه کشت</span></div><div><b>${state.transactions.length}</b><span class="muted"> تراکنش</span></div></div></div></div>`;document.querySelectorAll('[data-yar-question]').forEach(b=>b.onclick=()=>{$('#yarInput').value=b.dataset.yarQuestion;$('#yarInput').focus()});$('#yarSend')?.addEventListener('click',()=>{let q=$('#yarInput').value.trim();if(!q)return;let l=state.lands[0];let reply=`سوالت دریافت شد. ${l?`در حال حاضر ${l.name} با مساحت ${num(l.area).toLocaleString('fa-IR')} هکتار در پرونده ثبت شده است.`:'هنوز زمینی در پرونده ثبت نشده است.'} برای پاسخ تخصصی‌تر، اطلاعات زمین و سوابق کشت را کامل‌تر ثبت کن.`;$('#yarReply').innerHTML=`<div class="yar-bubble answer"><b>کشاورزیار:</b><p>${esc(reply)}</p></div>`})}
-function renderProfile(){head('اکانت');app.innerHTML=`<div class="card"><h2>پروفایل کشاورز</h2><div class="form"><div class="field"><label>نام</label><input id="pName" value="${esc(state.profile.name)}"></div><div class="field"><label>ایمیل</label><input id="pEmail" type="email" value="${esc(state.profile.email)}"></div><div class="field"><label>شماره تماس</label><input id="pPhone" inputmode="tel" value="${esc(state.profile.phone)}"></div><label class="file-btn">📷 عکس پروفایل<input id="pPhoto" type="file" accept="image/*" hidden></label><button class="primary" id="saveProfile">ذخیره پروفایل</button></div></div>`;$('#pPhoto').onchange=e=>compressImage(e.target.files[0],src=>{state.profile.photo=src;save();renderProfile()});if(state.profile.photo)$('#saveProfile').insertAdjacentHTML('beforebegin',`<img class="land-photo" src="${state.profile.photo}">`)}
+function renderProfile(){renderAccount()}
+function renderAccount(){
+  head('اکانت');
+  const p=state.profile||{};
+  const landCount=state.lands.length;
+  const cropCount=state.crops.length || state.lands.filter(x=>x&&x.crop).length;
+  const avatar=p.photo?`<img src="${p.photo}" alt="پروفایل">`:`<span>👨‍🌾</span>`;
+  app.innerHTML=`
+  <section class="account-hero card">
+    <div class="account-avatar">${avatar}</div>
+    <div class="account-identity"><h1>${esc(p.name||'کشاورز عزیز')}</h1><p>${esc(p.place||'پروفایل کشاورز')}</p></div>
+    <button class="secondary account-edit" id="accountEdit">ویرایش</button>
+  </section>
+  <div class="account-stats">
+    <div class="card account-stat"><b>${landCount.toLocaleString('fa-IR')}</b><span>زمین</span></div>
+    <div class="card account-stat"><b>${cropCount.toLocaleString('fa-IR')}</b><span>کشت</span></div>
+    <div class="card account-stat"><b>${state.inventory.length.toLocaleString('fa-IR')}</b><span>اقلام انبار</span></div>
+  </div>
+  <section class="card account-info">
+    <div class="section-head"><h3>اطلاعات حساب</h3></div>
+    ${row('نام و نام خانوادگی',p.name||'ثبت نشده')}
+    ${row('شماره تماس',p.phone||'ثبت نشده')}
+    ${row('ایمیل',p.email||'ثبت نشده')}
+    ${row('شهر / روستا',p.place||'ثبت نشده')}
+  </section>
+  <section class="card account-tools">
+    <div class="section-head"><h3>مدیریت حساب</h3></div>
+    <button class="secondary full-btn" id="accountBackup">⬇️ تهیه نسخه پشتیبان</button>
+    <button class="secondary full-btn" id="accountRestore">⬆️ بازیابی اطلاعات</button>
+    <input id="accountRestoreFile" type="file" accept="application/json" hidden>
+  </section>
+  <section class="card account-help"><b>یار کشاورز</b><p class="muted">اطلاعات حساب، زمین‌ها و فعالیت‌های مزرعه در همین دستگاه ذخیره می‌شوند.</p></section>`;
+}
+
 function renderAds(){head('تبلیغات');app.innerHTML=`<div class="section-head"><h2>تبلیغات و پیشنهادها</h2></div><div class="list"><article class="card ad"><h2>ویژه کشاورزان</h2><p>فضای آماده برای معرفی خدمات، تجهیزات، بذر و نهاده‌های کشاورزی.</p></article><article class="card"><h3>جایگاه تبلیغاتی</h3><p class="muted">در نسخه آنلاین می‌توان این بخش را به سامانه واقعی تبلیغات متصل کرد.</p></article></div>`}
 function renderNews(){head('اخبار');app.innerHTML=`<div class="section-head"><h2>اخبار کشاورزی</h2></div><div class="list"><article class="card"><div class="hero" style="min-height:150px;margin:0 0 10px"><h2>کشاورزی هوشمند</h2><p>مدیریت داده‌های زمین، هزینه و کشت در یک برنامه.</p></div><span class="muted">خبر و آموزش</span></article><article class="card"><h3>گزارش‌های مزرعه را منظم نگه دار</h3><p class="muted">عکس، هزینه، کشت و موجودی را کنار پرونده هر زمین ثبت کن.</p></article></div>`}
 function weatherIcon(code){code=Number(code);if(code===0)return '☀️';if(code<=2)return '🌤️';if(code===3)return '☁️';if(code<=48)return '🌫️';if(code<=57)return '🌦️';if(code<=67)return '🌧️';if(code<=77)return '🌨️';if(code<=82)return '🌦️';if(code<=86)return '🌨️';if(code<=99)return '⛈️';return '🌤️'}
@@ -51,4 +84,20 @@ document.addEventListener('submit',e=>{if(e.target.id==='landForm'){e.preventDef
 document.addEventListener('click',e=>{if(e.target.id==='saveProfile'){state.profile.name=$('#pName').value;state.profile.email=$('#pEmail').value;state.profile.phone=$('#pPhone').value;save();alert('پروفایل ذخیره شد.')}});
 const backupBtn=$('#backupBtn'),restoreInput=$('#restoreInput');if(backupBtn)backupBtn.onclick=()=>{let b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='yar-keshavarz-backup.json';a.click()};
 if(restoreInput)restoreInput.onchange=e=>{let f=e.target.files[0];if(f)f.text().then(x=>{state=normalize(JSON.parse(x));save();go('home')}).catch(()=>alert('فایل پشتیبان معتبر نیست.'))};
+
+
+document.addEventListener('click',e=>{
+  if(e.target.closest('#accountEdit')){
+    const p=state.profile||{};
+    app.innerHTML=`<div class="card account-info"><div class="section-head"><h2>ویرایش اکانت</h2><button class="secondary" id="accountCancel">انصراف</button></div><div class="form account-editor"><div class="field"><label>نام و نام خانوادگی</label><input id="aName" value="${esc(p.name||'')}"></div><div class="field"><label>شماره تماس</label><input id="aPhone" inputmode="tel" value="${esc(p.phone||'')}"></div><div class="field"><label>ایمیل</label><input id="aEmail" type="email" value="${esc(p.email||'')}"></div><div class="field"><label>شهر / روستا</label><input id="aPlace" value="${esc(p.place||'')}"></div><label class="file-btn">📷 تغییر عکس پروفایل<input id="aPhoto" type="file" accept="image/*" hidden></label><button class="primary" id="accountSave">ذخیره اطلاعات</button></div></div>`;
+    $('#aPhoto').onchange=ev=>compressImage(ev.target.files[0],src=>{state.profile.photo=src;save()});
+  }
+  if(e.target.closest('#accountCancel')) renderAccount();
+  if(e.target.closest('#accountSave')){state.profile={...state.profile,name:$('#aName').value.trim(),phone:$('#aPhone').value.trim(),email:$('#aEmail').value.trim(),place:$('#aPlace').value.trim()};save();alert('اطلاعات اکانت ذخیره شد.');renderAccount();}
+  if(e.target.closest('#accountBackup')){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='yar-keshavarz-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+  if(e.target.closest('#accountRestore')) $('#accountRestoreFile')?.click();
+});
+document.addEventListener('change',e=>{if(e.target.id==='accountRestoreFile'&&e.target.files?.[0]){e.target.files[0].text().then(x=>{state=normalize(JSON.parse(x));save();renderAccount();alert('اطلاعات با موفقیت بازیابی شد.')}).catch(()=>alert('فایل پشتیبان معتبر نیست.'))}});
+
 go('home');
+

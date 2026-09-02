@@ -232,3 +232,78 @@ main,#app,.app,.page,.page-container,.screen,.content,.content-area,
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
+
+/* V10 — premium account */
+.yk-account-page{
+  max-width:720px;
+  margin:0 auto;
+  padding:18px 14px 100px;
+}
+.yk-account-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:18px;
+  border-radius:24px;
+  background:rgba(255,255,255,.90);
+  box-shadow:0 14px 35px rgba(25,55,30,.12);
+  backdrop-filter:blur(10px);
+}
+.yk-avatar{
+  width:64px;height:64px;border-radius:20px;
+  display:grid;place-items:center;font-size:34px;
+  background:rgba(35,122,69,.10);
+}
+.yk-account-head h2{margin:0;font-size:20px}
+.yk-account-head p{margin:4px 0 0;opacity:.65;font-size:12px}
+.yk-account-edit{
+  margin-inline-start:auto;border:0;border-radius:12px;
+  padding:9px 13px;font-weight:800;background:rgba(35,122,69,.10);color:#237a45;
+}
+.yk-account-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;
+}
+.yk-account-stats div,.yk-account-card,.yk-account-editor{
+  background:rgba(255,255,255,.90);
+  border-radius:20px;padding:16px;
+  box-shadow:0 10px 26px rgba(25,55,30,.09);
+  backdrop-filter:blur(9px);
+}
+.yk-account-stats div{text-align:center}
+.yk-account-stats strong{display:block;font-size:25px;color:#237a45}
+.yk-account-stats span{font-size:11px;opacity:.65}
+.yk-account-row{
+  display:flex;justify-content:space-between;gap:12px;
+  padding:13px 0;border-bottom:1px solid rgba(30,60,35,.08);
+  font-size:12px;
+}
+.yk-account-row:last-child{border-bottom:0}
+.yk-account-row strong{font-size:12px}
+.yk-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.yk-account-actions button,.yk-editor-buttons button{
+  border:0;border-radius:16px;padding:14px;font-weight:800;
+  background:rgba(255,255,255,.92);box-shadow:0 8px 22px rgba(25,55,30,.08);
+}
+.yk-account-editor{margin-top:12px}
+.yk-account-editor h3{margin-top:0}
+.yk-account-editor input{
+  width:100%;box-sizing:border-box;margin:6px 0;padding:13px;
+  border:1px solid rgba(30,70,40,.12);border-radius:14px;background:rgba(250,252,249,.9);
+  font:inherit;
+}
+.yk-editor-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.yk-editor-buttons button:first-child{background:#237a45;color:white}
+@media(max-width:420px){
+  .yk-account-page{padding-inline:10px}
+  .yk-account-actions{grid-template-columns:1fr}
+}
+
+
+/* V11 — clean premium account page */
+.account-hero{display:flex;align-items:center;gap:14px;padding:18px!important;margin-bottom:12px;}
+.account-avatar{width:74px;height:74px;border-radius:24px;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,#1e5b3a,#6fae73);color:#fff;font-size:36px;flex:0 0 74px;box-shadow:0 8px 22px rgba(24,70,42,.16);}
+.account-avatar img{width:100%;height:100%;object-fit:cover;}
+.account-identity{min-width:0;flex:1;}.account-identity h1{font-size:20px;margin:0 0 5px}.account-identity p{margin:0;color:#68736c}.account-edit{white-space:nowrap!important;}
+.account-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.account-stat{padding:15px 8px!important;text-align:center}.account-stat b{display:block;font-size:22px;margin-bottom:3px}.account-stat span{font-size:11px;color:#68736c;font-weight:700}
+.account-info,.account-tools,.account-help{padding:16px!important;margin-bottom:12px}.account-info .row{padding:11px 0;border-bottom:1px solid rgba(30,70,45,.08)}.account-info .row:last-child{border-bottom:0}.full-btn{width:100%;margin-top:8px}.account-editor{display:grid;gap:10px}.account-editor .field{margin:0}
+@media(max-width:420px){.account-hero{padding:14px!important}.account-avatar{width:62px;height:62px;flex-basis:62px;border-radius:20px;font-size:29px}.account-identity h1{font-size:17px}.account-stats{gap:7px}.account-stat{padding:12px 5px!important}.account-stat b{font-size:19px}}
