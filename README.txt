@@ -1,11 +1,10 @@
-Yar Keshavarz V14.3 – Modern Measurement UI
-- Keeps MapLibre two-finger rotation.
-- Prevents blank zoom beyond available raster zoom (max 19).
-- Higher-quality satellite imagery as default.
-- Floating modern search box.
-- Visible blue current-location marker and GPS follow.
-- Search result marker.
-- Modern glass stats/tools and mobile layout.
+یار کشاورز – V14.4 Modern Measure Fix
 
-Add after the V14.2 script in index.html:
-<script src="v14.3-modern-measure.js"></script>
+این نسخه فقط اصلاحات متراژ را انجام می‌دهد:
+- جستجو پایین‌تر و مرتب‌تر قرار گرفته
+- زوم از محدوده‌ای که باعث سفید شدن نقشه می‌شود عبور نمی‌کند
+- کیفیت/نمایش لایه ماهواره‌ای بهتر شده و زوم بیشتری دارد
+- چرخش دو انگشتی و GPS نسخه قبل حفظ شده‌اند
+
+در index.html این خط را بعد از V14.3 اضافه/جایگزین کن:
+<script src="v14.4-modern-measure-fix.js"></script>
