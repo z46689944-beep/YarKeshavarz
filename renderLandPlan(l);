@@ -1,0 +1,115 @@
+/* Yar Keshavarz — Land Plan */
+(function () {
+  'use strict';
+
+  function addPlan() {
+    if (typeof selected === 'undefined') return;
+
+    const l = typeof land === 'function' ? land(selected) : null;
+    if (!l) return;
+
+    const points =
+      Array.isArray(l.measurement?.points) ? l.measurement.points :
+      Array.isArray(l.points) ? l.points : [];
+
+    if (points.length < 3) return;
+    if (document.getElementById('landPlanCard')) return;
+    if (typeof L === 'undefined') return;
+
+    const card = document.createElement('div');
+    card.id = 'landPlanCard';
+    card.className = 'card';
+    card.style.marginTop = '14px';
+
+    card.innerHTML = `
+      <div class="section-head">
+        <div>
+          <h3>🗺️ پلان و موقعیت زمین</h3>
+          <span class="muted">محدوده واقعی ثبت‌شده در اندازه‌گیری</span>
+        </div>
+        <span class="badge">GPS</span>
+      </div>
+
+      <div id="landPlanMap"
+        style="height:300px;width:100%;border-radius:18px;overflow:hidden;">
+      </div>
+
+      <div class="measure-detail-grid" style="margin-top:12px">
+        <div>
+          <span>مساحت</span>
+          <b>${Math.round(Number(l.areaM2 || Number(l.area || 0) * 10000)).toLocaleString('fa-IR')} مترمربع</b>
+        </div>
+        <div>
+          <span>هکتار</span>
+          <b>${Number(l.area || 0).toLocaleString('fa-IR')}</b>
+        </div>
+        <div>
+          <span>محیط</span>
+          <b>${Math.round(Number(l.perimeter || 0)).toLocaleString('fa-IR')} متر</b>
+        </div>
+      </div>
+    `;
+
+    const measured = document.querySelector('.measured-card');
+
+    if (measured) {
+      measured.insertAdjacentElement('afterend', card);
+    } else {
+      const tabs = document.querySelector('.tabs');
+      if (tabs) tabs.insertAdjacentElement('afterend', card);
+    }
+
+    const map = L.map('landPlanMap', {
+      zoomControl: true,
+      attributionControl: true
+    });
+
+    L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }
+    ).addTo(map);
+
+    const polygon = L.polygon(points, {
+      color: '#16803c',
+      weight: 3,
+      fillColor: '#16803c',
+      fillOpacity: 0.22
+    }).addTo(map);
+
+    points.forEach(function (p, i) {
+      L.circleMarker(p, {
+        radius: 5,
+        weight: 2,
+        fillOpacity: 1
+      })
+      .addTo(map)
+      .bindTooltip('نقطه ' + (i + 1));
+    });
+
+    map.fitBounds(polygon.getBounds(), {
+      padding: [20, 20]
+    });
+
+    setTimeout(function () {
+      map.invalidateSize();
+    }, 300);
+  }
+
+  if (typeof window.renderLand === 'function') {
+    const originalRenderLand = window.renderLand;
+
+    window.renderLand = function () {
+      originalRenderLand.apply(this, arguments);
+
+      setTimeout(function () {
+        if (typeof tab !== 'undefined' && tab === 'overview') {
+          addPlan();
+        }
+      }, 100);
+    };
+  }
+
+})();
