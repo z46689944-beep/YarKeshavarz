@@ -1,0 +1,35 @@
+(function(){
+"use strict";
+var M=null,P=[],MK=[],W=null,S=false;
+function css(){if(document.getElementById("ykmlcss"))return;var l=document.createElement("link");l.id="ykmlcss";l.rel="stylesheet";l.href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css";document.head.appendChild(l)}
+function lib(cb){if(window.maplibregl)return cb();var s=document.createElement("script");s.src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js";s.onload=cb;s.onerror=function(){var e=document.getElementById("mAcc");if(e)e.textContent="نقشه بارگذاری نشد.";};document.head.appendChild(s)}
+function f(n){return Number(n||0).toLocaleString("fa-IR",{maximumFractionDigits:1})}
+function d(a,b){var R=6371000,p=Math.PI/180,la=(b[1]-a[1])*p,lo=(b[0]-a[0])*p,x=Math.sin(la/2)**2+Math.cos(a[1]*p)*Math.cos(b[1]*p)*Math.sin(lo/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function ar(q){if(q.length<3)return 0;var la=q.reduce((s,p)=>s+p[1],0)/q.length,xs=111320*Math.cos(la*Math.PI/180),ys=110540,z=0;for(var i=0;i<q.length;i++){var j=(i+1)%q.length;z+=(q[i][0]*xs)*(q[j][1]*ys)-(q[j][0]*xs)*(q[i][1]*ys)}return Math.abs(z)/2}
+function pe(q){var z=0;if(q.length<2)return z;for(var i=1;i<q.length;i++)z+=d(q[i-1],q[i]);if(q.length>2)z+=d(q[q.length-1],q[0]);return z}
+function stats(){var a=ar(P),p=pe(P),e=document.getElementById("mArea"),h=document.getElementById("mHa"),r=document.getElementById("mPer"),u=document.getElementById("useBtn");if(e)e.textContent=f(a);if(h)h.textContent=f(a/10000);if(r)r.textContent=f(p);if(u)u.disabled=P.length<3||a<=0}
+function draw(){if(!M||!M.isStyleLoaded())return;var q=P.slice();if(q.length>2)q.push(q[0]);var s=M.getSource("ykline");if(s)s.setData({type:"FeatureCollection",features:q.length>1?[{type:"Feature",geometry:{type:"LineString",coordinates:q},properties:{}}]:[]});stats()}
+function add(lng,lat){if(P.length&&d(P[P.length-1],[lng,lat])<3)return;P.push([lng,lat]);var e=document.createElement("div");e.style.cssText="width:21px;height:21px;border-radius:50%;background:#fff;border:3px solid #16834b;box-sizing:border-box";var m=new maplibregl.Marker({element:e,draggable:true}).setLngLat([lng,lat]).addTo(M);m.on("dragend",function(){var p=m.getLngLat(),i=MK.indexOf(m);if(i>=0)P[i]=[p.lng,p.lat];draw()});MK.push(m);draw()}
+function clear(){MK.forEach(m=>m.remove());MK=[];P=[];draw()}
+function init(){
+M=new maplibregl.Map({container:"measureMap",style:{version:8,sources:{osm:{type:"raster",tiles:["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],tileSize:256,attribution:"© OpenStreetMap"}},layers:[{id:"ykosm",type:"raster",source:"osm"}]},center:[51.4,35.7],zoom:12,bearing:0,pitch:0,dragRotate:true,touchZoomRotate:true});
+M.addControl(new maplibregl.NavigationControl({showCompass:true}),"top-left");
+M.on("load",function(){M.touchZoomRotate.enable();M.touchZoomRotate.enableRotation();M.dragRotate.enable();M.dragPan.enable();M.getCanvas().style.touchAction="none";M.addSource("ykline",{type:"geojson",data:{type:"FeatureCollection",features:[]}});M.addLayer({id:"ykline-layer",type:"line",source:"ykline",paint:{"line-width":4,"line-opacity":.9}});});
+M.on("click",e=>add(e.lngLat.lng,e.lngLat.lat));
+}
+function render(){
+css();var a=document.getElementById("app");if(!a)return;document.body.classList.add("measure-active");
+a.innerHTML='<div class="measure-page" style="position:relative;height:100dvh;overflow:hidden"><div id="measureMap" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></div><div style="position:absolute;top:12px;left:12px;right:12px;z-index:50"><input id="measureSearch" placeholder="جستجوی روستا، شهر یا مختصات" style="width:100%;box-sizing:border-box"><button class="primary" id="searchBtn" style="width:100%;margin-top:6px">جستجو</button></div><div style="position:absolute;right:12px;top:125px;z-index:50;display:flex;flex-direction:column;gap:7px"><button id="locBtn">⌖</button><button id="satBtn">🛰️</button><button id="northBtn">N</button><button id="clearBtn">↺</button><button id="closeMeasure">×</button></div><div class="measure-bottom" style="position:absolute;left:10px;right:10px;bottom:10px;z-index:50"><div class="measure-stats"><div><b id="mArea">۰</b><span>مترمربع</span></div><div><b id="mHa">۰</b><span>هکتار</span></div><div><b id="mPer">۰</b><span>متر محیط</span></div></div><div class="accuracy" id="mAcc">آماده پیمایش</div><button class="finish" id="trackBtn">▶ شروع پیمایش GPS</button><div class="measure-help">🔄 با دو انگشت نقشه را واقعاً بچرخان و زوم کن.</div><button class="primary" id="useBtn" style="width:100%;margin-top:7px" disabled>📐 ثبت زمین با این مساحت</button></div></div>';
+setTimeout(init,50);
+document.getElementById("northBtn").onclick=()=>M&&M.rotateTo(0,{duration:450});
+document.getElementById("clearBtn").onclick=clear;
+document.getElementById("satBtn").onclick=function(){S=!S;if(!M.getSource("sat")){M.addSource("sat",{type:"raster",tiles:["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],tileSize:256,maxzoom:19});M.addLayer({id:"satlayer",type:"raster",source:"sat"});}M.setLayoutProperty("ykosm","visibility",S?"none":"visible");M.setLayoutProperty("satlayer","visibility",S?"visible":"none")};
+document.getElementById("locBtn").onclick=()=>navigator.geolocation&&navigator.geolocation.getCurrentPosition(p=>M.flyTo({center:[p.coords.longitude,p.coords.latitude],zoom:17}));
+document.getElementById("searchBtn").onclick=()=>{var q=document.getElementById("measureSearch").value.trim();if(q)fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q)).then(x=>x.json()).then(x=>x[0]&&M.flyTo({center:[+x[0].lon,+x[0].lat],zoom:15}))};
+document.getElementById("trackBtn").onclick=function(){if(!navigator.geolocation)return;if(W!==null){navigator.geolocation.clearWatch(W);W=null;this.textContent="▶ شروع پیمایش GPS";return}this.textContent="⏹ پایان پیمایش";W=navigator.geolocation.watchPosition(p=>{var c=p.coords,e=document.getElementById("mAcc");if(e)e.textContent="دقت GPS: "+f(c.accuracy)+" متر";M.easeTo({center:[c.longitude,c.latitude],zoom:Math.max(M.getZoom(),17),duration:250});add(c.longitude,c.latitude)},()=>{}, {enableHighAccuracy:true,maximumAge:1000,timeout:15000})};
+document.getElementById("useBtn").onclick=()=>{var x=ar(P);if(x>0){localStorage.setItem("yk-last-measure",JSON.stringify({area:x,hectare:x/10000,perimeter:pe(P),points:P}));alert("مساحت زمین ثبت شد: "+f(x)+" مترمربع")}};
+document.getElementById("closeMeasure").onclick=()=>{if(W!==null)navigator.geolocation.clearWatch(W);W=null;if(typeof window.go==="function")window.go("home")};
+}
+function install(){css();lib(function(){window.__YK_V14_2__=render;if(typeof window.go==="function"&&!window.__YK_V14_2_GO__){var g=window.go;window.go=function(r){if(r==="measure")return render();return g.apply(this,arguments)};window.__YK_V14_2_GO__=true}})}
+install();
+})();
