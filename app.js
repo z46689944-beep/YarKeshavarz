@@ -78,6 +78,91 @@ function clearMeasure(){if(watch!==null){navigator.geolocation.clearWatch(watch)
 function startTrack(){if(!navigator.geolocation)return alert('GPS در دسترس نیست.');if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;track=false;$('#trackBtn').textContent='▶ شروع پیمایش GPS';return}track=true;$('#trackBtn').textContent='⏹ پایان پیمایش';watch=navigator.geolocation.watchPosition(p=>{let c=p.coords;acc=c.accuracy;map.setView([c.latitude,c.longitude],Math.max(map.getZoom(),18));addPoint(c.latitude,c.longitude,c.accuracy);updateMeasure()},()=>alert('اجازه موقعیت داده نشد.'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000})}
 async function searchPlace(){let q=$('#measureSearch').value.trim();if(!q)return;try{let d=await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q='+encodeURIComponent(q))).json();if(!d[0])return alert('مکان پیدا نشد.');let lat=+d[0].lat,lon=+d[0].lon;map.setView([lat,lon],17);addPoint(lat,lon)}catch(e){alert('جستجو انجام نشد.')}}
 function toggleSat(){sat=!sat;const old=baseLayer;if(old)map.removeLayer(old);if(sat){map.setMaxZoom(19);baseLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:19,noWrap:true,attribution:'© Esri',keepBuffer:2});baseLayer.on('tileerror',()=>{if(sat){sat=false;map.removeLayer(baseLayer);map.setMaxZoom(20);baseLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);alert('تصاویر ماهواره‌ای در این بزرگنمایی در دسترس نیست؛ نقشه عادی فعال شد.')}});baseLayer.addTo(map)}else{map.setMaxZoom(20);baseLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map)}}
+function createLandPlan(points, areaM2, perimeterM){
+  if(!points || points.length<3) return '';
+
+  let c=document.createElement('canvas');
+  c.width=900;
+  c.height=650;
+
+  let ctx=c.getContext('2d');
+
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,c.width,c.height);
+
+  let xs=points.map(p=>p[1]);
+  let ys=points.map(p=>p[0]);
+
+  let minX=Math.min(...xs), maxX=Math.max(...xs);
+  let minY=Math.min(...ys), maxY=Math.max(...ys);
+
+  let scale=Math.min(
+    650/(maxX-minX||1),
+    400/(maxY-minY||1)
+  );
+
+  let offsetX=450;
+  let offsetY=330;
+
+  let mapP=points.map((p,i)=>[
+    offsetX+(p[1]-minX-(maxX-minX)/2)*scale,
+    offsetY-(p[0]-minY-(maxY-minY)/2)*scale
+  ]);
+
+  // مرز زمین
+  ctx.beginPath();
+  mapP.forEach((p,i)=>{
+    if(i===0)ctx.moveTo(p[0],p[1]);
+    else ctx.lineTo(p[0],p[1]);
+  });
+  ctx.closePath();
+  ctx.strokeStyle='#14532d';
+  ctx.lineWidth=5;
+  ctx.stroke();
+
+  // نقاط
+  mapP.forEach((p,i)=>{
+    ctx.beginPath();
+    ctx.arc(p[0],p[1],10,0,Math.PI*2);
+    ctx.fillStyle='#15803d';
+    ctx.fill();
+
+    ctx.fillStyle='#000';
+    ctx.font='20px sans-serif';
+    ctx.fillText(i+1,p[0]+12,p[1]);
+  });
+
+
+  // قطب نما
+  ctx.font='40px sans-serif';
+  ctx.fillStyle='#000';
+  ctx.fillText('N ↑',420,80);
+  ctx.fillText('S ↓',420,610);
+  ctx.fillText('W ←',80,340);
+  ctx.fillText('→ E',730,340);
+
+
+  // اطلاعات
+  ctx.font='28px sans-serif';
+  ctx.fillText(
+   'مساحت: '+Math.round(areaM2)+' مترمربع',
+   40,540
+  );
+
+  ctx.fillText(
+   'محیط: '+Math.round(perimeterM)+' متر',
+   40,580
+  );
+
+
+  ctx.font='22px sans-serif';
+  ctx.fillText(
+   'پلان شماتیک یار کشاورز',
+   300,630
+  );
+
+  return c.toDataURL('image/png');
+}
 document.addEventListener('click',e=>{let r=e.target.closest('[data-route]')?.dataset.route;if(r){go(r);return}let o=e.target.closest('[data-open-land]');if(o){selected=o.dataset.openLand;tab='overview';go('land');return}let t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;renderLand();return}if(e.target.id==='trackBtn')startTrack();if(e.target.id==='clearBtn')clearMeasure();if(e.target.id==='locBtn')navigator.geolocation?.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],18);addPoint(p.coords.latitude,p.coords.longitude,p.coords.accuracy)});if(e.target.id==='satBtn')toggleSat();if(e.target.id==='searchBtn')searchPlace();if(e.target.id==='closeMeasure'){if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null}go('home')}if(e.target.id==='useBtn'){let a=area(points),p=perimeter(points);if(a>0){sessionStorage.setItem('yk-measured-area',a);sessionStorage.setItem('yk-measured-perimeter',p);if(points[0]){sessionStorage.setItem('yk-measured-lat',points[0][0]);sessionStorage.setItem('yk-measured-lng',points[0][1])}go('add')}}if(e.target.dataset.stockIn){let i=state.inventory.find(x=>x.id===e.target.dataset.stockIn),q=num(prompt('مقدار ورود','0'));if(i&&q>0){i.quantity=num(i.quantity)+q;save();renderInventory()}}if(e.target.dataset.stockOut){let i=state.inventory.find(x=>x.id===e.target.dataset.stockOut),q=num(prompt('مقدار مصرف/خروج','0'));if(i&&q>0){i.quantity=Math.max(0,num(i.quantity)-q);save();renderInventory()}}if(e.target.closest('[data-add-item]')){let n=prompt('نام کالا');if(n){let u=prompt('واحد','کیلو')||'واحد',q=num(prompt('موجودی اولیه','0')),m=num(prompt('حداقل موجودی','0'));state.inventory.push({id:uid(),name:n,unit:u,quantity:q,minQuantity:m});save();renderInventory()}}if(e.target.closest('[data-add-crop]')){let p=prompt('محصول');if(p){state.crops.push({id:uid(),landId:selected,product:p,date:prompt('تاریخ',''),seedQty:num(prompt('مقدار بذر','0'))});save();renderLand()}}if(e.target.closest('[data-add-tx]')){let typ=prompt('expense برای هزینه یا income برای درآمد','expense'),tt=prompt('عنوان');if(tt){state.transactions.push({id:uid(),landId:selected,type:typ==='income'?'income':'expense',title:tt,amount:num(prompt('مبلغ','0')),date:new Date().toLocaleDateString('fa-IR')});save();renderLand()}}if(e.target.closest('[data-consume]')){let i=state.inventory[0];if(!i)return alert('انبار خالی است.');let q=num(prompt(`مصرف ${i.name}`,'0'));if(q>0&&q<=num(i.quantity)){i.quantity-=q;save();renderLand()}}if(e.target.closest('[data-land-weather]')){let l=land(selected);if(l?.lat)weatherData(l.lat,l.lng,$('#landWeather'));else navigator.geolocation?.getCurrentPosition(p=>{l.lat=p.coords.latitude;l.lng=p.coords.longitude;save();weatherData(l.lat,l.lng,$('#landWeather'))})}});
 document.addEventListener('click',e=>{if(e.target.id==='clearMeasured'){['yk-measured-area','yk-measured-perimeter','yk-measured-lat','yk-measured-lng'].forEach(k=>sessionStorage.removeItem(k));renderAdd();}});
 document.addEventListener('submit',e=>{if(e.target.id==='landForm'){e.preventDefault();let f=new FormData(e.target),l={id:uid(),name:f.get('name'),area:num(f.get('area')),region:f.get('region'),ownership:f.get('ownership'),soil:f.get('soil'),water:f.get('water'),irrigation:f.get('irrigation'),crop:f.get('crop'),notes:f.get('notes'),photos:[]};let a=num(sessionStorage.getItem('yk-measured-area')),mp=num(sessionStorage.getItem('yk-measured-perimeter')),mlat=num(sessionStorage.getItem('yk-measured-lat')),mlng=num(sessionStorage.getItem('yk-measured-lng'));if(a){l.area=a/10000;l.areaM2=a;l.perimeter=mp;l.measured=true;if(mlat){l.lat=mlat;l.lng=mlng}sessionStorage.removeItem('yk-measured-area');sessionStorage.removeItem('yk-measured-perimeter');sessionStorage.removeItem('yk-measured-lat');sessionStorage.removeItem('yk-measured-lng')}state.lands.push(l);save();selected=l.id;tab='overview';sessionStorage.removeItem('yk-measured-area');sessionStorage.removeItem('yk-measured-perimeter');sessionStorage.removeItem('yk-measured-lat');sessionStorage.removeItem('yk-measured-lng');go('land')}if(e.target.id==='calcForm'){e.preventDefault();let f=new FormData(e.target),c=num(f.get('cost')),income=num(f.get('production'))*num(f.get('price'));$('#calcResult').innerHTML=`<div class="card"><p>هزینه: <b>${money(c)}</b></p><p>درآمد احتمالی: <b>${money(income)}</b></p><p>سود/زیان: <b>${money(income-c)}</b></p></div>`}});
