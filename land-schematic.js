@@ -288,3 +288,18 @@ JSON.stringify(state)
 
 
 })();
+(function(){
+
+"use strict";
+
+const style=document.createElement("style");
+
+style.textContent=`
+.land-plan-inside > div:last-child{
+  display:none !important;
+}
+`;
+
+document.head.appendChild(style);
+
+})();
