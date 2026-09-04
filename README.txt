@@ -1,8 +1,15 @@
-Yar Keshavarz V3.2 STABLE RECOVERY
+یار کشاورز — V3 CLEAN
 
-Replace ONLY:
-index.html
-app.js
-style.css
+این بسته، نسخه تمیز و یکپارچه پروژه است.
 
-Keep manifest.webmanifest, logo.png, wheat-hero.jpg, keshavar-yar.js and land-edit.js from the repository.
+فایل‌های فعال وب:
+- index.html
+- app.js
+- style.css
+- keshavar-yar.js
+- land-edit.js
+- manifest.webmanifest
+- icon-192.png
+- icon-512.png
+
+نسخه‌های قدیمی و آزمایشی داخل legacy/ هستند و در index.html بارگذاری نمی‌شوند.

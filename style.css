@@ -307,28 +307,3 @@ main,#app,.app,.page,.page-container,.screen,.content,.content-area,
 .account-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.account-stat{padding:15px 8px!important;text-align:center}.account-stat b{display:block;font-size:22px;margin-bottom:3px}.account-stat span{font-size:11px;color:#68736c;font-weight:700}
 .account-info,.account-tools,.account-help{padding:16px!important;margin-bottom:12px}.account-info .row{padding:11px 0;border-bottom:1px solid rgba(30,70,45,.08)}.account-info .row:last-child{border-bottom:0}.full-btn{width:100%;margin-top:8px}.account-editor{display:grid;gap:10px}.account-editor .field{margin:0}
 @media(max-width:420px){.account-hero{padding:14px!important}.account-avatar{width:62px;height:62px;flex-basis:62px;border-radius:20px;font-size:29px}.account-identity h1{font-size:17px}.account-stats{gap:7px}.account-stat{padding:12px 5px!important}.account-stat b{font-size:19px}}
-
-/* YK STABLE RECOVERY PASS */
-html,body{max-width:100%;overflow-x:hidden}
-body.measure-active{overflow:hidden!important}
-body.measure-active main{padding:0!important}
-.measure-page{background:#fff!important;overflow:hidden!important}
-.measure-page .measure-map{background:#e9efeb!important}
-.measure-page .leaflet-container{background:#e9efeb!important}
-.measure-page .leaflet-tile{will-change:transform}
-.measure-page .measure-bottom{max-height:34vh;overflow:auto}
-@media(max-width:560px){
-  .measure-page .measure-overlay{top:8px;right:8px;left:8px}
-  .measure-page .measure-overlay input{min-width:0;font-size:13px}
-  .measure-page .measure-overlay .primary{padding:11px 10px}
-  .measure-page .floating{top:58px;right:8px;flex-wrap:wrap;max-width:150px}
-  .measure-page .measure-bottom{left:7px!important;right:7px!important;bottom:7px!important;border-radius:16px!important;padding:9px!important;max-height:36vh}
-  .weather-page-head{min-height:145px!important;padding:15px!important;border-radius:18px!important}
-  .weather-temp-row strong{font-size:40px!important}
-  .weather-big-icon{font-size:50px!important}
-}
-/* جلوگیری از تکرار جزئیات متراژ در کارت اندازه‌گیری */
-.measured-card>.row{display:none!important}
-.measured-card .land-plan-inside{margin-top:0!important}
-/* نقشه شماتیک نباید صفحه را بزرگ کند */
-.land-plan-inside img{max-width:100%!important;height:auto!important;display:block!important}

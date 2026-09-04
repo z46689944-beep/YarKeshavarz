@@ -7,8 +7,7 @@ const base={
   inventory:[],
   transactions:[],
   crops:[],
-  profile:{name:'',email:'',phone:'',photo:''},
-  equipment:[]
+  profile:{name:'',email:'',phone:'',photo:''}
 };
 
 let state=load(),route='home',selected=null,tab='overview';
@@ -64,7 +63,6 @@ function normalize(x){
     inventory:Array.isArray(x.inventory)?x.inventory:[],
     transactions:Array.isArray(x.transactions)?x.transactions:[],
     crops:Array.isArray(x.crops)?x.crops:[],
-    equipment:Array.isArray(x.equipment)?x.equipment:[],
     profile:{...base.profile,...(x.profile||{})}
   }
 }
@@ -109,7 +107,6 @@ function go(r){
   else if(r==='ads')renderAds();
   else if(r==='news')renderNews();
   else if(r==='inventory')renderInventory();
-  else if(r==='equipment')renderEquipment();
   else if(r==='yar')renderYar();
   else renderHome();
 
@@ -122,6 +119,7 @@ function go(r){
   })
 }
 
+// Expose the router for auxiliary V3 modules (e.g. land editor).
 window.go=go;
 
 function head(h){
@@ -1238,13 +1236,6 @@ function renderLand(){
     ${content}
   `;
 
-  if(tab==='weather'){
-    const wb=$('#landWeather');
-    if(wb && l.lat && l.lng){
-      weatherData(l.lat,l.lng,wb);
-    }
-  }
-
   let ph=$('#landPhoto');
 
   if(ph){
@@ -1317,35 +1308,6 @@ function compressImage(file,cb){
 
 
 /* =========================================================
-   ادوات کشاورزی
-   ========================================================= */
-
-function renderEquipment(){
-  head('ادوات کشاورزی');
-  const items=state.equipment||[];
-  const total=items.reduce((a,x)=>a+num(x.count),0);
-  const ready=items.filter(x=>x.condition==='آماده').length;
-  const repair=items.filter(x=>x.condition==='نیازمند تعمیر').length;
-
-  app.innerHTML=`
-    <div class="section-head">
-      <h2>🚜 موجودی ادوات کشاورزی</h2>
-      <button class="primary" data-add-equipment>＋ افزودن</button>
-    </div>
-    <div class="grid">
-      <div class="card"><span class="muted">تعداد نوع ادوات</span><div class="metric">${items.length.toLocaleString('fa-IR')}</div></div>
-      <div class="card"><span class="muted">تعداد کل</span><div class="metric">${total.toLocaleString('fa-IR')}</div></div>
-      <div class="card"><span class="muted">آماده کار</span><div class="metric">${ready.toLocaleString('fa-IR')}</div></div>
-      <div class="card"><span class="muted">نیازمند تعمیر</span><div class="metric">${repair.toLocaleString('fa-IR')}</div></div>
-    </div>
-    <div class="list">
-      ${items.map(x=>`<article class="card"><div class="row"><div><h3>${esc(x.name)}</h3><span class="badge">${esc(x.type||'سایر')}</span></div><b>${num(x.count).toLocaleString('fa-IR')} ${esc(x.unit||'دستگاه')}</b></div><p class="muted">وضعیت: <b>${esc(x.condition||'ثبت نشده')}</b> · محل: <b>${esc(x.location||'ثبت نشده')}</b></p>${x.notes?`<p>${esc(x.notes)}</p>`:''}<div class="actions"><button class="secondary" data-equipment-edit="${x.id}">ویرایش</button><button class="danger" data-equipment-delete="${x.id}">حذف</button></div></article>`).join('')||'<div class="empty card">هنوز ادواتی ثبت نشده است.</div>'}
-    </div>
-    <button class="secondary" data-route="inventory">← بازگشت به انبار</button>
-  `;
-}
-
-/* =========================================================
    انبار
    ========================================================= */
 
@@ -1359,10 +1321,12 @@ function renderInventory(){
 
       <h2>انبار</h2>
 
-      <div class="actions">
-        <button class="secondary" data-route="equipment">🚜 ادوات کشاورزی</button>
-        <button class="primary" data-add-item>＋ کالا</button>
-      </div>
+      <button
+        class="primary"
+        data-add-item
+      >
+        ＋ کالا
+      </button>
 
     </div>
 
@@ -2723,7 +2687,7 @@ function initMap(){
     'measureMap',
     {
       zoomControl:false,
-      maxZoom:18,
+      maxZoom:20,
       minZoom:3
     }
   ).setView(
@@ -2739,10 +2703,9 @@ function initMap(){
     L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
-        maxZoom:18,
-        maxNativeZoom:19,
-        keepBuffer:4,
-        attribution:'© OpenStreetMap'
+        maxZoom:20,
+        attribution:'© OpenStreetMap',
+        noWrap:true
       }
     ).addTo(map);
 
@@ -3058,7 +3021,7 @@ async function searchPlace(){
 
     map.setView(
       [lat,lon],
-      16
+      17
     );
 
     addPoint(
@@ -3295,13 +3258,6 @@ document.addEventListener(
           )
         }
 
-        try{
-          sessionStorage.setItem(
-            'yk-measured-points',
-            JSON.stringify(points)
-          );
-        }catch(err){}
-
         go('add')
       }
     }
@@ -3363,44 +3319,6 @@ document.addEventListener(
 
         renderInventory()
       }
-    }
-
-    if(e.target.closest('[data-add-equipment]')){
-      let n=prompt('نام وسیله','تراکتور');
-      if(n){
-        let type=prompt('نوع وسیله','تراکتور')||'سایر';
-        let count=num(prompt('تعداد','1'));
-        let unit=prompt('واحد','دستگاه')||'دستگاه';
-        let condition=prompt('وضعیت: آماده / نیازمند تعمیر','آماده')||'آماده';
-        let location=prompt('محل نگهداری','انبار')||'انبار';
-        let notes=prompt('توضیحات','')||'';
-        state.equipment=state.equipment||[];
-        state.equipment.push({id:uid(),name:n,type,count,unit,condition,location,notes});
-        save(); renderEquipment();
-      }
-      return;
-    }
-
-    if(e.target.dataset.equipmentDelete){
-      let id=e.target.dataset.equipmentDelete;
-      if(confirm('این وسیله حذف شود؟')){
-        state.equipment=(state.equipment||[]).filter(x=>x.id!==id);
-        save(); renderEquipment();
-      }
-      return;
-    }
-
-    if(e.target.dataset.equipmentEdit){
-      let x=(state.equipment||[]).find(a=>a.id===e.target.dataset.equipmentEdit);
-      if(x){
-        x.name=prompt('نام وسیله',x.name)||x.name;
-        x.count=num(prompt('تعداد',String(x.count)));
-        x.condition=prompt('وضعیت',x.condition)||x.condition;
-        x.location=prompt('محل نگهداری',x.location)||x.location;
-        x.notes=prompt('توضیحات',x.notes||'')||'';
-        save(); renderEquipment();
-      }
-      return;
     }
 
     if(

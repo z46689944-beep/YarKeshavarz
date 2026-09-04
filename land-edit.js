@@ -1645,6 +1645,12 @@
 
         }
 
+        // Keep the main V3 in-memory state in sync with the editor.
+        // Otherwise the next render could show the old area until reload.
+        if (typeof state !== "undefined" && typeof normalize === "function") {
+          state = normalize(fresh);
+        }
+
         stopGPS();
 
         overlay.remove();
