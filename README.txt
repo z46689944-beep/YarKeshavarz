@@ -1,10 +1,8 @@
-یار کشاورز – V14.4 Modern Measure Fix
+Yar Keshavarz V3.2 STABLE RECOVERY
 
-این نسخه فقط اصلاحات متراژ را انجام می‌دهد:
-- جستجو پایین‌تر و مرتب‌تر قرار گرفته
-- زوم از محدوده‌ای که باعث سفید شدن نقشه می‌شود عبور نمی‌کند
-- کیفیت/نمایش لایه ماهواره‌ای بهتر شده و زوم بیشتری دارد
-- چرخش دو انگشتی و GPS نسخه قبل حفظ شده‌اند
+Replace ONLY:
+index.html
+app.js
+style.css
 
-در index.html این خط را بعد از V14.3 اضافه/جایگزین کن:
-<script src="v14.4-modern-measure-fix.js"></script>
+Keep manifest.webmanifest, logo.png, wheat-hero.jpg, keshavar-yar.js and land-edit.js from the repository.

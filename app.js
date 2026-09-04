@@ -7,8 +7,8 @@ const base={
   inventory:[],
   transactions:[],
   crops:[],
-  equipment:[],
-  profile:{name:'',email:'',phone:'',photo:''}
+  profile:{name:'',email:'',phone:'',photo:''},
+  equipment:[]
 };
 
 let state=load(),route='home',selected=null,tab='overview';
@@ -94,8 +94,10 @@ function go(r){
 
   route=r;
 
-  document.body.classList.toggle('measure-active',r==='measure');
-  document.body.dataset.route=r;
+  document.body.classList.toggle(
+    'measure-active',
+    r==='measure'
+  );
 
   if(r==='land')renderLand();
   else if(r==='lands')renderLands();
@@ -120,7 +122,6 @@ function go(r){
   })
 }
 
-// Expose the router for auxiliary V3 modules (e.g. land editor).
 window.go=go;
 
 function head(h){
@@ -718,6 +719,47 @@ function renderLand(){
             </b>
           </div>
 
+          <div class="measure-detail-grid">
+
+            <div>
+              <span>هکتار</span>
+              <b>
+                ${
+                  (num(l.areaM2)/10000)
+                  .toLocaleString('fa-IR',{
+                    maximumFractionDigits:3
+                  })
+                }
+              </b>
+            </div>
+
+            <div>
+              <span>محیط</span>
+              <b>
+                ${
+                  Math.round(
+                    num(l.perimeter||0)
+                  ).toLocaleString('fa-IR')
+                }
+                متر
+              </b>
+            </div>
+
+            <div>
+              <span>موقعیت</span>
+              <b>
+                ${
+                  l.lat&&l.lng
+                  ?
+                  'GPS ثبت شده'
+                  :
+                  'ثبت نشده'
+                }
+              </b>
+            </div>
+
+          </div>
+
           ${
             plan
             ?
@@ -789,7 +831,110 @@ function renderLand(){
                 "
               >
 
-              
+              <div
+                style="
+                  display:grid;
+                  grid-template-columns:repeat(3,1fr);
+                  gap:8px;
+                  padding:12px;
+                "
+              >
+
+                <div
+                  style="
+                    background:#fff;
+                    border-radius:15px;
+                    padding:10px 7px;
+                    text-align:center;
+                  "
+                >
+                  <small
+                    style="
+                      display:block;
+                      color:#7a8b83;
+                    "
+                  >
+                    مساحت
+                  </small>
+
+                  <b
+                    style="
+                      display:block;
+                      margin-top:4px;
+                      color:#174d35;
+                    "
+                  >
+                    ${Math.round(num(l.areaM2))
+                      .toLocaleString('fa-IR')}
+                  </b>
+
+                  <small>مترمربع</small>
+                </div>
+
+                <div
+                  style="
+                    background:#fff;
+                    border-radius:15px;
+                    padding:10px 7px;
+                    text-align:center;
+                  "
+                >
+                  <small
+                    style="
+                      display:block;
+                      color:#7a8b83;
+                    "
+                  >
+                    هکتار
+                  </small>
+
+                  <b
+                    style="
+                      display:block;
+                      margin-top:4px;
+                      color:#174d35;
+                    "
+                  >
+                    ${(num(l.areaM2)/10000)
+                      .toLocaleString('fa-IR',{
+                        maximumFractionDigits:3
+                      })}
+                  </b>
+                </div>
+
+                <div
+                  style="
+                    background:#fff;
+                    border-radius:15px;
+                    padding:10px 7px;
+                    text-align:center;
+                  "
+                >
+                  <small
+                    style="
+                      display:block;
+                      color:#7a8b83;
+                    "
+                  >
+                    محیط
+                  </small>
+
+                  <b
+                    style="
+                      display:block;
+                      margin-top:4px;
+                      color:#174d35;
+                    "
+                  >
+                    ${Math.round(
+                      num(l.perimeter||0)
+                    ).toLocaleString('fa-IR')}
+                  </b>
+
+                  <small>متر</small>
+                </div>
+
+              </div>
 
             </div>
             `
@@ -1093,6 +1238,13 @@ function renderLand(){
     ${content}
   `;
 
+  if(tab==='weather'){
+    const wb=$('#landWeather');
+    if(wb && l.lat && l.lng){
+      weatherData(l.lat,l.lng,wb);
+    }
+  }
+
   let ph=$('#landPhoto');
 
   if(ph){
@@ -1165,47 +1317,37 @@ function compressImage(file,cb){
 
 
 /* =========================================================
-   انبار
+   ادوات کشاورزی
    ========================================================= */
 
 function renderEquipment(){
-
   head('ادوات کشاورزی');
-
   const items=state.equipment||[];
   const total=items.reduce((a,x)=>a+num(x.count),0);
-  const ready=items.filter(x=>(x.condition||'')==='آماده').length;
-  const repair=items.filter(x=>(x.condition||'')==='نیازمند تعمیر').length;
+  const ready=items.filter(x=>x.condition==='آماده').length;
+  const repair=items.filter(x=>x.condition==='نیازمند تعمیر').length;
 
   app.innerHTML=`
     <div class="section-head">
-      <div><span class="eyebrow">مدیریت دارایی مزرعه</span><h2>موجودی ادوات کشاورزی</h2></div>
+      <h2>🚜 موجودی ادوات کشاورزی</h2>
       <button class="primary" data-add-equipment>＋ افزودن</button>
     </div>
-
-    <div class="grid equipment-stats">
-      <div class="card"><span class="muted">تعداد دستگاه/ادوات</span><div class="metric">${items.length.toLocaleString('fa-IR')}</div></div>
+    <div class="grid">
+      <div class="card"><span class="muted">تعداد نوع ادوات</span><div class="metric">${items.length.toLocaleString('fa-IR')}</div></div>
       <div class="card"><span class="muted">تعداد کل</span><div class="metric">${total.toLocaleString('fa-IR')}</div></div>
       <div class="card"><span class="muted">آماده کار</span><div class="metric">${ready.toLocaleString('fa-IR')}</div></div>
       <div class="card"><span class="muted">نیازمند تعمیر</span><div class="metric">${repair.toLocaleString('fa-IR')}</div></div>
     </div>
-
-    <div class="list equipment-list">
-      ${items.map(x=>`<article class="card equipment-card">
-        <div class="row"><div><h3>${esc(x.name)}</h3><span class="badge">${esc(x.type||'سایر')}</span></div><b>${num(x.count).toLocaleString('fa-IR')} ${esc(x.unit||'دستگاه')}</b></div>
-        <div class="equipment-meta">
-          <span>وضعیت: <b>${esc(x.condition||'ثبت نشده')}</b></span>
-          <span>محل: <b>${esc(x.location||'ثبت نشده')}</b></span>
-        </div>
-        ${x.notes?`<p class="muted">${esc(x.notes)}</p>`:''}
-        <div class="actions"><button class="secondary" data-equipment-edit="${x.id}">ویرایش</button><button class="danger" data-equipment-delete="${x.id}">حذف</button></div>
-      </article>`).join('') || '<div class="empty card">هنوز ادواتی ثبت نشده است. اولین وسیله را اضافه کن.</div>'}
+    <div class="list">
+      ${items.map(x=>`<article class="card"><div class="row"><div><h3>${esc(x.name)}</h3><span class="badge">${esc(x.type||'سایر')}</span></div><b>${num(x.count).toLocaleString('fa-IR')} ${esc(x.unit||'دستگاه')}</b></div><p class="muted">وضعیت: <b>${esc(x.condition||'ثبت نشده')}</b> · محل: <b>${esc(x.location||'ثبت نشده')}</b></p>${x.notes?`<p>${esc(x.notes)}</p>`:''}<div class="actions"><button class="secondary" data-equipment-edit="${x.id}">ویرایش</button><button class="danger" data-equipment-delete="${x.id}">حذف</button></div></article>`).join('')||'<div class="empty card">هنوز ادواتی ثبت نشده است.</div>'}
     </div>
-
-    <button class="secondary full-btn" data-route="inventory">← بازگشت به انبار</button>
+    <button class="secondary" data-route="inventory">← بازگشت به انبار</button>
   `;
 }
 
+/* =========================================================
+   انبار
+   ========================================================= */
 
 function renderInventory(){
 
@@ -1648,70 +1790,94 @@ function renderAds(){
 
   head('تبلیغات');
 
-  const ads=[
-    {id:'ad1',title:'خدمات و تجهیزات کشاورزی',cat:'ادوات',text:'معرفی تراکتور، سمپاش، تیلر، کمباین و تجهیزات مزرعه در یک جایگاه اختصاصی.',cta:'ثبت درخواست خرید'},
-    {id:'ad2',title:'بذر و نهاده',cat:'نهاده',text:'فضای معرفی بذر، کود و نهاده با امکان ثبت شماره تماس فروشنده.',cta:'ثبت درخواست'},
-    {id:'ad3',title:'تعمیرکار و خدمات فنی',cat:'خدمات',text:'جایگاه معرفی تعمیرکاران و خدمات فنی نزدیک مزرعه.',cta:'ثبت نیاز'}
-  ];
-
   app.innerHTML=`
+
     <div class="section-head">
-      <div>
-        <span class="eyebrow">بازار یار کشاورز</span>
-        <h2>تبلیغات و پیشنهادها</h2>
-      </div>
-      <button class="primary" id="addAdRequest">＋ ثبت آگهی</button>
+      <h2>تبلیغات و پیشنهادها</h2>
     </div>
 
-    <div class="ad-filter">
-      <button class="secondary active" data-ad-filter="all">همه</button>
-      <button class="secondary" data-ad-filter="ادوات">ادوات</button>
-      <button class="secondary" data-ad-filter="نهاده">نهاده</button>
-      <button class="secondary" data-ad-filter="خدمات">خدمات</button>
-    </div>
+    <div class="list">
 
-    <div class="list" id="adsList">
-      ${ads.map(a=>`<article class="card ad-card" data-ad-cat="${a.cat}">
-        <div class="ad-top"><span class="badge">${a.cat}</span><span class="muted small">آگهی</span></div>
-        <h3>${a.title}</h3>
-        <p class="muted">${a.text}</p>
-        <div class="actions"><button class="primary" data-ad-action="${a.id}">${a.cta}</button></div>
-      </article>`).join('')}
-    </div>
+      <article class="card ad">
 
-    <div class="card ad-note">
-      <b>ثبت آگهی در نسخه V3</b>
-      <p class="muted">فعلاً درخواست آگهی روی همین دستگاه ذخیره می‌شود تا بعداً به سامانه آنلاین تبلیغات متصل شود.</p>
+        <h2>ویژه کشاورزان</h2>
+
+        <p>
+          فضای آماده برای معرفی خدمات،
+          تجهیزات، بذر و نهاده‌های کشاورزی.
+        </p>
+
+      </article>
+
+      <article class="card">
+
+        <h3>جایگاه تبلیغاتی</h3>
+
+        <p class="muted">
+          در نسخه آنلاین می‌توان این بخش را
+          به سامانه واقعی تبلیغات متصل کرد.
+        </p>
+
+      </article>
+
     </div>
-  `;
+  `
 }
 
+
+/* =========================================================
+   اخبار
+   ========================================================= */
 
 function renderNews(){
 
   head('اخبار');
 
-  const news=[
-    {id:'n1',cat:'آموزش',title:'چطور اطلاعات زمین را برای تصمیم‌گیری بهتر کامل کنیم؟',text:'موقعیت، خاک، منبع آب، آبیاری، محصول و سوابق هزینه را در پرونده زمین ثبت کن.',detail:'هرچه اطلاعات پرونده زمین کامل‌تر باشد، گزارش هزینه و پیشنهادهای کشاورزیار دقیق‌تر می‌شود.'},
-    {id:'n2',cat:'مدیریت مزرعه',title:'ثبت منظم ورود و مصرف انبار',text:'ورودی و مصرف نهاده‌ها را جدا ثبت کن تا موجودی واقعی همیشه مشخص باشد.',detail:'در صفحه انبار، ورود کالا و مصرف/خروج جداگانه ثبت می‌شود و موجودی به‌صورت خودکار تغییر می‌کند.'},
-    {id:'n3',cat:'هواشناسی',title:'قبل از عملیات مزرعه، وضعیت هوا را بررسی کن',text:'آب‌وهوا را برای موقعیت زمین ببین و احتمال بارش، باد و دما را بررسی کن.',detail:'در پرونده هر زمین، آب‌وهوای همان مختصات قابل دریافت است.'}
-  ];
-
   app.innerHTML=`
+
     <div class="section-head">
-      <div><span class="eyebrow">مرکز محتوای یار کشاورز</span><h2>اخبار و آموزش</h2></div>
+      <h2>اخبار کشاورزی</h2>
     </div>
-    <div class="news-list">
-      ${news.map(n=>`<article class="card news-card">
-        <div class="ad-top"><span class="badge">${n.cat}</span><span class="muted small">آموزش</span></div>
-        <h3>${n.title}</h3>
-        <p class="muted">${n.text}</p>
-        <button class="secondary" data-news="${n.id}">مشاهده مطلب</button>
-        <div class="news-detail" id="news-${n.id}" hidden>${n.detail}</div>
-      </article>`).join('')}
+
+    <div class="list">
+
+      <article class="card">
+
+        <div
+          class="hero"
+          style="min-height:150px;margin:0 0 10px"
+        >
+
+          <h2>کشاورزی هوشمند</h2>
+
+          <p>
+            مدیریت داده‌های زمین،
+            هزینه و کشت در یک برنامه.
+          </p>
+
+        </div>
+
+        <span class="muted">
+          خبر و آموزش
+        </span>
+
+      </article>
+
+      <article class="card">
+
+        <h3>
+          گزارش‌های مزرعه را منظم نگه دار
+        </h3>
+
+        <p class="muted">
+          عکس، هزینه، کشت و موجودی را
+          کنار پرونده هر زمین ثبت کن.
+        </p>
+
+      </article>
+
     </div>
-    <div class="card news-note"><b>خبرهای آنلاین</b><p class="muted">این بخش برای اتصال به منبع خبری آنلاین آماده شده؛ محتوای فعلی آفلاین است تا بدون سرویس جانبی هم برنامه پایدار بماند.</p></div>
-  `;
+  `
 }
 
 
@@ -2557,10 +2723,8 @@ function initMap(){
     'measureMap',
     {
       zoomControl:false,
-      maxZoom:19,
-      minZoom:3,
-      zoomSnap:1,
-      zoomDelta:1
+      maxZoom:18,
+      minZoom:3
     }
   ).setView(
     [35.7,51.4],
@@ -2575,10 +2739,10 @@ function initMap(){
     L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
-        maxZoom:19,
+        maxZoom:18,
         maxNativeZoom:19,
-        attribution:'© OpenStreetMap',
-        noWrap:false
+        keepBuffer:4,
+        attribution:'© OpenStreetMap'
       }
     ).addTo(map);
 
@@ -2593,8 +2757,7 @@ function initMap(){
   points=[];
   markers=[];
 
-  updateMeasure();
-  setTimeout(()=>map.invalidateSize(true),180);
+  updateMeasure()
 }
 
 function addPoint(lat,lng,a){
@@ -2838,9 +3001,9 @@ function startTrack(){
             c.latitude,
             c.longitude
           ],
-          Math.min(
-            19,
-            Math.max(map.getZoom(),18)
+          Math.max(
+            map.getZoom(),
+            18
           )
         );
 
@@ -2895,7 +3058,7 @@ async function searchPlace(){
 
     map.setView(
       [lat,lon],
-      17
+      16
     );
 
     addPoint(
@@ -2976,8 +3139,7 @@ function toggleSat(){
       L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
-          maxZoom:19,
-          maxNativeZoom:19,
+          maxZoom:20,
           attribution:'© OpenStreetMap'
         }
       ).addTo(map)
@@ -3133,10 +3295,12 @@ document.addEventListener(
           )
         }
 
-        sessionStorage.setItem(
-          'yk-measured-points',
-          JSON.stringify(points)
-        );
+        try{
+          sessionStorage.setItem(
+            'yk-measured-points',
+            JSON.stringify(points)
+          );
+        }catch(err){}
 
         go('add')
       }
@@ -3205,10 +3369,10 @@ document.addEventListener(
       let n=prompt('نام وسیله','تراکتور');
       if(n){
         let type=prompt('نوع وسیله','تراکتور')||'سایر';
-        let count=num(prompt('تعداد','1'))||1;
+        let count=num(prompt('تعداد','1'));
         let unit=prompt('واحد','دستگاه')||'دستگاه';
-        let condition=prompt('وضعیت: آماده / نیازمند تعمیر / ازکارافتاده','آماده')||'آماده';
-        let location=prompt('محل نگهداری','مزرعه')||'مزرعه';
+        let condition=prompt('وضعیت: آماده / نیازمند تعمیر','آماده')||'آماده';
+        let location=prompt('محل نگهداری','انبار')||'انبار';
         let notes=prompt('توضیحات','')||'';
         state.equipment=state.equipment||[];
         state.equipment.push({id:uid(),name:n,type,count,unit,condition,location,notes});
@@ -3219,9 +3383,8 @@ document.addEventListener(
 
     if(e.target.dataset.equipmentDelete){
       let id=e.target.dataset.equipmentDelete;
-      let x=(state.equipment||[]).find(a=>a.id===id);
-      if(x && confirm(`«${x.name}» حذف شود؟`)){
-        state.equipment=state.equipment.filter(a=>a.id!==id);
+      if(confirm('این وسیله حذف شود؟')){
+        state.equipment=(state.equipment||[]).filter(x=>x.id!==id);
         save(); renderEquipment();
       }
       return;
@@ -3231,17 +3394,20 @@ document.addEventListener(
       let x=(state.equipment||[]).find(a=>a.id===e.target.dataset.equipmentEdit);
       if(x){
         x.name=prompt('نام وسیله',x.name)||x.name;
-        x.type=prompt('نوع وسیله',x.type||'سایر')||x.type;
-        x.count=num(prompt('تعداد',String(x.count)))||x.count;
-        x.condition=prompt('وضعیت',x.condition||'آماده')||x.condition;
-        x.location=prompt('محل نگهداری',x.location||'مزرعه')||x.location;
-        x.notes=prompt('توضیحات',x.notes||'')??x.notes;
+        x.count=num(prompt('تعداد',String(x.count)));
+        x.condition=prompt('وضعیت',x.condition)||x.condition;
+        x.location=prompt('محل نگهداری',x.location)||x.location;
+        x.notes=prompt('توضیحات',x.notes||'')||'';
         save(); renderEquipment();
       }
       return;
     }
 
-    if(e.target.closest('[data-add-item]')){
+    if(
+      e.target.closest(
+        '[data-add-item]'
+      )
+    ){
 
       let n=
         prompt(
@@ -3363,52 +3529,6 @@ document.addEventListener(
         save();
 
         renderLand()
-      }
-    }
-
-    if(e.target.dataset.news){
-      let box=document.querySelector('#news-'+e.target.dataset.news);
-      if(box){ box.hidden=!box.hidden; e.target.textContent=box.hidden?'مشاهده مطلب':'بستن مطلب'; }
-      return;
-    }
-
-    if(e.target.dataset.adAction){
-      let a=e.target.closest('.ad-card');
-      let text=a?.querySelector('h3')?.textContent||'آگهی';
-      let q=prompt(`درخواست برای «${text}»\nشماره تماس یا توضیح خود را وارد کن:`,'');
-      if(q){ alert('درخواست شما در این دستگاه ثبت شد.'); }
-      return;
-    }
-
-    if(e.target.id==='addAdRequest'){
-      let t=prompt('عنوان آگهی','فروش یا خدمات کشاورزی');
-      if(t){ alert('درخواست ثبت آگهی دریافت شد. در نسخه آنلاین می‌توان آن را به سامانه تبلیغات متصل کرد.'); }
-      return;
-    }
-
-    if(e.target.dataset.adFilter){
-      document.querySelectorAll('[data-ad-filter]').forEach(b=>b.classList.toggle('active',b===e.target));
-      let f=e.target.dataset.adFilter;
-      document.querySelectorAll('.ad-card').forEach(c=>c.style.display=(f==='all'||c.dataset.adCat===f)?'':'none');
-      return;
-    }
-
-    if(e.target.closest('[data-land-weather]')){
-
-      let l=land(selected);
-
-      if(!l){
-        return alert('زمین انتخاب نشده است.')
-      }
-
-      let box=$('#landWeather');
-
-      if(!l.lat || !l.lng){
-        return alert('این زمین مختصات GPS ندارد. ابتدا متراژ زمین را با نقشه ثبت کن.')
-      }
-
-      if(box){
-        weatherData(l.lat,l.lng,box);
       }
     }
 
