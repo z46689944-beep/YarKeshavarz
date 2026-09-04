@@ -1,6 +1,7 @@
 /* =========================================================
-   یار کشاورز — Land Edit V3
-   ویرایش مستقل هر زمین + تغییر متراژ روی همان زمین
+   یار کشاورز — Land Edit V4
+   ویرایش مستقل تمام زمین‌ها
+   + تغییر متراژ همان زمین با نقشه و GPS
    ========================================================= */
 
 (function () {
@@ -21,394 +22,380 @@
       .replace(/'/g, "&#039;");
   }
 
-  function toNumber(value) {
+  function faToEn(value) {
+    return String(value ?? "")
+      .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  }
+
+  function num(value) {
     return Number(
-      String(value ?? "")
-        .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
-        .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+      faToEn(value)
         .replace(/[٬,\s]/g, "")
-    );
+    ) || 0;
   }
 
   function loadState() {
     try {
-      return JSON.parse(localStorage.getItem(KEY) || "null");
+      return JSON.parse(
+        localStorage.getItem(KEY) || "null"
+      );
     } catch (e) {
-      console.error("Land edit load error:", e);
+      console.error(e);
       return null;
     }
   }
 
   function saveState(state) {
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(
+        KEY,
+        JSON.stringify(state)
+      );
       return true;
     } catch (e) {
-      console.error("Land edit save error:", e);
+      console.error(e);
       return false;
     }
   }
 
-  function formatNumber(value, digits = 1) {
-    return Number(value || 0).toLocaleString("fa-IR", {
-      maximumFractionDigits: digits
-    });
-  }
-
-  function closeEditor() {
-    const el = document.querySelector(".yk-v3-overlay");
-    if (el) el.remove();
+  function format(value, digits = 1) {
+    return Number(value || 0).toLocaleString(
+      "fa-IR",
+      {
+        maximumFractionDigits: digits
+      }
+    );
   }
 
   /* =========================================================
-     STYLE
+     CSS
      ========================================================= */
 
   const style = document.createElement("style");
 
   style.textContent = `
 
-    .yk-v3-edit-btn{
+    .yk-v4-edit-btn{
       width:100%;
-      margin-top:9px;
-      padding:13px 15px;
+      margin-top:10px;
       border:0;
       border-radius:14px;
+      padding:13px 15px;
       background:#166534;
       color:#fff;
-      font:700 14px inherit;
-      box-shadow:0 5px 15px rgba(22,101,52,.16);
+      font:800 14px inherit;
       cursor:pointer;
+      box-shadow:0 5px 16px rgba(22,101,52,.18);
     }
 
-    .yk-v3-edit-btn:active{
+    .yk-v4-edit-btn:active{
       transform:scale(.98);
     }
 
-    .yk-v3-overlay{
+    .yk-v4-overlay{
       position:fixed;
       inset:0;
-      z-index:100000;
-      background:rgba(5,20,10,.58);
+      z-index:99999;
+      background:rgba(0,0,0,.55);
       display:flex;
       align-items:flex-end;
       justify-content:center;
+      direction:rtl;
     }
 
-    .yk-v3-modal{
+    .yk-v4-modal{
       width:100%;
-      max-width:650px;
+      max-width:680px;
       max-height:94vh;
       overflow:auto;
       background:#fff;
-      border-radius:25px 25px 0 0;
-      padding:19px;
+      border-radius:26px 26px 0 0;
+      padding:18px;
       box-sizing:border-box;
-      direction:rtl;
-      box-shadow:0 -12px 45px rgba(0,0,0,.25);
     }
 
-    .yk-v3-head{
+    .yk-v4-head{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      margin-bottom:15px;
+      margin-bottom:14px;
     }
 
-    .yk-v3-head h2{
+    .yk-v4-head h2{
       margin:0;
       font-size:20px;
     }
 
-    .yk-v3-x{
-      border:0;
-      background:#eef3ef;
+    .yk-v4-close{
       width:40px;
       height:40px;
+      border:0;
       border-radius:50%;
+      background:#eef3ef;
       font-size:22px;
-      cursor:pointer;
     }
 
-    .yk-v3-note{
+    .yk-v4-note{
       background:#f0fdf4;
-      border:1px solid #d5f1dd;
+      border:1px solid #ccebd5;
       color:#166534;
       border-radius:14px;
-      padding:11px 12px;
+      padding:11px;
       font-size:13px;
-      margin-bottom:14px;
       line-height:1.8;
+      margin-bottom:15px;
     }
 
-    .yk-v3-field{
+    .yk-v4-field{
       margin-bottom:12px;
     }
 
-    .yk-v3-field label{
+    .yk-v4-field label{
       display:block;
       font-size:13px;
       font-weight:800;
       margin-bottom:6px;
     }
 
-    .yk-v3-field input,
-    .yk-v3-field select,
-    .yk-v3-field textarea{
+    .yk-v4-field input,
+    .yk-v4-field select,
+    .yk-v4-field textarea{
       width:100%;
       box-sizing:border-box;
       border:1px solid #d7e1da;
       border-radius:13px;
       padding:12px;
-      font:15px inherit;
       background:#fff;
-      outline:0;
+      outline:none;
+      font:15px inherit;
     }
 
-    .yk-v3-field input:focus,
-    .yk-v3-field select:focus,
-    .yk-v3-field textarea:focus{
+    .yk-v4-field input:focus,
+    .yk-v4-field select:focus,
+    .yk-v4-field textarea:focus{
       border-color:#22a05a;
-      box-shadow:0 0 0 3px rgba(34,160,90,.1);
+      box-shadow:0 0 0 3px rgba(34,160,90,.10);
     }
 
-    .yk-v3-measure-btn{
+    .yk-v4-measure{
       width:100%;
-      border:1px solid #b8ddc2;
-      background:#f0fdf4;
-      color:#166534;
+      border:1px solid #b9dfc4;
       border-radius:15px;
       padding:14px;
-      font:800 15px inherit;
-      cursor:pointer;
-      margin:2px 0 13px;
+      background:#f0fdf4;
+      color:#166534;
+      font:900 15px inherit;
+      margin:2px 0 14px;
     }
 
-    .yk-v3-actions{
+    .yk-v4-actions{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:9px;
       margin-top:16px;
     }
 
-    .yk-v3-save,
-    .yk-v3-cancel{
+    .yk-v4-save,
+    .yk-v4-cancel{
       border:0;
       border-radius:14px;
       padding:14px;
-      font:800 15px inherit;
-      cursor:pointer;
+      font:900 15px inherit;
     }
 
-    .yk-v3-save{
+    .yk-v4-save{
       background:#166534;
       color:#fff;
     }
 
-    .yk-v3-cancel{
+    .yk-v4-cancel{
       background:#edf2ee;
       color:#333;
     }
 
     /* =====================================================
-       MEASUREMENT SCREEN
+       MEASUREMENT
        ===================================================== */
 
-    .yk-measure-overlay{
+    .yk-v4-measure-screen{
       position:fixed;
       inset:0;
-      z-index:100001;
+      z-index:100000;
       background:#fff;
-      direction:rtl;
       display:flex;
       flex-direction:column;
+      direction:rtl;
     }
 
-    .yk-measure-top{
+    .yk-v4-measure-head{
       padding:10px 12px;
-      background:rgba(255,255,255,.97);
+      background:#fff;
       box-shadow:0 2px 12px rgba(0,0,0,.12);
-      position:relative;
-      z-index:3;
+      z-index:5;
     }
 
-    .yk-measure-title{
+    .yk-v4-measure-title{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:8px;
     }
 
-    .yk-measure-title strong{
+    .yk-v4-measure-title strong{
       font-size:17px;
     }
 
-    .yk-measure-close{
-      border:0;
-      background:#eef3ef;
+    .yk-v4-measure-close{
       width:38px;
       height:38px;
+      border:0;
       border-radius:50%;
+      background:#eef3ef;
       font-size:21px;
-      cursor:pointer;
     }
 
-    .yk-measure-sub{
+    .yk-v4-measure-help{
       font-size:12px;
-      color:#5c6b61;
-      margin-top:3px;
+      color:#66736a;
       line-height:1.7;
+      margin-top:3px;
     }
 
-    .yk-measure-map{
+    .yk-v4-map{
       position:relative;
       flex:1;
       min-height:280px;
     }
 
-    .yk-measure-map .leaflet-container{
+    .yk-v4-map .leaflet-container{
       width:100%;
       height:100%;
-      background:#dfe9df;
     }
 
-    .yk-measure-tools{
+    .yk-v4-map-tools{
       position:absolute;
-      top:9px;
-      left:9px;
+      top:10px;
+      left:10px;
       z-index:1000;
       display:flex;
       flex-direction:column;
       gap:7px;
     }
 
-    .yk-measure-tools button{
+    .yk-v4-map-tools button{
       border:0;
       border-radius:12px;
-      background:rgba(255,255,255,.96);
+      background:#fff;
       padding:9px 11px;
       font:800 12px inherit;
       box-shadow:0 2px 9px rgba(0,0,0,.18);
-      cursor:pointer;
     }
 
-    .yk-measure-tools button.on{
+    .yk-v4-map-tools button.active{
       background:#166534;
       color:#fff;
     }
 
-    .yk-measure-bottom{
+    .yk-v4-bottom{
       background:#fff;
-      padding:10px 12px 12px;
-      box-shadow:0 -3px 15px rgba(0,0,0,.14);
-      z-index:3;
+      padding:10px 12px 13px;
+      box-shadow:0 -3px 16px rgba(0,0,0,.14);
+      z-index:5;
     }
 
-    .yk-measure-stats{
+    .yk-v4-stats{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:7px;
       margin-bottom:9px;
     }
 
-    .yk-stat{
+    .yk-v4-stat{
       background:#f5f8f5;
       border-radius:12px;
-      padding:9px;
+      padding:9px 5px;
       text-align:center;
     }
 
-    .yk-stat b{
+    .yk-v4-stat b{
       display:block;
-      font-size:15px;
       color:#166534;
+      font-size:15px;
     }
 
-    .yk-stat span{
-      font-size:11px;
-      color:#59655d;
+    .yk-v4-stat span{
+      font-size:10px;
+      color:#657067;
     }
 
-    .yk-measure-row{
+    .yk-v4-controls{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:7px;
     }
 
-    .yk-measure-row button{
+    .yk-v4-controls button{
       border:0;
       border-radius:13px;
-      padding:12px 8px;
+      padding:12px 7px;
       font:800 13px inherit;
-      cursor:pointer;
     }
 
-    .yk-gps{
+    .yk-v4-gps{
       background:#e8f5eb;
       color:#166534;
     }
 
-    .yk-gps.on{
+    .yk-v4-gps.active{
       background:#166534;
       color:#fff;
     }
 
-    .yk-clear{
-      background:#f5eeee;
+    .yk-v4-clear{
+      background:#f8eeee;
       color:#9b2c2c;
     }
 
-    .yk-measure-save{
+    .yk-v4-save-measure{
       width:100%;
-      margin-top:8px;
       border:0;
       border-radius:14px;
+      padding:14px;
+      margin-top:8px;
       background:#166534;
       color:#fff;
-      padding:14px;
       font:900 15px inherit;
-      cursor:pointer;
     }
 
-    .yk-measure-hint{
+    .yk-v4-hint{
       text-align:center;
-      color:#657067;
-      font-size:11px;
+      color:#68736c;
+      font-size:10px;
       margin-top:6px;
-      line-height:1.7;
+      line-height:1.6;
     }
 
-    .yk-point-label{
+    .yk-v4-point-label{
       background:#166534 !important;
       border:0 !important;
       color:#fff !important;
-      font-weight:800;
       border-radius:8px !important;
+      font-weight:900;
       padding:3px 6px !important;
     }
 
     @media(min-width:700px){
 
-      .yk-v3-overlay{
+      .yk-v4-overlay{
         align-items:center;
         padding:20px;
       }
 
-      .yk-v3-modal{
-        border-radius:25px;
+      .yk-v4-modal{
+        border-radius:26px;
         max-height:90vh;
       }
 
-      .yk-measure-bottom{
-        padding-left:22px;
-        padding-right:22px;
-      }
-
-      .yk-measure-top{
-        padding-left:22px;
-        padding-right:22px;
-      }
     }
 
   `;
@@ -416,10 +403,17 @@
   document.head.appendChild(style);
 
   /* =========================================================
-     ADD EDIT BUTTON TO EVERY LAND
+     FIND ALL LAND CARDS
      ========================================================= */
 
-  function addEditButtons(){
+  function addButtons(){
+
+    const cards =
+      document.querySelectorAll(".land-card");
+
+    if(!cards.length){
+      return;
+    }
 
     const state = loadState();
 
@@ -430,31 +424,55 @@
       return;
     }
 
-    document.querySelectorAll("[data-open-land]").forEach(function(openButton){
+    cards.forEach(function(card){
 
-      const id = openButton.dataset.openLand;
+      /*
+        اگر دکمه قبلاً ساخته شده،
+        دوباره نساز.
+      */
+
+      if(
+        card.querySelector(
+          ".yk-v4-edit-btn"
+        )
+      ){
+        return;
+      }
+
+      /*
+        شناسه زمین را مستقیماً
+        از دکمه پرونده می‌گیریم.
+      */
+
+      const openButton =
+        card.querySelector(
+          "[data-open-land]"
+        );
+
+      if(!openButton){
+        return;
+      }
+
+      const id =
+        openButton.getAttribute(
+          "data-open-land"
+        );
 
       if(!id){
         return;
       }
 
-      const parent =
-        openButton.closest(".land-card") ||
-        openButton.closest("article") ||
-        openButton.closest(".card") ||
-        openButton.parentElement;
+      /*
+        اطمینان از وجود همین زمین
+        در localStorage
+      */
 
-      if(!parent){
-        return;
-      }
+      const land =
+        state.lands.find(
+          x => String(x.id) === String(id)
+        );
 
-      if(
-        parent.querySelector(
-          '[data-yk-v3-edit="' +
-          CSS.escape(id) +
-          '"]'
-        )
-      ){
+      if(!land){
         return;
       }
 
@@ -462,27 +480,37 @@
         document.createElement("button");
 
       button.type = "button";
-      button.className = "yk-v3-edit-btn";
-      button.dataset.ykV3Edit = id;
-      button.textContent = "✏️ ویرایش این زمین";
+      button.className =
+        "yk-v4-edit-btn";
 
-      button.addEventListener("click", function(event){
+      button.textContent =
+        "✏️ ویرایش این زمین";
 
-        event.preventDefault();
-        event.stopPropagation();
+      button.addEventListener(
+        "click",
+        function(e){
 
-        openEditor(id);
+          e.preventDefault();
+          e.stopPropagation();
 
-      });
+          openEditor(id);
 
-      parent.appendChild(button);
+        }
+      );
+
+      /*
+        دکمه را مستقیماً
+        داخل همان کارت قرار می‌دهیم.
+      */
+
+      card.appendChild(button);
 
     });
 
   }
 
   /* =========================================================
-     LAND EDITOR
+     EDITOR
      ========================================================= */
 
   function openEditor(id){
@@ -498,114 +526,105 @@
     }
 
     const land =
-      state.lands.find(function(item){
-        return item.id === id;
-      });
+      state.lands.find(
+        x => String(x.id) === String(id)
+      );
 
     if(!land){
-      alert("زمین موردنظر پیدا نشد.");
+      alert("زمین پیدا نشد.");
       return;
     }
 
-    closeEditor();
+    const old =
+      document.querySelector(
+        ".yk-v4-overlay"
+      );
+
+    if(old){
+      old.remove();
+    }
 
     const overlay =
       document.createElement("div");
 
-    overlay.className = "yk-v3-overlay";
+    overlay.className =
+      "yk-v4-overlay";
 
     const modal =
       document.createElement("div");
 
-    modal.className = "yk-v3-modal";
+    modal.className =
+      "yk-v4-modal";
 
     modal.innerHTML = `
 
-      <div class="yk-v3-head">
+      <div class="yk-v4-head">
 
         <h2>
           ✏️ ویرایش زمین
         </h2>
 
         <button
-          type="button"
-          class="yk-v3-x"
-          id="ykEditClose"
+          class="yk-v4-close"
+          id="ykV4Close"
         >
           ×
         </button>
 
       </div>
 
-      <div class="yk-v3-note">
+      <div class="yk-v4-note">
 
-        اطلاعات همین زمین تغییر می‌کند؛
-        زمین جدید ساخته نمی‌شود.
+        این ویرایش فقط روی
+        «${esc(land.name || "این زمین")}»
+        انجام می‌شود.
 
         <br>
 
-        برای تغییر دقیق مساحت،
-        از «تغییر متراژ با نقشه و GPS» استفاده کن.
+        برای تغییر واقعی متراژ،
+        دکمه «تغییر متراژ» را بزن.
 
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          نام زمین
-        </label>
+      <div class="yk-v4-field">
+        <label>نام زمین</label>
 
         <input
-          id="ykEName"
+          id="ykV4Name"
           value="${esc(land.name)}"
-          placeholder="مثلاً زمین شمالی"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          مساحت (هکتار)
-        </label>
+      <div class="yk-v4-field">
+        <label>مساحت (هکتار)</label>
 
         <input
-          id="ykEArea"
+          id="ykV4Area"
           inputmode="decimal"
           value="${esc(land.area)}"
-          placeholder="مثلاً 2.5"
         >
-
       </div>
 
       <button
-        type="button"
-        class="yk-v3-measure-btn"
-        id="ykChangeMeasure"
+        class="yk-v4-measure"
+        id="ykV4Measure"
       >
         📐 تغییر متراژ با نقشه و GPS
       </button>
 
-      <div class="yk-v3-field">
-
-        <label>
-          روستا / شهر / منطقه
-        </label>
+      <div class="yk-v4-field">
+        <label>روستا / شهر / منطقه</label>
 
         <input
-          id="ykERegion"
+          id="ykV4Region"
           value="${esc(land.region)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
+      <div class="yk-v4-field">
+        <label>مالکیت</label>
 
-        <label>
-          مالکیت
-        </label>
-
-        <select id="ykEOwn">
+        <select id="ykV4Ownership">
 
           <option
             value="own"
@@ -622,101 +641,74 @@
           </option>
 
         </select>
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          نام مالک
-        </label>
+      <div class="yk-v4-field">
+        <label>نام مالک</label>
 
         <input
-          id="ykEOwner"
+          id="ykV4Owner"
           value="${esc(land.ownerName)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          نوع خاک
-        </label>
+      <div class="yk-v4-field">
+        <label>نوع خاک</label>
 
         <input
-          id="ykESoil"
+          id="ykV4Soil"
           value="${esc(land.soil)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          منبع آب
-        </label>
+      <div class="yk-v4-field">
+        <label>منبع آب</label>
 
         <input
-          id="ykEWater"
+          id="ykV4Water"
           value="${esc(land.water)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          نوع آبیاری
-        </label>
+      <div class="yk-v4-field">
+        <label>نوع آبیاری</label>
 
         <input
-          id="ykEIrr"
+          id="ykV4Irrigation"
           value="${esc(land.irrigation)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          محصول
-        </label>
+      <div class="yk-v4-field">
+        <label>محصول</label>
 
         <input
-          id="ykECrop"
+          id="ykV4Crop"
           value="${esc(land.crop)}"
         >
-
       </div>
 
-      <div class="yk-v3-field">
-
-        <label>
-          توضیحات
-        </label>
+      <div class="yk-v4-field">
+        <label>توضیحات</label>
 
         <textarea
-          id="ykENotes"
+          id="ykV4Notes"
           rows="4"
         >${esc(land.notes)}</textarea>
-
       </div>
 
-      <div class="yk-v3-actions">
+      <div class="yk-v4-actions">
 
         <button
-          type="button"
-          class="yk-v3-save"
-          id="ykESave"
+          class="yk-v4-save"
+          id="ykV4Save"
         >
           💾 ذخیره تغییرات
         </button>
 
         <button
-          type="button"
-          class="yk-v3-cancel"
-          id="ykECancel"
+          class="yk-v4-cancel"
+          id="ykV4Cancel"
         >
           انصراف
         </button>
@@ -728,32 +720,42 @@
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    modal.querySelector("#ykEditClose").onclick =
-      function(){
-        overlay.remove();
-      };
+    modal
+      .querySelector("#ykV4Close")
+      .onclick =
+      () => overlay.remove();
 
-    modal.querySelector("#ykECancel").onclick =
-      function(){
-        overlay.remove();
-      };
+    modal
+      .querySelector("#ykV4Cancel")
+      .onclick =
+      () => overlay.remove();
 
-    overlay.addEventListener("click", function(event){
+    overlay.addEventListener(
+      "click",
+      function(e){
 
-      if(event.target === overlay){
-        overlay.remove();
+        if(e.target === overlay){
+          overlay.remove();
+        }
+
       }
+    );
 
-    });
-
-    modal.querySelector("#ykChangeMeasure").onclick =
+    modal
+      .querySelector("#ykV4Measure")
+      .onclick =
       function(){
 
-        openMeasure(id, overlay);
+        openMeasurement(
+          id,
+          overlay
+        );
 
       };
 
-    modal.querySelector("#ykESave").onclick =
+    modal
+      .querySelector("#ykV4Save")
+      .onclick =
       function(){
 
         const fresh =
@@ -763,14 +765,16 @@
           !fresh ||
           !Array.isArray(fresh.lands)
         ){
-          alert("خطا در خواندن اطلاعات زمین.");
+          alert("خطا در اطلاعات زمین.");
           return;
         }
 
         const target =
-          fresh.lands.find(function(item){
-            return item.id === id;
-          });
+          fresh.lands.find(
+            x =>
+              String(x.id) ===
+              String(id)
+          );
 
         if(!target){
           alert("زمین پیدا نشد.");
@@ -778,13 +782,16 @@
         }
 
         const name =
-          modal.querySelector("#ykEName")
+          modal
+            .querySelector("#ykV4Name")
             .value
             .trim();
 
         const area =
-          toNumber(
-            modal.querySelector("#ykEArea").value
+          num(
+            modal
+              .querySelector("#ykV4Area")
+              .value
           );
 
         if(!name){
@@ -797,125 +804,145 @@
           return;
         }
 
-        target.name = name;
-        target.area = area;
+        target.name =
+          name;
+
+        target.area =
+          area;
 
         target.region =
-          modal.querySelector("#ykERegion")
+          modal
+            .querySelector("#ykV4Region")
             .value
             .trim();
 
         target.ownership =
-          modal.querySelector("#ykEOwn")
+          modal
+            .querySelector("#ykV4Ownership")
             .value;
 
         target.ownerName =
-          modal.querySelector("#ykEOwner")
+          modal
+            .querySelector("#ykV4Owner")
             .value
             .trim();
 
         target.soil =
-          modal.querySelector("#ykESoil")
+          modal
+            .querySelector("#ykV4Soil")
             .value
             .trim();
 
         target.water =
-          modal.querySelector("#ykEWater")
+          modal
+            .querySelector("#ykV4Water")
             .value
             .trim();
 
         target.irrigation =
-          modal.querySelector("#ykEIrr")
+          modal
+            .querySelector("#ykV4Irrigation")
             .value
             .trim();
 
         target.crop =
-          modal.querySelector("#ykECrop")
+          modal
+            .querySelector("#ykV4Crop")
             .value
             .trim();
 
         target.notes =
-          modal.querySelector("#ykENotes")
+          modal
+            .querySelector("#ykV4Notes")
             .value
             .trim();
 
         /*
-          اگر متراژ نقشه‌ای قبلاً وجود داشته،
-          اطلاعات دقیق آن حفظ می‌شود.
+          اگر قبلاً متراژ دقیق نداشته،
+          مقدار هکتار را به مترمربع تبدیل کن.
         */
 
         if(
-          typeof target.areaM2 === "undefined" &&
-          area > 0
+          !target.areaM2
         ){
-          target.areaM2 = area * 10000;
+          target.areaM2 =
+            area * 10000;
         }
 
-        if(!saveState(fresh)){
+        if(
+          !saveState(fresh)
+        ){
           alert("ذخیره انجام نشد.");
           return;
         }
 
         overlay.remove();
 
-        refreshApp();
+        refresh();
 
       };
 
   }
 
   /* =========================================================
-     GEOGRAPHIC CALCULATIONS
+     GEO
      ========================================================= */
 
-  function haversine(a, b){
+  function distance(a,b){
 
-    const R = 6371008.8;
+    const R =
+      6371008.8;
 
-    const rad = Math.PI / 180;
+    const rad =
+      Math.PI / 180;
 
     const dLat =
-      (b[0] - a[0]) * rad;
+      (b[0]-a[0])*rad;
 
     const dLon =
-      (b[1] - a[1]) * rad;
+      (b[1]-a[1])*rad;
 
     const lat1 =
-      a[0] * rad;
+      a[0]*rad;
 
     const lat2 =
-      b[0] * rad;
+      b[0]*rad;
 
     const h =
-      Math.sin(dLat / 2) ** 2 +
+      Math.sin(dLat/2)**2 +
       Math.cos(lat1) *
       Math.cos(lat2) *
-      Math.sin(dLon / 2) ** 2;
+      Math.sin(dLon/2)**2;
 
     return (
-      2 *
-      R *
+      2*R*
       Math.asin(
-        Math.min(1, Math.sqrt(h))
+        Math.min(
+          1,
+          Math.sqrt(h)
+        )
       )
     );
 
   }
 
-  function calculateArea(points){
+  function area(points){
 
     if(points.length < 3){
       return 0;
     }
 
-    const R = 6371008.8;
-    const rad = Math.PI / 180;
+    const R =
+      6371008.8;
 
-    let total = 0;
+    const rad =
+      Math.PI / 180;
+
+    let sum = 0;
 
     for(
-      let i = 0;
-      i < points.length;
+      let i=0;
+      i<points.length;
       i++
     ){
 
@@ -924,23 +951,23 @@
 
       const b =
         points[
-          (i + 1) %
+          (i+1) %
           points.length
         ];
 
-      total +=
-        (b[1] - a[1]) *
+      sum +=
+        (b[1]-a[1]) *
         rad *
         (
           2 +
-          Math.sin(a[0] * rad) +
-          Math.sin(b[0] * rad)
+          Math.sin(a[0]*rad) +
+          Math.sin(b[0]*rad)
         );
 
     }
 
     return Math.abs(
-      total *
+      sum *
       R *
       R /
       2
@@ -948,25 +975,25 @@
 
   }
 
-  function calculatePerimeter(points){
+  function perimeter(points){
 
     if(points.length < 2){
       return 0;
     }
 
-    let total = 0;
+    let total=0;
 
     for(
-      let i = 0;
-      i < points.length;
+      let i=0;
+      i<points.length;
       i++
     ){
 
       total +=
-        haversine(
+        distance(
           points[i],
           points[
-            (i + 1) %
+            (i+1) %
             points.length
           ]
         );
@@ -978,22 +1005,27 @@
   }
 
   /* =========================================================
-     MEASUREMENT
+     MEASUREMENT SCREEN
      ========================================================= */
 
-  function openMeasure(id, editOverlay){
+  function openMeasurement(
+    id,
+    editor
+  ){
 
-    if(typeof L === "undefined"){
+    if(
+      typeof L === "undefined"
+    ){
 
       alert(
-        "نقشه هنوز بارگذاری نشده؛ چند لحظه بعد دوباره امتحان کن."
+        "نقشه هنوز بارگذاری نشده است."
       );
 
       return;
 
     }
 
-    editOverlay.remove();
+    editor.remove();
 
     const state =
       loadState();
@@ -1001,67 +1033,71 @@
     const land =
       state &&
       state.lands &&
-      state.lands.find(function(item){
-        return item.id === id;
-      });
+      state.lands.find(
+        x =>
+          String(x.id) ===
+          String(id)
+      );
 
     if(!land){
       return;
     }
 
-    const overlay =
+    const screen =
       document.createElement("div");
 
-    overlay.className =
-      "yk-measure-overlay";
+    screen.className =
+      "yk-v4-measure-screen";
 
-    overlay.innerHTML = `
+    screen.innerHTML = `
 
-      <div class="yk-measure-top">
+      <div class="yk-v4-measure-head">
 
-        <div class="yk-measure-title">
+        <div class="yk-v4-measure-title">
 
           <strong>
-            📐 تغییر متراژ — ${esc(land.name)}
+            📐 تغییر متراژ
           </strong>
 
           <button
-            type="button"
-            class="yk-measure-close"
-            id="ykMeasureClose"
+            class="yk-v4-measure-close"
+            id="ykV4MClose"
           >
             ×
           </button>
 
         </div>
 
-        <div class="yk-measure-sub">
+        <div class="yk-v4-measure-help">
 
-          روی نقشه نقطه بزن یا GPS را روشن کن.
-          نقاط بعداً قابل جابه‌جایی هستند.
+          زمین:
+          ${esc(land.name)}
+
+          <br>
+
+          روی نقشه نقطه بزن
+          یا GPS را روشن کن.
 
         </div>
 
       </div>
 
       <div
-        class="yk-measure-map"
-        id="ykMeasureMap"
+        class="yk-v4-map"
+        id="ykV4Map"
       >
 
-        <div class="yk-measure-tools">
+        <div class="yk-v4-map-tools">
 
           <button
-            type="button"
-            id="ykMapBtn"
-            class="on"
+            id="ykV4Street"
+            class="active"
           >
             🗺️ نقشه
           </button>
 
           <button
-            type="button"
-            id="ykSatBtn"
+            id="ykV4Satellite"
           >
             🛰️ ماهواره
           </button>
@@ -1070,62 +1106,45 @@
 
       </div>
 
-      <div class="yk-measure-bottom">
+      <div class="yk-v4-bottom">
 
-        <div class="yk-measure-stats">
+        <div class="yk-v4-stats">
 
-          <div class="yk-stat">
-
-            <b id="ykMArea">
+          <div class="yk-v4-stat">
+            <b id="ykV4Area">
               ۰
             </b>
-
-            <span>
-              مترمربع
-            </span>
-
+            <span>مترمربع</span>
           </div>
 
-          <div class="yk-stat">
-
-            <b id="ykMHect">
+          <div class="yk-v4-stat">
+            <b id="ykV4Hectare">
               ۰
             </b>
-
-            <span>
-              هکتار
-            </span>
-
+            <span>هکتار</span>
           </div>
 
-          <div class="yk-stat">
-
-            <b id="ykMPer">
+          <div class="yk-v4-stat">
+            <b id="ykV4Perimeter">
               ۰
             </b>
-
-            <span>
-              متر محیط
-            </span>
-
+            <span>متر محیط</span>
           </div>
 
         </div>
 
-        <div class="yk-measure-row">
+        <div class="yk-v4-controls">
 
           <button
-            type="button"
-            class="yk-gps"
-            id="ykGps"
+            class="yk-v4-gps"
+            id="ykV4GPS"
           >
             📍 شروع GPS
           </button>
 
           <button
-            type="button"
-            class="yk-clear"
-            id="ykClear"
+            class="yk-v4-clear"
+            id="ykV4Clear"
           >
             🗑️ پاک کردن
           </button>
@@ -1133,17 +1152,17 @@
         </div>
 
         <button
-          type="button"
-          class="yk-measure-save"
-          id="ykMeasureSave"
+          class="yk-v4-save-measure"
+          id="ykV4SaveMeasure"
         >
           💾 ثبت متراژ برای همین زمین
         </button>
 
-        <div class="yk-measure-hint">
+        <div class="yk-v4-hint">
 
-          برای دقت بهتر، دور زمین چند نقطه واقعی ثبت کن.
-          این ابزار نقشه‌ای است و جای نقشه‌برداری رسمی را نمی‌گیرد.
+          نقطه‌ها قابل جابه‌جایی هستند.
+          برای اندازه‌گیری دقیق‌تر،
+          دور زمین نقاط بیشتری ثبت کن.
 
         </div>
 
@@ -1151,7 +1170,7 @@
 
     `;
 
-    document.body.appendChild(overlay);
+    document.body.appendChild(screen);
 
     /* =====================================================
        MAP
@@ -1159,10 +1178,9 @@
 
     const map =
       L.map(
-        "ykMeasureMap",
+        "ykV4Map",
         {
-          zoomControl:true,
-          attributionControl:true
+          zoomControl:true
         }
       ).setView(
         [35.7,51.4],
@@ -1187,11 +1205,7 @@
         }
       );
 
-    /* =====================================================
-       EXISTING POINTS
-       ===================================================== */
-
-    let points = [];
+    let points=[];
 
     if(
       land.measurement &&
@@ -1202,90 +1216,88 @@
 
       points =
         land.measurement.points
-          .map(function(point){
-
-            return [
-              Number(point[0]),
-              Number(point[1])
-            ];
-
-          })
-          .filter(function(point){
-
-            return (
-              Number.isFinite(point[0]) &&
-              Number.isFinite(point[1])
-            );
-
-          });
+          .map(
+            p => [
+              Number(p[0]),
+              Number(p[1])
+            ]
+          )
+          .filter(
+            p =>
+              Number.isFinite(p[0]) &&
+              Number.isFinite(p[1])
+          );
 
     }
 
-    let markers = [];
-    let polygon = null;
+    let markers=[];
+    let polygon=null;
 
-    let gpsWatch = null;
-    let gpsOn = false;
+    let gpsWatch=null;
+    let gpsActive=false;
 
     /* =====================================================
-       REDRAW
+       DRAW
        ===================================================== */
 
     function redraw(){
 
-      markers.forEach(function(marker){
-        marker.remove();
-      });
+      markers.forEach(
+        m => m.remove()
+      );
 
-      markers = [];
+      markers=[];
 
       if(polygon){
         polygon.remove();
-        polygon = null;
+        polygon=null;
       }
 
-      points.forEach(function(point,index){
+      points.forEach(
+        function(point,index){
 
-        const marker =
-          L.marker(
-            point,
+          const marker =
+            L.marker(
+              point,
+              {
+                draggable:true
+              }
+            ).addTo(map);
+
+          marker.bindTooltip(
+            String(index+1),
             {
-              draggable:true
+              permanent:true,
+              direction:"top",
+              offset:[0,-10],
+              className:
+                "yk-v4-point-label"
             }
-          ).addTo(map);
+          );
 
-        marker.bindTooltip(
-          String(index + 1),
-          {
-            permanent:true,
-            direction:"top",
-            offset:[0,-10],
-            className:"yk-point-label"
-          }
-        );
+          marker.on(
+            "dragend",
+            function(){
 
-        marker.on(
-          "dragend",
-          function(){
+              const p =
+                marker.getLatLng();
 
-            const p =
-              marker.getLatLng();
+              points[index]=[
+                p.lat,
+                p.lng
+              ];
 
-            points[index] = [
-              p.lat,
-              p.lng
-            ];
+              redraw();
 
-            redraw();
+            }
+          );
 
-          }
-        );
+          markers.push(marker);
 
-        markers.push(marker);
+        }
+      );
 
-      });
-
-      if(points.length >= 2){
+      if(points.length>=3){
 
         polygon =
           L.polygon(
@@ -1303,32 +1315,28 @@
 
     }
 
-    /* =====================================================
-       STATS
-       ===================================================== */
-
     function updateStats(){
 
-      const area =
-        calculateArea(points);
+      const a =
+        area(points);
 
-      const perimeter =
-        calculatePerimeter(points);
+      const p =
+        perimeter(points);
 
-      overlay.querySelector(
-        "#ykMArea"
+      screen.querySelector(
+        "#ykV4Area"
       ).textContent =
-        formatNumber(area,1);
+        format(a,1);
 
-      overlay.querySelector(
-        "#ykMHect"
+      screen.querySelector(
+        "#ykV4Hectare"
       ).textContent =
-        formatNumber(area / 10000,3);
+        format(a/10000,3);
 
-      overlay.querySelector(
-        "#ykMPer"
+      screen.querySelector(
+        "#ykV4Perimeter"
       ).textContent =
-        formatNumber(perimeter,1);
+        format(p,1);
 
     }
 
@@ -1338,11 +1346,11 @@
 
     map.on(
       "click",
-      function(event){
+      function(e){
 
         points.push([
-          event.latlng.lat,
-          event.latlng.lng
+          e.latlng.lat,
+          e.latlng.lng
         ]);
 
         redraw();
@@ -1351,11 +1359,11 @@
     );
 
     /* =====================================================
-       MAP / SATELLITE
+       LAYERS
        ===================================================== */
 
-    overlay.querySelector(
-      "#ykMapBtn"
+    screen.querySelector(
+      "#ykV4Street"
     ).onclick =
       function(){
 
@@ -1367,18 +1375,16 @@
           map.removeLayer(satellite);
         }
 
-        overlay.querySelector(
-          "#ykMapBtn"
-        ).classList.add("on");
+        this.classList.add("active");
 
-        overlay.querySelector(
-          "#ykSatBtn"
-        ).classList.remove("on");
+        screen.querySelector(
+          "#ykV4Satellite"
+        ).classList.remove("active");
 
       };
 
-    overlay.querySelector(
-      "#ykSatBtn"
+    screen.querySelector(
+      "#ykV4Satellite"
     ).onclick =
       function(){
 
@@ -1390,13 +1396,11 @@
           map.removeLayer(street);
         }
 
-        overlay.querySelector(
-          "#ykSatBtn"
-        ).classList.add("on");
+        this.classList.add("active");
 
-        overlay.querySelector(
-          "#ykMapBtn"
-        ).classList.remove("on");
+        screen.querySelector(
+          "#ykV4Street"
+        ).classList.remove("active");
 
       };
 
@@ -1404,20 +1408,20 @@
        CLEAR
        ===================================================== */
 
-    overlay.querySelector(
-      "#ykClear"
+    screen.querySelector(
+      "#ykV4Clear"
     ).onclick =
       function(){
 
         if(
           !confirm(
-            "همه نقاط اندازه‌گیری پاک شود؟"
+            "همه نقاط پاک شود؟"
           )
         ){
           return;
         }
 
-        points = [];
+        points=[];
 
         redraw();
 
@@ -1440,31 +1444,33 @@
 
       }
 
-      gpsWatch = null;
-      gpsOn = false;
+      gpsWatch=null;
+      gpsActive=false;
 
-      const button =
-        overlay.querySelector(
-          "#ykGps"
+      const btn =
+        screen.querySelector(
+          "#ykV4GPS"
         );
 
-      if(button){
+      if(btn){
 
-        button.textContent =
+        btn.textContent =
           "📍 شروع GPS";
 
-        button.classList.remove("on");
+        btn.classList.remove(
+          "active"
+        );
 
       }
 
     }
 
-    overlay.querySelector(
-      "#ykGps"
+    screen.querySelector(
+      "#ykV4GPS"
     ).onclick =
       function(){
 
-        if(gpsOn){
+        if(gpsActive){
 
           stopGPS();
 
@@ -1472,7 +1478,9 @@
 
         }
 
-        if(!navigator.geolocation){
+        if(
+          !navigator.geolocation
+        ){
 
           alert(
             "GPS در این دستگاه در دسترس نیست."
@@ -1482,28 +1490,25 @@
 
         }
 
-        gpsOn = true;
+        gpsActive=true;
 
-        const button =
-          overlay.querySelector(
-            "#ykGps"
-          );
-
-        button.textContent =
+        this.textContent =
           "⏹️ توقف GPS";
 
-        button.classList.add("on");
+        this.classList.add(
+          "active"
+        );
 
         navigator.geolocation.getCurrentPosition(
 
-          function(position){
+          function(pos){
 
-            const point = [
-              position.coords.latitude,
-              position.coords.longitude
+            const point=[
+              pos.coords.latitude,
+              pos.coords.longitude
             ];
 
-            if(points.length === 0){
+            if(points.length===0){
 
               map.setView(
                 point,
@@ -1521,7 +1526,7 @@
           function(){
 
             alert(
-              "دسترسی موقعیت مکانی داده نشد."
+              "دسترسی GPS داده نشد."
             );
 
             stopGPS();
@@ -1530,7 +1535,7 @@
 
           {
             enableHighAccuracy:true,
-            timeout:10000,
+            timeout:15000,
             maximumAge:0
           }
 
@@ -1539,17 +1544,19 @@
         gpsWatch =
           navigator.geolocation.watchPosition(
 
-            function(position){
+            function(pos){
 
-              const point = [
-                position.coords.latitude,
-                position.coords.longitude
+              const point=[
+                pos.coords.latitude,
+                pos.coords.longitude
               ];
 
               if(
-                points.length === 0 ||
-                haversine(
-                  points[points.length - 1],
+                points.length===0 ||
+                distance(
+                  points[
+                    points.length-1
+                  ],
                   point
                 ) >= 2
               ){
@@ -1583,32 +1590,32 @@
        CLOSE
        ===================================================== */
 
-    overlay.querySelector(
-      "#ykMeasureClose"
+    screen.querySelector(
+      "#ykV4MClose"
     ).onclick =
       function(){
 
         stopGPS();
 
-        overlay.remove();
+        screen.remove();
 
         openEditor(id);
 
       };
 
     /* =====================================================
-       SAVE MEASUREMENT
+       SAVE
        ===================================================== */
 
-    overlay.querySelector(
-      "#ykMeasureSave"
+    screen.querySelector(
+      "#ykV4SaveMeasure"
     ).onclick =
       function(){
 
-        if(points.length < 3){
+        if(points.length<3){
 
           alert(
-            "حداقل ۳ نقطه برای محاسبه زمین لازم است."
+            "حداقل ۳ نقطه لازم است."
           );
 
           return;
@@ -1621,9 +1628,11 @@
         const target =
           fresh &&
           fresh.lands &&
-          fresh.lands.find(function(item){
-            return item.id === id;
-          });
+          fresh.lands.find(
+            x =>
+              String(x.id) ===
+              String(id)
+          );
 
         if(!target){
 
@@ -1635,13 +1644,13 @@
 
         }
 
-        const area =
-          calculateArea(points);
+        const a =
+          area(points);
 
-        const perimeter =
-          calculatePerimeter(points);
+        const p =
+          perimeter(points);
 
-        if(area <= 0){
+        if(a<=0){
 
           alert(
             "مساحت قابل محاسبه نیست."
@@ -1651,45 +1660,31 @@
 
         }
 
-        /*
-          ذخیره متراژ روی همان زمین
-        */
-
         target.areaM2 =
-          area;
+          a;
 
         target.area =
-          area / 10000;
+          a / 10000;
 
         target.perimeter =
-          perimeter;
+          p;
 
-        target.measurement = {
-
+        target.measurement={
           points:
-            points.map(function(point){
-
-              return [
-                point[0],
-                point[1]
-              ];
-
-            }),
-
-          area:
-            area,
-
-          perimeter:
-            perimeter,
-
+            points.map(
+              p => [
+                p[0],
+                p[1]
+              ]
+            ),
+          area:a,
+          perimeter:p,
           updatedAt:
             new Date().toISOString()
-
         };
 
         /*
-          اگر زمین مختصات نداشت،
-          مرکز تقریبی را ذخیره می‌کنیم.
+          ذخیره مرکز زمین
         */
 
         if(
@@ -1697,25 +1692,27 @@
           !target.lng
         ){
 
-          let lat = 0;
-          let lng = 0;
+          let lat=0;
+          let lng=0;
 
-          points.forEach(function(point){
-
-            lat += point[0];
-            lng += point[1];
-
-          });
+          points.forEach(
+            p => {
+              lat+=p[0];
+              lng+=p[1];
+            }
+          );
 
           target.lat =
-            lat / points.length;
+            lat/points.length;
 
           target.lng =
-            lng / points.length;
+            lng/points.length;
 
         }
 
-        if(!saveState(fresh)){
+        if(
+          !saveState(fresh)
+        ){
 
           alert(
             "ذخیره متراژ انجام نشد."
@@ -1727,26 +1724,21 @@
 
         stopGPS();
 
-        overlay.remove();
+        screen.remove();
 
-        refreshApp();
-
-        /*
-          بعد از برگشت، ویرایش همان زمین
-          دوباره باز می‌شود.
-        */
+        refresh();
 
         setTimeout(
           function(){
             openEditor(id);
           },
-          350
+          400
         );
 
       };
 
     /* =====================================================
-       INITIAL VIEW
+       INITIAL
        ===================================================== */
 
     if(points.length){
@@ -1766,44 +1758,23 @@
       function(){
         map.invalidateSize();
       },
-      150
+      200
     );
 
   }
 
   /* =========================================================
-     REFRESH
+     REFRESH APP
      ========================================================= */
 
-  function refreshApp(){
+  function refresh(){
 
-    try{
-
-      if(
-        typeof window.go === "function"
-      ){
-
-        window.go("home");
-
-        setTimeout(
-          function(){
-            window.go("land");
-          },
-          100
-        );
-
-        return;
-
-      }
-
-    }catch(e){
-
-      console.error(
-        "Refresh app error:",
-        e
-      );
-
-    }
+    /*
+      چون state داخل app.js
+      در حافظه است، صفحه را
+      reload می‌کنیم تا state
+      از localStorage دوباره خوانده شود.
+    */
 
     location.reload();
 
@@ -1816,13 +1787,15 @@
   const observer =
     new MutationObserver(
       function(){
-        addEditButtons();
+
+        addButtons();
+
       }
     );
 
   function boot(){
 
-    addEditButtons();
+    addButtons();
 
     observer.observe(
       document.body,
@@ -1832,20 +1805,36 @@
       }
     );
 
+    /*
+      چند بار بعد از رندر
+      هم بررسی می‌کنیم.
+    */
+
     setTimeout(
-      addEditButtons,
-      400
+      addButtons,
+      300
     );
 
     setTimeout(
-      addEditButtons,
-      1200
+      addButtons,
+      800
+    );
+
+    setTimeout(
+      addButtons,
+      1500
+    );
+
+    setTimeout(
+      addButtons,
+      2500
     );
 
   }
 
   if(
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
   ){
 
     document.addEventListener(
