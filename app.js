@@ -80,7 +80,28 @@ async function searchPlace(){let q=$('#measureSearch').value.trim();if(!q)return
 function toggleSat(){sat=!sat;const old=baseLayer;if(old)map.removeLayer(old);if(sat){map.setMaxZoom(19);baseLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:19,noWrap:true,attribution:'© Esri',keepBuffer:2});baseLayer.on('tileerror',()=>{if(sat){sat=false;map.removeLayer(baseLayer);map.setMaxZoom(20);baseLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map);alert('تصاویر ماهواره‌ای در این بزرگنمایی در دسترس نیست؛ نقشه عادی فعال شد.')}});baseLayer.addTo(map)}else{map.setMaxZoom(20);baseLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'}).addTo(map)}}
 function createLandPlan(points, areaM2, perimeterM){
   if(!points || points.length<3) return '';
+  
+// قطب نما حرفه‌ای
+ctx.beginPath();
+ctx.arc(450,120,45,0,Math.PI*2);
+ctx.stroke();
 
+ctx.font='30px sans-serif';
+ctx.fillStyle='#14532d';
+
+ctx.fillText('N ↑',425,70);
+ctx.fillText('S ↓',425,190);
+ctx.fillText('W ←',300,130);
+ctx.fillText('→ E',560,130);
+
+// عنوان
+ctx.font='24px sans-serif';
+ctx.fillStyle='#000';
+ctx.fillText(
+'جهت جغرافیایی زمین',
+320,
+240
+);
   let c=document.createElement('canvas');
   c.width=900;
   c.height=650;
