@@ -303,3 +303,20 @@ style.textContent=`
 document.head.appendChild(style);
 
 })();
+(function(){
+  "use strict";
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .land-plan-inside > img + div{
+      display:none !important;
+    }
+
+    .land-plan-inside > div:last-child{
+      display:none !important;
+    }
+  `;
+
+  document.head.appendChild(style);
+})();
