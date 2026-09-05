@@ -1,1793 +1,1147 @@
-
-/* =========================================================
-   Yar Keshavarz V3.5
-   Measurement + Map Fix
-   ========================================================= */
+/* =========================================
+   Yar Keshavarz V3.6 FIX
+   Part 1 - Clean UI + Weather Fix
+========================================= */
 
 (function () {
-  'use strict';
-
-  /* -------------------------------------------------------
-     ظاهر
-     ------------------------------------------------------- */
-
-  const css = document.createElement('style');
-
-  css.textContent = `
-    /* جلوگیری از دوباره نمایش دادن جزئیات متراژ */
-    .measured-card > .row,
-    .measured-card .measure-detail-grid {
-      display: none !important;
-    }
-
-    /* تصویر نقشه شماتیک */
-    .land-plan-inside img {
-      max-width: 100% !important;
-      height: auto !important;
-      display: block !important;
-    }
-
-    /* نقشه */
-    #measureMap {
-      width: 100% !important;
-      min-height: 320px !important;
-      overflow: hidden !important;
-      touch-action: none !important;
-    }
-
-    /* آب و هوا */
-    .weather-page-head {
-      min-height: 135px !important;
-    }
-
-    .weather-temp-row strong {
-      font-size: 38px !important;
-      line-height: 1.1 !important;
-    }
-
-    .weather-big-icon {
-      font-size: 46px !important;
-      line-height: 1 !important;
-    }
-
-    /* ادوات کشاورزی */
-    .yk-equipment-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .yk-equipment-card {
-      padding: 14px;
-      border: 1px solid rgba(0,0,0,.08);
-      border-radius: 16px;
-      background: #fff;
-    }
-
-    .yk-equipment-card h3 {
-      margin: 0 0 6px;
-    }
-
-    .yk-equipment-card p {
-      margin: 4px 0;
-      opacity: .78;
-    }
-
-    .yk-equipment-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .yk-equipment-actions button {
-      flex: 1;
-    }
-
-    @media(max-width:560px) {
-      .weather-page-head {
-        padding: 14px !important;
-      }
-
-      .weather-temp-row strong {
-        font-size: 36px !important;
-      }
-
-      .weather-big-icon {
-        font-size: 44px !important;
-      }
-
-      .yk-equipment-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* نقاط متراژ */
-    .yk35-point {
-      background: transparent !important;
-      border: 0 !important;
-    }
-
-    .yk35-point span {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #15803d;
-      color: #fff;
-      font: bold 14px sans-serif;
-      border: 3px solid #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,.25);
-    }
+"use strict";
 
-    .yk35-control {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
+/* ---------- CSS اصلاحات ---------- */
 
-    .yk35-control button {
-      flex: 1;
-      min-width: 130px;
-    }
-  `;
+const style = document.createElement("style");
 
-  document.head.appendChild(css);
+style.textContent = `
 
+/* جلوگیری از زوم و قاطی شدن آب و هوا */
+.weather-shell,
+.weather-page-head,
+.weather-main {
+    transform:none !important;
+    zoom:1 !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+}
 
-  /* =======================================================
-     ابزارهای کمکی
-     ======================================================= */
+.weather-big-icon {
+    max-width:120px !important;
+    height:auto !important;
+}
 
-  function esc2(v) {
-    return String(v ?? '').replace(
-      /[&<>\"']/g,
-      m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      }[m])
-    );
-  }
-
-
-  /* =======================================================
-     ادوات کشاورزی
-     ======================================================= */
 
-  function getEq() {
-    try {
-      return JSON.parse(
-        localStorage.getItem('yk-equipment') || '[]'
-      );
-    } catch (e) {
-      return [];
-    }
-  }
+/* نقشه متراژ */
+#measureMap {
+    width:100% !important;
+    height:420px !important;
+    overflow:hidden !important;
+    touch-action:none !important;
+}
 
-  function setEq(a) {
-    localStorage.setItem(
-      'yk-equipment',
-      JSON.stringify(a)
-    );
-  }
 
-  window.renderEquipment = function () {
+/* دکمه های متراژ */
+.yk36-actions {
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+}
 
-    const app = document.getElementById('app');
+.yk36-actions button {
+    flex:1;
+    min-height:42px;
+}
 
-    if (!app) return;
 
-    const a = getEq();
+/* کارت ادوات */
 
-    app.innerHTML = `
-      <section class="page">
+.yk-equipment-grid {
 
-        <div class="section-head">
+ display:grid;
+ grid-template-columns:
+ repeat(2,minmax(0,1fr));
+ gap:12px;
 
-          <h2>ادوات کشاورزی</h2>
+}
 
-          <button
-            class="primary"
-            data-eq-add>
-            ＋ افزودن وسیله
-          </button>
 
-        </div>
+.yk-equipment-card {
 
-        <div class="card">
+ background:#fff;
+ border-radius:16px;
+ padding:15px;
+ border:1px solid #ddd;
 
-          <h3>موجودی ادوات مزرعه</h3>
+}
 
-          <p class="muted">
-            تراکتور، سمپاش، کمباین، تیلر
-            و سایر تجهیزات را اینجا ثبت و مدیریت کن.
-          </p>
 
-        </div>
+.yk-equipment-card h3 {
+ margin-top:0;
+}
 
-        <div class="yk-equipment-grid">
 
-          ${
-            a.length
+@media(max-width:600px){
 
-            ?
+.yk-equipment-grid{
+ grid-template-columns:1fr;
+}
 
-            a.map((x,i) => `
+}
 
-              <article class="yk-equipment-card">
 
-                <h3>
-                  🚜 ${esc2(x.name || 'بدون نام')}
-                </h3>
+`;
 
-                <p>
-                  دسته:
-                  <b>${esc2(x.type || 'سایر')}</b>
-                </p>
+document.head.appendChild(style);
 
-                <p>
-                  تعداد:
-                  <b>${esc2(x.qty || 1)}</b>
-                </p>
 
-                <p>
-                  وضعیت:
-                  <b>${esc2(x.status || 'فعال')}</b>
-                </p>
 
-                <div class="yk-equipment-actions">
+/* ---------- اصلاح اندازه آب و هوا ---------- */
 
-                  <button
-                    class="secondary"
-                    data-eq-edit="${i}">
-                    ویرایش
-                  </button>
 
-                  <button
-                    class="danger"
-                    data-eq-del="${i}">
-                    حذف
-                  </button>
+function fixWeather(){
 
-                </div>
+    const items=[
+        ".weather-shell",
+        ".weather-page-head",
+        ".weather-main"
+    ];
 
-              </article>
 
-            `).join('')
-
-            :
-
-            `
-
-              <div
-                class="card"
-                style="
-                  grid-column:1/-1;
-                  text-align:center;
-                  padding:28px
-                "
-              >
-
-                <div style="font-size:48px">
-                  🚜
-                </div>
-
-                <h3>
-                  هنوز ادواتی ثبت نشده
-                </h3>
-
-                <p class="muted">
-                  اولین وسیله کشاورزی را اضافه کن.
-                </p>
-
-              </div>
-
-            `
-          }
-
-        </div>
-
-      </section>
-    `;
-  };
-
-
-  function editEq(i) {
-
-    const a = getEq();
-
-    const x =
-      i == null
-      ? {}
-      : a[i];
-
-    const name =
-      prompt(
-        'نام وسیله:',
-        x.name || ''
-      );
-
-    if (name === null) return;
-
-    if (!name.trim()) {
-
-      alert(
-        'نام وسیله را وارد کن.'
-      );
-
-      return;
-    }
-
-    const type =
-      prompt(
-        'دسته‌بندی:',
-        x.type || 'تراکتور'
-      ) || 'سایر';
-
-    const qty =
-      prompt(
-        'تعداد:',
-        x.qty || 1
-      ) || 1;
-
-    const status =
-      prompt(
-        'وضعیت:',
-        x.status || 'فعال'
-      ) || 'فعال';
-
-    const item = {
-
-      name: name.trim(),
-
-      type: type.trim(),
-
-      qty: String(qty).trim(),
-
-      status: status.trim()
-
-    };
-
-    if (i == null) {
-
-      a.push(item);
-
-    } else {
-
-      a[i] = item;
-
-    }
-
-    setEq(a);
-
-    window.renderEquipment();
-  }
-
-
-  function addEquipmentEntry() {
-
-    if (
-      document.querySelector(
-        '.yk-equipment-entry'
-      )
-    ) {
-      return;
-    }
-
-    const inv =
-      document.querySelector(
-        '.section-head'
-      );
-
-    if (!inv) return;
-
-    const b =
-      document.createElement('button');
-
-    b.className =
-      'secondary yk-equipment-entry';
-
-    b.dataset.route =
-      'equipment';
-
-    b.textContent =
-      '🚜 ادوات کشاورزی';
-
-    inv.parentNode.insertBefore(
-      b,
-      inv.nextSibling
-    );
-  }
-
-
-  const oldInventory =
-    window.renderInventory;
-
-  if (
-    typeof oldInventory === 'function'
-  ) {
-
-    window.renderInventory =
-      function () {
-
-        oldInventory();
-
-        addEquipmentEntry();
-
-      };
-  }
-
-
-  const oldHome =
-    window.renderHome;
-
-  if (
-    typeof oldHome === 'function'
-  ) {
-
-    window.renderHome =
-      function () {
-
-        oldHome();
-
-        const q =
-          document.querySelector(
-            '.quick'
-          );
-
-        if (
-          q &&
-          !q.querySelector(
-            '[data-route="equipment"]'
-          )
-        ) {
-
-          const b =
-            document.createElement(
-              'button'
-            );
-
-          b.className =
-            'card';
-
-          b.dataset.route =
-            'equipment';
-
-          b.innerHTML =
-            '🚜<br>ادوات کشاورزی';
-
-          q.appendChild(b);
-        }
-
-      };
-  }
-
-
-  /* =======================================================
-     نقشه Leaflet
-     ======================================================= */
-
-  if (window.L) {
-
-    const origMap =
-      window.L.map;
-
-    if (
-      origMap &&
-      !origMap.__yk35
-    ) {
-
-      function safeMap(
-        id,
-        opts
-      ) {
-
-        opts =
-          Object.assign(
-            {},
-            opts || {},
-            {
-              maxZoom: 18,
-              minZoom: 3,
-              worldCopyJump: false,
-              zoomControl: true
-            }
-          );
-
-        const m =
-          origMap.call(
-            this,
-            id,
-            opts
-          );
-
-        if (
-          id === 'measureMap'
-        ) {
-
-          window.__ykMeasureMap =
-            m;
-
-          setTimeout(
-            () => {
-
-              try {
-                m.invalidateSize(true);
-              } catch (e) {}
-
-            },
-            300
-          );
-        }
-
-        return m;
-      }
-
-      safeMap.__yk35 = true;
-
-      window.L.map =
-        safeMap;
-    }
-
-
-    const origTile =
-      window.L.tileLayer;
-
-    if (
-      origTile &&
-      !origTile.__yk35
-    ) {
-
-      function safeTile(
-        url,
-        opts
-      ) {
-
-        opts =
-          Object.assign(
-            {},
-            opts || {},
-            {
-              maxZoom: 18,
-              maxNativeZoom: 18,
-              keepBuffer: 5
-            }
-          );
-
-        delete opts.noWrap;
-
-        return origTile.call(
-          this,
-          url,
-          opts
-        );
-      }
-
-      safeTile.__yk35 = true;
-
-      window.L.tileLayer =
-        safeTile;
-    }
-  }
-
-
-  /* =======================================================
-     سیستم جدید اندازه‌گیری
-     ======================================================= */
-
-  function setupMeasurement() {
-
-    const map =
-      window.__ykMeasureMap;
-
-    const box =
-      document.getElementById(
-        'measureMap'
-      );
-
-    if (
-      !map ||
-      !box ||
-      map.__yk35ready
-    ) {
-      return;
-    }
-
-    map.__yk35ready = true;
-
-
-    /* فعال کردن زوم و حرکت */
-
-    try {
-      map.touchZoom.enable();
-      map.dragging.enable();
-      map.scrollWheelZoom.enable();
-      map.doubleClickZoom.enable();
-      map.boxZoom.enable();
-    } catch (e) {}
-
-
-    /* حذف listener قدیمی */
-
-    try {
-      map.off('click');
-    } catch (e) {}
-
-
-    const layer =
-      L.layerGroup().addTo(map);
-
-    const points = [];
-
-
-    /* -----------------------------------------------------
-       فاصله جغرافیایی
-       ----------------------------------------------------- */
-
-    function distance(a,b) {
-
-      const R =
-        6371008.8;
-
-      const p1 =
-        a.lat *
-        Math.PI / 180;
-
-      const p2 =
-        b.lat *
-        Math.PI / 180;
-
-      const dp =
-        (b.lat - a.lat) *
-        Math.PI / 180;
-
-      const dl =
-        (b.lng - a.lng) *
-        Math.PI / 180;
-
-      const h =
-        Math.sin(dp/2) ** 2 +
-        Math.cos(p1) *
-        Math.cos(p2) *
-        Math.sin(dl/2) ** 2;
-
-      return (
-        2 *
-        R *
-        Math.asin(
-          Math.min(
-            1,
-            Math.sqrt(h)
-          )
-        )
-      );
-    }
-
-
-    /* -----------------------------------------------------
-       محاسبه مساحت
-       ----------------------------------------------------- */
-
-    function calculate() {
-
-      if (
-        points.length < 3
-      ) {
-
-        let p = 0;
-
-        for (
-          let i = 1;
-          i < points.length;
-          i++
-        ) {
-
-          p += distance(
-            points[i-1],
-            points[i]
-          );
-        }
-
-        return {
-          area: 0,
-          perimeter: p
-        };
-      }
-
-
-      const R =
-        6371008.8;
-
-      const lat0 =
-        points.reduce(
-          (s,p) =>
-            s + p.lat,
-          0
-        ) /
-        points.length *
-        Math.PI / 180;
-
-
-      const xy =
-        points.map(
-          p => [
-
-            R *
-            p.lng *
-            Math.PI / 180 *
-            Math.cos(lat0),
-
-            R *
-            p.lat *
-            Math.PI / 180
-
-          ]
-        );
-
-
-      let area = 0;
-
-
-      for (
-        let i = 0;
-        i < xy.length;
-        i++
-      ) {
-
-        const j =
-          (i + 1) %
-          xy.length;
-
-        area +=
-          xy[i][0] *
-          xy[j][1] -
-
-          xy[j][0] *
-          xy[i][1];
-      }
-
-
-      let perimeter = 0;
-
-
-      for (
-        let i = 0;
-        i < points.length;
-        i++
-      ) {
-
-        const j =
-          (i + 1) %
-          points.length;
-
-        perimeter +=
-          distance(
-            points[i],
-            points[j]
-          );
-      }
-
-
-      return {
-
-        area:
-          Math.abs(area) / 2,
-
-        perimeter
-
-      };
-    }
-
-
-    /* -----------------------------------------------------
-       رسم نقاط
-       ----------------------------------------------------- */
-
-    function draw() {
-
-      layer.clearLayers();
-
-
-      if (
-        points.length >= 2
-      ) {
-
-        L.polyline(
-          points,
-          {
-            weight: 4
-          }
-        ).addTo(layer);
-      }
-
-
-      if (
-        points.length >= 3
-      ) {
-
-        L.polygon(
-          points,
-          {
-            weight: 3,
-            fillOpacity: .16
-          }
-        ).addTo(layer);
-      }
-
-
-      points.forEach(
-        (p,i) => {
-
-          L.marker(
-            p,
-            {
-              icon:
-                L.divIcon({
-
-                  className:
-                    'yk35-point',
-
-                  html:
-                    '<span>' +
-                    (i + 1) +
-                    '</span>',
-
-                  iconSize:
-                    [34,34],
-
-                  iconAnchor:
-                    [17,17]
-
-                })
-            }
-          ).addTo(layer);
-
-        }
-      );
-
-
-      const m =
-        calculate();
-
-
-      const area =
-        document.getElementById(
-          'mArea'
-        );
-
-      const ha =
-        document.getElementById(
-          'mHa'
-        );
-
-      const per =
-        document.getElementById(
-          'mPer'
-        );
-
-      const acc =
-        document.getElementById(
-          'mAcc'
-        );
-
-      const use =
-        document.getElementById(
-          'useBtn'
-        );
-
-
-      if (area) {
-
-        area.textContent =
-          Math.round(
-            m.area
-          ).toLocaleString(
-            'fa-IR'
-          );
-      }
-
-
-      if (ha) {
-
-        ha.textContent =
-          (
-            m.area / 10000
-          ).toLocaleString(
-            'fa-IR',
-            {
-              maximumFractionDigits: 3
-            }
-          );
-      }
-
-
-      if (per) {
-
-        per.textContent =
-          Math.round(
-            m.perimeter
-          ).toLocaleString(
-            'fa-IR'
-          );
-      }
-
-
-      if (acc) {
-
-        acc.textContent =
-          points.length +
-          ' نقطه · اندازه‌گیری نقشه';
-      }
-
-
-      if (use) {
-
-        use.disabled =
-          points.length < 3;
-
-        use.textContent =
-          points.length >= 3
-
-          ?
-
-          '📐 ثبت زمین با این مساحت'
-
-          :
-
-          '📐 حداقل ۳ نقطه لازم است';
-      }
-    }
-
-
-    /* -----------------------------------------------------
-       اضافه کردن نقطه
-       ----------------------------------------------------- */
-
-    map.on(
-      'click',
-      function (e) {
-
-        points.push({
-
-          lat:
-            e.latlng.lat,
-
-          lng:
-            e.latlng.lng
+    items.forEach(function(sel){
+
+        document
+        .querySelectorAll(sel)
+        .forEach(function(el){
+
+            el.style.transform="none";
+            el.style.zoom="1";
+            el.style.maxWidth="100%";
 
         });
 
-        draw();
+    });
 
-      }
-    );
+}
 
 
-    /* -----------------------------------------------------
-       برگشت یک نقطه
-       ----------------------------------------------------- */
+setTimeout(fixWeather,1000);
+setTimeout(fixWeather,3000);
 
-    window.__ykMeasureUndo =
-      function () {
 
-        if (
-          points.length === 0
-        ) {
-          return;
-        }
 
-        points.pop();
+/* ---------- ذخیره ادوات ---------- */
 
-        draw();
-      };
 
+function getEquipment(){
 
-    /* -----------------------------------------------------
-       پاک کردن همه نقاط
-       ----------------------------------------------------- */
+try{
 
-    window.__ykMeasureClear =
-      function () {
+return JSON.parse(
+localStorage.getItem("yk-equipment") || "[]"
+);
 
-        points.length = 0;
+}catch(e){
 
-        draw();
-      };
+return [];
 
+}
 
-    /* -----------------------------------------------------
-       ثبت متراژ
-       ----------------------------------------------------- */
+}
 
-    window.__ykMeasureUse =
-      function () {
 
-        if (
-          points.length < 3
-        ) {
+function saveEquipment(data){
 
-          alert(
-            'حداقل ۳ نقطه لازم است.'
-          );
+localStorage.setItem(
+"yk-equipment",
+JSON.stringify(data)
+);
 
-          return;
-        }
+}
+   /* =========================================
+   Part 2 - Equipment Management
+========================================= */
 
 
-        const m =
-          calculate();
+window.renderEquipment = function(){
 
+const app=document.getElementById("app");
 
-        sessionStorage.setItem(
-          'yk-measured-area',
-          String(m.area)
-        );
+if(!app) return;
 
 
-        sessionStorage.setItem(
-          'yk-measured-perimeter',
-          String(m.perimeter)
-        );
+const data=getEquipment();
 
 
-        sessionStorage.setItem(
-          'yk-measured-points',
-          JSON.stringify(points)
-        );
+app.innerHTML=`
 
+<section class="page">
 
-        if (
-          typeof window.go ===
-          'function'
-        ) {
+<div class="section-head">
 
-          window.go(
-            'add'
-          );
-        }
-      };
+<h2>🚜 ادوات کشاورزی</h2>
 
+<button id="addEquipment"
+class="primary">
++ افزودن وسیله
+</button>
 
-    /* -----------------------------------------------------
-       دکمه‌های برگشت و پاک کردن
-       ----------------------------------------------------- */
+</div>
 
-    const controls =
-      document.querySelector(
-        '.measure-overlay'
-      );
 
+<div class="card">
 
-    if (
-      controls &&
-      !document.getElementById(
-        'yk35Undo'
-      )
-    ) {
+<h3>
+موجودی ادوات مزرعه
+</h3>
 
-      const b =
-        document.createElement(
-          'button'
-        );
+<p>
+تراکتور، کمباین، سمپاش و تجهیزات خود را ثبت کنید.
+</p>
 
-      b.id =
-        'yk35Undo';
+</div>
 
-      b.className =
-        'secondary';
 
-      b.textContent =
-        '↩️ برگشت یک نقطه';
+<div class="yk-equipment-grid">
 
-      b.style.marginTop =
-        '8px';
 
-      controls.appendChild(
-        b
-      );
-    }
+${
+data.length ?
 
+data.map((item,index)=>`
 
-    if (
-      controls &&
-      !document.getElementById(
-        'yk35Clear'
-      )
-    ) {
+<div class="yk-equipment-card">
 
-      const c =
-        document.createElement(
-          'button'
-        );
 
-      c.id =
-        'yk35Clear';
+<h3>
+🚜 ${item.name}
+</h3>
 
-      c.className =
-        'secondary';
 
-      c.textContent =
-        '🗑️ پاک کردن نقاط';
+<p>
+نوع:
+${item.type}
+</p>
 
-      c.style.marginTop =
-        '8px';
 
-      controls.appendChild(
-        c
-      );
-    }
+<p>
+تعداد:
+${item.count}
+</p>
 
 
-    draw();
-  }
+<p>
+وضعیت:
+${item.status}
+</p>
 
 
-  /* =======================================================
-     اتصال نقشه به سیستم جدید
-     ======================================================= */
+<div class="yk36-actions">
 
-  function watchMap() {
+<button
+data-edit-equipment="${index}">
+ویرایش
+</button>
 
-    if (
-      document.getElementById(
-        'measureMap'
-      ) &&
-      window.__ykMeasureMap
-    ) {
 
-      setupMeasurement();
+<button
+data-delete-equipment="${index}">
+حذف
+</button>
 
-    }
 
-  }
+</div>
 
 
-  const timer =
-    setInterval(
-      watchMap,
-      100
-    );
+</div>
 
 
-  setTimeout(
-    () => {
-      clearInterval(timer);
-    },
-    15000
-  );
+`).join("")
 
 
-  /* =======================================================
-     جستجوی روستا / شهر
-     ======================================================= */
+:
 
-  async function searchBetter() {
+`
 
-    const input =
-      document.getElementById(
-        'measureSearch'
-      );
+<div class="card">
 
-    const q =
-      (
-        input &&
-        input.value
-        ||
-        ''
-      ).trim();
+<h3>
+هنوز وسیله‌ای ثبت نشده
+</h3>
 
+<p>
+اولین وسیله کشاورزی را اضافه کنید.
+</p>
 
-    const map =
-      window.__ykMeasureMap;
+</div>
 
+`
 
-    if (!q) {
+}
 
-      alert(
-        'نام روستا، شهر یا مختصات را وارد کن.'
-      );
 
-      return;
-    }
+</div>
 
 
-    if (!map) {
+</section>
 
-      alert(
-        'نقشه هنوز آماده نشده است.'
-      );
+`;
 
-      return;
-    }
 
 
-    try {
+};
 
-      /* مختصات مستقیم */
 
-      const coord =
-        q
-          .replace(/،/g, ',')
-          .split(',')
-          .map(
-            x =>
-              Number(
-                x.trim()
-              )
-          );
 
+function addEquipment(){
 
-      if (
-        coord.length === 2 &&
-        coord.every(
-          Number.isFinite
-        ) &&
-        Math.abs(coord[0]) <= 90 &&
-        Math.abs(coord[1]) <= 180
-      ) {
 
-        map.setView(
-          [
-            coord[0],
-            coord[1]
-          ],
-          16
-        );
+let name=prompt(
+"نام وسیله:"
+);
 
 
-        L.marker(
-          [
-            coord[0],
-            coord[1]
-          ]
-        )
-          .addTo(map)
-          .bindPopup(
-            'موقعیت جستجو'
-          )
-          .openPopup();
+if(!name)
+return;
 
 
-        return;
-      }
+let type=prompt(
+"نوع وسیله:",
+"تراکتور"
+);
 
 
-      /* جستجوی نام */
+let count=prompt(
+"تعداد:",
+"1"
+);
 
-      const queries = [
 
-        q,
+let status=prompt(
+"وضعیت:",
+"فعال"
+);
 
-        q + ', ایران',
 
-        q + ', Iran'
 
-      ];
+let data=getEquipment();
 
 
-      let data = [];
+data.push({
 
+name:name,
 
-      for (
-        const text of queries
-      ) {
+type:type || "سایر",
 
-        const url =
-          'https://nominatim.openstreetmap.org/search' +
+count:count || "1",
 
-          '?format=jsonv2' +
+status:status || "فعال"
 
-          '&limit=8' +
+});
 
-          '&addressdetails=1' +
 
-          '&namedetails=1' +
+saveEquipment(data);
 
-          '&accept-language=fa' +
 
-          '&countrycodes=ir' +
+renderEquipment();
 
-          '&q=' +
 
-          encodeURIComponent(
-            text
-          );
+}
 
 
-        const response =
-          await fetch(
-            url,
-            {
-              headers: {
-                'Accept':
-                  'application/json'
-              }
-            }
-          );
 
 
-        const result =
-          await response.json();
+document.addEventListener(
+"click",
+function(e){
 
 
-        if (
-          Array.isArray(result) &&
-          result.length
-        ) {
+if(e.target.id==="addEquipment"){
 
-          data =
-            result;
+addEquipment();
 
-          break;
-        }
-      }
+}
 
 
-      if (!data.length) {
 
-        alert(
-          'روستا پیدا نشد. نام روستا را همراه شهرستان یا استان وارد کن.'
-        );
+if(e.target.dataset.editEquipment){
 
-        return;
-      }
+let i=
+Number(
+e.target.dataset.editEquipment
+);
 
 
-      const r =
-        data[0];
+let data=getEquipment();
 
 
-      const lat =
-        Number(r.lat);
+let old=data[i];
 
-      const lng =
-        Number(r.lon);
 
+let name=prompt(
+"نام وسیله:",
+old.name
+);
 
-      map.setView(
-        [
-          lat,
-          lng
-        ],
-        16
-      );
 
+if(name){
 
-      L.marker(
-        [
-          lat,
-          lng
-        ]
-      )
-        .addTo(map)
-        .bindPopup(
-          r.display_name ||
-          q
-        )
-        .openPopup();
+old.name=name;
 
+saveEquipment(data);
 
-    } catch (err) {
+renderEquipment();
 
-      console.error(
-        err
-      );
+}
 
-      alert(
-        'جستجوی مکان انجام نشد. دوباره تلاش کن.'
-      );
-    }
-  }
+}
 
 
-  /* =======================================================
-     رویدادها
-     ======================================================= */
 
-  document.addEventListener(
-    'click',
-    function (e) {
+if(e.target.dataset.deleteEquipment){
 
-      const target =
-        e.target.closest(
-          '[data-eq-add],' +
-          '[data-eq-edit],' +
-          '[data-eq-del],' +
-          '[data-route="equipment"],' +
-          '#yk35Undo,' +
-          '#yk35Clear,' +
-          '#useBtn,' +
-          '#searchBtn'
-        );
 
+let i=
+Number(
+e.target.dataset.deleteEquipment
+);
 
-      if (!target) {
-        return;
-      }
 
+let data=getEquipment();
 
-      /* افزودن ادوات */
 
-      if (
-        target.hasAttribute(
-          'data-eq-add'
-        )
-      ) {
+if(confirm("حذف شود؟")){
 
-        e.preventDefault();
 
-        e.stopImmediatePropagation();
+data.splice(i,1);
 
-        editEq(null);
 
-        return;
-      }
+saveEquipment(data);
 
 
-      /* ویرایش ادوات */
+renderEquipment();
 
-      if (
-        target.hasAttribute(
-          'data-eq-edit'
-        )
-      ) {
 
-        e.preventDefault();
+}
 
-        e.stopImmediatePropagation();
 
-        editEq(
-          Number(
-            target.dataset.eqEdit
-          )
-        );
+}
 
-        return;
-      }
 
 
-      /* حذف ادوات */
+});
 
-      if (
-        target.hasAttribute(
-          'data-eq-del'
-        )
-      ) {
 
-        e.preventDefault();
 
-        e.stopImmediatePropagation();
+/* اضافه کردن دکمه ادوات به صفحه اصلی */
 
-        const a =
-          getEq();
 
-        const i =
-          Number(
-            target.dataset.eqDel
-          );
+function addEquipmentButton(){
 
 
-        if (
-          confirm(
-            'این وسیله حذف شود؟'
-          )
-        ) {
+let home=document.querySelector(".quick");
 
-          a.splice(
-            i,
-            1
-          );
 
-          setEq(a);
+if(!home)
+return;
 
-          window.renderEquipment();
-        }
 
-        return;
-      }
 
+if(
+document.getElementById(
+"equipmentHomeBtn"
+)
+)
+return;
 
-      /* صفحه ادوات */
 
-      if (
-        target.dataset.route ===
-        'equipment'
-      ) {
 
-        e.preventDefault();
+let btn=document.createElement("button");
 
-        e.stopImmediatePropagation();
 
-        if (
-          typeof window.go ===
-          'function'
-        ) {
+btn.id="equipmentHomeBtn";
 
-          window.go(
-            'equipment'
-          );
-        }
+btn.className="card";
 
-        return;
-      }
 
+btn.innerHTML=
+`
+🚜
+<br>
+ادوات کشاورزی
+`;
 
-      /* برگشت یک نقطه */
 
-      if (
-        target.id ===
-        'yk35Undo'
-      ) {
 
-        e.preventDefault();
+btn.onclick=function(){
 
-        e.stopImmediatePropagation();
+if(window.go)
+window.go("equipment");
 
-        if (
-          window.__ykMeasureUndo
-        ) {
+};
 
-          window.__ykMeasureUndo();
-        }
 
-        return;
-      }
 
+home.appendChild(btn);
 
-      /* پاک کردن */
 
-      if (
-        target.id ===
-        'yk35Clear'
-      ) {
 
-        e.preventDefault();
+}
 
-        e.stopImmediatePropagation();
 
-        if (
-          window.__ykMeasureClear
-        ) {
 
-          window.__ykMeasureClear();
-        }
+setTimeout(
+addEquipmentButton,
+2000
+);
+   /* =========================================
+   Part 3 - Measure Map Fix
+========================================= */
 
-        return;
-      }
 
+function setupMeasureFix(){
 
-      /* ثبت زمین */
 
-      if (
-        target.id ===
-        'useBtn'
-      ) {
+const map=window.__ykMeasureMap;
 
-        e.preventDefault();
 
-        e.stopImmediatePropagation();
+if(!map)
+return;
 
-        if (
-          window.__ykMeasureUse
-        ) {
 
-          window.__ykMeasureUse();
-        }
 
-        return;
-      }
+try{
 
+map.touchZoom.enable();
 
-      /* جستجو */
+map.dragging.enable();
 
-      if (
-        target.id ===
-        'searchBtn'
-      ) {
+map.scrollWheelZoom.enable();
 
-        e.preventDefault();
+map.doubleClickZoom.enable();
 
-        e.stopImmediatePropagation();
 
-        searchBetter();
+}catch(e){}
 
-        return;
-      }
 
-    },
-    true
-  );
 
+let points=[];
 
-  /* =======================================================
-     آب‌وهوای زمین
-     ======================================================= */
 
-  document.addEventListener(
-    'click',
-    function (e) {
+let layer=
+L.layerGroup()
+.addTo(map);
 
-      const b =
-        e.target.closest(
-          '[data-land-weather]'
-        );
 
-      if (!b) return;
 
-      e.preventDefault();
+function redraw(){
 
-      e.stopImmediatePropagation();
 
+layer.clearLayers();
 
-      let name = '';
 
 
-      const h =
-        document.querySelector(
-          '#app h2'
-        );
+if(points.length>1){
 
+L.polyline(
+points,
+{
+weight:4
+}
+)
+.addTo(layer);
 
-      if (h) {
-        name =
-          h.textContent.trim();
-      }
+}
 
 
-      let s = null;
 
+if(points.length>=3){
 
-      try {
+L.polygon(
+points,
+{
+weight:3,
+fillOpacity:.15
+}
+)
+.addTo(layer);
 
-        s =
-          JSON.parse(
-            localStorage.getItem(
-              'yk-v3-clean'
-            ) ||
-            'null'
-          );
 
-      } catch (_) {}
+}
 
 
-      const l =
-        s &&
-        Array.isArray(
-          s.lands
-        )
 
-        ?
+points.forEach(
+function(p,i){
 
-        s.lands.find(
-          x =>
-            String(
-              x.name || ''
-            ).trim() === name
-        )
 
-        :
+L.marker(
+p,
+{
 
-        null;
+icon:L.divIcon({
 
+className:
+"yk-point",
 
-      const box =
-        document.getElementById(
-          'landWeather'
-        );
+html:
+"<b>"+
+(i+1)+
+"</b>",
 
 
-      if (
-        l &&
-        l.lat != null &&
-        l.lng != null &&
-        typeof window.weatherData ===
-        'function'
-      ) {
+iconSize:
+[32,32]
 
-        if (box) {
+})
 
-          box.innerHTML =
-            `
-              <h3>
-                آب‌وهوای این زمین
-              </h3>
 
-              <p>
-                در حال دریافت اطلاعات هوا...
-              </p>
-            `;
-        }
+}
 
+)
+.addTo(layer);
 
-        window.weatherData(
-          Number(l.lat),
-          Number(l.lng),
-          box
-        );
 
 
-      } else if (
-        l &&
-        box
-      ) {
+});
 
-        box.innerHTML =
-          `
-            <h3>
-              آب‌وهوای این زمین
-            </h3>
 
-            <p class="muted">
-              برای این زمین مختصات GPS ثبت نشده است.
-              ابتدا زمین را با موقعیت مکانی ثبت کن.
-            </p>
-          `;
 
+updateMeasure();
 
-      } else {
 
-        alert(
-          'پرونده زمین پیدا نشد.'
-        );
-      }
+}
 
-    },
-    true
-  );
 
 
-  /* =======================================================
-     مسیر ادوات
-     ======================================================= */
 
-  const oldGo =
-    window.go;
+function calc(){
 
 
-  window.go =
-    function (r) {
+if(points.length<3)
 
-      if (
-        r === 'equipment'
-      ) {
+return 0;
 
-        document.body.classList.remove(
-          'measure-active'
-        );
 
-        window.route =
-          'equipment';
 
-        window.renderEquipment();
+let area=0;
 
-        document
-          .querySelectorAll(
-            '.bottom-nav button'
-          )
-          .forEach(
-            x =>
-              x.classList.remove(
-                'active'
-              )
-          );
 
-        return;
-      }
+for(
+let i=0;
+i<points.length;
+i++
+){
 
 
-      if (
-        typeof oldGo ===
-        'function'
-      ) {
+let j=
+(i+1)
+%
+points.length;
 
-        return oldGo(r);
-      }
-    };
+
+
+area +=
+
+points[i].lng *
+points[j].lat
+
+-
+
+points[j].lng *
+points[i].lat;
+
+
+}
+
+
+
+return Math.abs(area/2)*111000*111000;
+
+
+
+}
+
+
+
+function updateMeasure(){
+
+
+
+let area=
+document.getElementById(
+"mArea"
+);
+
+
+
+if(area){
+
+area.innerText=
+Math.round(
+calc()
+)
+.toLocaleString(
+"fa-IR"
+);
+
+}
+
+
+let count=
+document.getElementById(
+"mAcc"
+);
+
+
+if(count){
+
+count.innerText=
+points.length+
+" نقطه ثبت شد";
+
+}
+
+
+}
+
+
+
+
+/* جلوگیری از پاک شدن نقاط قبلی */
+
+map.off("click");
+
+
+
+map.on(
+"click",
+function(e){
+
+
+points.push({
+
+lat:e.latlng.lat,
+
+lng:e.latlng.lng
+
+});
+
+
+redraw();
+
+
+}
+
+);
+
+
+
+/* برگشت یک نقطه */
+
+
+window.measureUndo=function(){
+
+
+if(points.length){
+
+points.pop();
+
+redraw();
+
+}
+
+
+};
+
+
+
+/* پاک کردن همه */
+
+
+window.measureClear=function(){
+
+
+points=[];
+
+redraw();
+
+};
+
+
+
+/* ثبت زمین */
+
+
+window.measureSave=function(){
+
+
+if(points.length<3){
+
+alert(
+"حداقل ۳ نقطه لازم است"
+);
+
+return;
+
+}
+
+
+
+sessionStorage.setItem(
+"measurePoints",
+JSON.stringify(points)
+);
+
+
+
+if(window.go)
+
+window.go("add");
+
+
+};
+
+
+
+}
+
+
+
+
+setTimeout(
+setupMeasureFix,
+1500
+);
+
+
+
+
+
+/* =========================================
+   Search Village / City
+========================================= */
+
+
+async function searchVillage(){
+
+
+let input=
+document.getElementById(
+"measureSearch"
+);
+
+
+if(!input)
+return;
+
+
+
+let text=
+input.value.trim();
+
+
+
+if(!text)
+return;
+
+
+
+try{
+
+
+let url=
+
+"https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ir&q="+
+
+encodeURIComponent(
+text
+);
+
+
+
+let res=
+await fetch(url);
+
+
+
+let data=
+await res.json();
+
+
+
+if(!data.length){
+
+alert(
+"مکان پیدا نشد"
+);
+
+return;
+
+}
+
+
+
+let place=data[0];
+
+
+
+let lat=
+Number(place.lat);
+
+
+
+let lon=
+Number(place.lon);
+
+
+
+let map=
+window.__ykMeasureMap;
+
+
+
+if(map){
+
+map.setView(
+[
+lat,
+lon
+],
+15
+);
+
+
+L.marker(
+[
+lat,
+lon
+]
+)
+.addTo(map)
+.bindPopup(
+place.display_name
+)
+.openPopup();
+
+
+}
+
+
+
+}
+catch(e){
+
+alert(
+"خطا در جستجو"
+);
+
+}
+
+
+
+}
+
+
+
+
+document.addEventListener(
+"click",
+function(e){
+
+
+if(e.target.id==="searchBtn"){
+
+searchVillage();
+
+}
+
+
+if(e.target.id==="undoPoint"){
+
+measureUndo();
+
+}
+
+
+if(e.target.id==="clearPoints"){
+
+measureClear();
+
+}
+
+
+if(e.target.id==="useBtn"){
+
+measureSave();
+
+}
+
+
+
+}
+);
+   /* =========================================
+   Part 4 - Final Connect
+========================================= */
+
+
+/* دکمه های کنترل متراژ */
+
+function addMeasureButtons(){
+
+
+let box =
+document.querySelector(
+".measure-controls"
+);
+
+
+
+if(!box)
+return;
+
+
+
+if(
+document.getElementById(
+"undoPoint"
+)
+)
+return;
+
+
+
+let div=
+document.createElement(
+"div"
+);
+
+
+div.className=
+"yk36-actions";
+
+
+
+div.innerHTML=
+
+`
+
+<button
+id="undoPoint"
+class="secondary">
+
+↩️ برگشت یک نقطه
+
+</button>
+
+
+<button
+id="clearPoints"
+class="secondary">
+
+🗑️ پاک کردن نقاط
+
+</button>
+
+
+`;
+
+
+
+box.appendChild(div);
+
+
+
+}
+
+
+
+setTimeout(
+addMeasureButtons,
+2000
+);
+
+
+
+
+
+/* جلوگیری از سفید شدن نقشه بعد از تغییر صفحه */
+
+
+window.addEventListener(
+"resize",
+function(){
+
+
+if(
+window.__ykMeasureMap
+){
+
+try{
+
+window.__ykMeasureMap.invalidateSize(
+true
+);
+
+}
+
+catch(e){}
+
+
+
+}
+
+
+});
+
+
+
+
+
+/* اصلاح نمایش آب و هوا بعد از باز شدن صفحه */
+
+
+const oldGo =
+window.go;
+
+
+
+if(typeof oldGo==="function"){
+
+
+window.go=function(route){
+
+
+let result=
+oldGo.apply(
+this,
+arguments
+);
+
+
+
+setTimeout(
+fixWeather,
+800
+);
+
+
+
+return result;
+
+
+};
+
+
+
+}
+
+
+
+
+
+/* پایان V3.6 */
+
+console.log(
+"Yar Keshavarz V3.6 Loaded"
+);
 
 
 })();
