@@ -2569,45 +2569,61 @@ function renderMeasure(){
   head('متراژ');
 
   app.innerHTML=`
-
     <div class="measure-page">
 
-      <div
-        id="measureMap"
-        class="measure-map"
-      ></div>
+      <div id="measureMap" class="measure-map"></div>
 
       <div class="measure-overlay">
 
-        <input
-          id="measureSearch"
-          placeholder="جستجوی روستا، شهر یا مختصات"
-        >
+        <div class="measure-search">
+          <input
+            id="measureSearch"
+            type="text"
+            placeholder="جستجوی روستا، شهر یا مختصات"
+          >
 
-        <button
-          class="primary"
-          id="searchBtn"
-        >
-          جستجو
-        </button>
+          <button
+            class="primary"
+            id="searchBtn"
+            type="button"
+          >
+            جستجو
+          </button>
+        </div>
 
       </div>
 
       <div class="floating">
 
-        <button id="locBtn">
+        <button
+          id="locBtn"
+          type="button"
+          title="موقعیت من"
+        >
           ⌖
         </button>
 
-        <button id="satBtn">
+        <button
+          id="satBtn"
+          type="button"
+          title="نمای ماهواره‌ای"
+        >
           🛰️
         </button>
 
-        <button id="clearBtn">
+        <button
+          id="clearBtn"
+          type="button"
+          title="پاک کردن نقاط"
+        >
           ↺
         </button>
 
-        <button id="closeMeasure">
+        <button
+          id="closeMeasure"
+          type="button"
+          title="بستن"
+        >
           ×
         </button>
 
@@ -2618,18 +2634,23 @@ function renderMeasure(){
         <div class="measure-stats">
 
           <div>
-            <b id="mArea">۰</b>
-            <span>مترمربع</span>
+            <span>مساحت</span>
+            <strong id="mArea">۰ مترمربع</strong>
           </div>
 
           <div>
-            <b id="mHa">۰</b>
             <span>هکتار</span>
+            <strong id="mHectare">۰</strong>
           </div>
 
           <div>
-            <b id="mPer">۰</b>
-            <span>متر محیط</span>
+            <span>محیط</span>
+            <strong id="mPerimeter">۰ متر</strong>
+          </div>
+
+          <div>
+            <span>نقاط</span>
+            <strong id="mPoints">۰</strong>
           </div>
 
         </div>
@@ -2641,22 +2662,35 @@ function renderMeasure(){
           آماده پیمایش
         </div>
 
-        <button
-          class="finish"
-          id="trackBtn"
-        >
-          ▶ شروع پیمایش GPS
-        </button>
+        <div class="yk-measure-actions">
+
+          <button
+            class="finish"
+            id="trackBtn"
+            type="button"
+          >
+            ▶ شروع پیمایش GPS
+          </button>
+
+          <button
+            class="secondary"
+            id="undoPoint"
+            type="button"
+          >
+            ↶ حذف آخرین نقطه
+          </button>
+
+        </div>
 
         <div class="measure-help">
-          ۳ نقطه روی نقشه بزن یا پیمایش GPS را شروع کن؛
-          بعد دکمه ثبت فعال می‌شود.
+          روی نقشه لمس کنید و گوشه‌های زمین را مشخص کنید.
+          برای مساحت دقیق حداقل ۳ نقطه ثبت کنید.
         </div>
 
         <button
           class="primary measure-register"
           id="useBtn"
-          style="width:100%;margin-top:7px"
+          type="button"
           disabled
         >
           📐 ثبت زمین با این مساحت
@@ -2667,10 +2701,14 @@ function renderMeasure(){
     </div>
   `;
 
-  setTimeout(
-    initMap,
-    30
-  )
+  setTimeout(function(){
+
+    if(typeof initMap==='function'){
+      initMap();
+    }
+
+  },100);
+
 }
 
 function initMap(){
