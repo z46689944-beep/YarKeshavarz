@@ -2714,53 +2714,776 @@ function renderMeasure(){
 function initMap(){
 
   if(!window.L){
+    const box=document.getElementById('measureMap');
 
-    $('#mAcc').textContent=
-      'نقشه بارگذاری نشد.';
+    if(box){
+      box.innerHTML=`
+        <div class="card" style="margin:20px;padding:20px;text-align:center">
+          نقشه بارگذاری نشد.
+          <br><br>
+          اتصال اینترنت را بررسی کنید.
+        </div>
+      `;
+    }
 
-    return
+    return;
   }
 
-  map=L.map(
-    'measureMap',
-    {
+  const el=document.getElementById('measureMap');
+
+  if(!el) return;
+
+  /* اگر نقشه قبلی وجود دارد، کامل پاک شود */
+  if(window.__ykMeasureMap){
+    try{
+      window.__ykMeasureMap.remove();
+    }catch(e){}
+  }
+
+  let map;
+
+  try{
+
+    map=L.map(el,{
       zoomControl:false,
-      maxZoom:20,
-      minZoom:3
+      attributionControl:true,
+      minZoom:3,
+      maxZoom:21,
+
+      /* کنترل‌های لمسی */
+      dragging:true,
+      touchZoom:true,
+      doubleClickZoom:true,
+      scrollWheelZoom:true,
+      boxZoom:false,
+      keyboard:true,
+
+      tap:false
+    });
+
+  }catch(e){
+
+    console.error('YarKeshavarz map error:',e);
+
+    return;
+  }
+
+  window.__ykMeasureMap=map;
+
+  /* مرکز اولیه ایران */
+  map.setView([35.6892,51.3890],12);
+
+  /* لایه نقشه */
+  let normalLayer=L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      maxZoom:21,
+      attribution:'© OpenStreetMap',
+      noWrap:true
     }
-  ).setView(
-    [35.7,51.4],
-    12
   );
 
-  layer=
-    L.layerGroup()
-      .addTo(map);
+  normalLayer.addTo(map);
 
-  baseLayer=
-    L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom:20,
-        attribution:'© OpenStreetMap',
-        noWrap:true
+  /* لایه ماهواره‌ای */
+  let satelliteLayer=L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom:21,
+      attribution:'Esri'
+    }
+  );
+
+  window.__ykNormalLayer=normalLayer;
+  window.__ykSatelliteLayer=satelliteLayer;
+
+  /* نقاط اندازه‌گیری */
+  window.__ykMeasurePoints=[];
+
+  window.__ykMeasureMarkers=[];
+
+  window.__ykMeasurePolygon=null;
+
+  window.__ykMeasureLine=null;
+
+  window.__ykMeasureSatellite=false;
+
+  /* گروه مخصوص نقاط */
+  let layerGroup=L.layerGroup().addTo(map);
+
+  window.__ykMeasureLayerGroup=layerGroup;
+
+
+  /* -------------------------------------------------------
+     تبدیل مختصات به متر
+     ------------------------------------------------------- */
+
+  function distance(a,b){
+
+    const R=6371000;
+
+    const lat1=a.lat*Math.PI/180;
+    const lat2=b.lat*Math.PI/180;
+
+    const dLat=(b.lat-a.lat)*Math.PI/180;
+    const dLng=(b.lng-a.lng)*Math.PI/180;
+
+    const x=
+      Math.sin(dLat/2)*Math.sin(dLat/2)+
+      Math.cos(lat1)*
+      Math.cos(lat2)*
+      Math.sin(dLng/2)*
+      Math.sin(dLng/2);
+
+    const c=
+      2*Math.atan2(
+        Math.sqrt(x),
+        Math.sqrt(1-x)
+      );
+
+    return R*c;
+  }
+
+
+  /* -------------------------------------------------------
+     مساحت چندضلعی روی زمین
+     ------------------------------------------------------- */
+
+  function polygonArea(points){
+
+    if(!points || points.length<3) return 0;
+
+    const R=6378137;
+
+    let lat0=0;
+
+    points.forEach(p=>{
+      lat0+=p.lat;
+    });
+
+    lat0=lat0/points.length;
+
+    const latRad=lat0*Math.PI/180;
+
+    let xy=points.map(p=>{
+
+      const x=
+        R*
+        (p.lng*Math.PI/180)*
+        Math.cos(latRad);
+
+      const y=
+        R*
+        (p.lat*Math.PI/180);
+
+      return {x,y};
+    });
+
+    let area=0;
+
+    for(let i=0;i<xy.length;i++){
+
+      let j=(i+1)%xy.length;
+
+      area+=
+        xy[i].x*xy[j].y-
+        xy[j].x*xy[i].y;
+    }
+
+    return Math.abs(area/2);
+  }
+
+
+  /* -------------------------------------------------------
+     به‌روزرسانی اطلاعات
+     ------------------------------------------------------- */
+
+  function update(){
+
+    const points=window.__ykMeasurePoints;
+
+    let area=0;
+    let perimeter=0;
+
+    if(points.length>=3){
+
+      area=polygonArea(points);
+
+      for(let i=0;i<points.length;i++){
+
+        let j=(i+1)%points.length;
+
+        perimeter+=distance(
+          points[i],
+          points[j]
+        );
       }
-    ).addTo(map);
 
-  map.on(
-    'click',
-    e=>addPoint(
+    }else if(points.length===2){
+
+      perimeter=distance(
+        points[0],
+        points[1]
+      );
+    }
+
+    const areaEl=document.getElementById('mArea');
+    const hectareEl=document.getElementById('mHectare');
+    const perimeterEl=document.getElementById('mPerimeter');
+    const pointsEl=document.getElementById('mPoints');
+    const accEl=document.getElementById('mAcc');
+    const useEl=document.getElementById('useBtn');
+
+    if(areaEl){
+
+      areaEl.textContent=
+        Math.round(area).toLocaleString('fa-IR')+
+        ' مترمربع';
+    }
+
+    if(hectareEl){
+
+      hectareEl.textContent=
+        (area/10000).toLocaleString('fa-IR',{
+          maximumFractionDigits:4
+        });
+    }
+
+    if(perimeterEl){
+
+      perimeterEl.textContent=
+        Math.round(perimeter).toLocaleString('fa-IR')+
+        ' متر';
+    }
+
+    if(pointsEl){
+
+      pointsEl.textContent=
+        points.length.toLocaleString('fa-IR');
+    }
+
+    if(accEl){
+
+      if(points.length===0){
+
+        accEl.textContent='آماده اندازه‌گیری';
+
+      }else if(points.length<3){
+
+        accEl.textContent=
+          'یک یا چند نقطه دیگر اضافه کنید';
+
+      }else{
+
+        accEl.textContent=
+          '✓ مساحت آماده ثبت است';
+      }
+    }
+
+    if(useEl){
+
+      useEl.disabled=points.length<3;
+
+      useEl.dataset.area=String(area);
+
+      useEl.dataset.perimeter=String(perimeter);
+    }
+
+    /* ذخیره برای ثبت زمین */
+    window.__ykMeasureArea=area;
+
+    window.__ykMeasurePerimeter=perimeter;
+  }
+
+
+  /* -------------------------------------------------------
+     رسم نقاط و مرز زمین
+     ------------------------------------------------------- */
+
+  function redraw(){
+
+    layerGroup.clearLayers();
+
+    const points=window.__ykMeasurePoints;
+
+    window.__ykMeasureMarkers=[];
+
+    if(window.__ykMeasurePolygon){
+
+      try{
+        map.removeLayer(window.__ykMeasurePolygon);
+      }catch(e){}
+
+      window.__ykMeasurePolygon=null;
+    }
+
+    if(window.__ykMeasureLine){
+
+      try{
+        map.removeLayer(window.__ykMeasureLine);
+      }catch(e){}
+
+      window.__ykMeasureLine=null;
+    }
+
+    /* نقاط */
+    points.forEach((p,index)=>{
+
+      const marker=L.circleMarker(
+        [p.lat,p.lng],
+        {
+          radius:8,
+          weight:3,
+          color:'#ffffff',
+          fillColor:'#15803d',
+          fillOpacity:1
+        }
+      );
+
+      marker.bindTooltip(
+        String(index+1),
+        {
+          permanent:true,
+          direction:'top',
+          offset:[0,-8],
+          className:'yk-measure-number'
+        }
+      );
+
+      marker.addTo(layerGroup);
+
+      window.__ykMeasureMarkers.push(marker);
+    });
+
+
+    /* خط بین نقاط */
+    if(points.length>=2){
+
+      window.__ykMeasureLine=L.polyline(
+        points.map(p=>[p.lat,p.lng]),
+        {
+          color:'#15803d',
+          weight:4,
+          opacity:.9
+        }
+      ).addTo(map);
+    }
+
+
+    /* بستن چندضلعی */
+    if(points.length>=3){
+
+      window.__ykMeasurePolygon=L.polygon(
+        points.map(p=>[p.lat,p.lng]),
+        {
+          color:'#14532d',
+          weight:3,
+          fillColor:'#22c55e',
+          fillOpacity:.20
+        }
+      ).addTo(map);
+    }
+
+    update();
+  }
+
+
+  /* -------------------------------------------------------
+     اضافه کردن نقطه
+     ------------------------------------------------------- */
+
+  function addPoint(lat,lng){
+
+    if(!isFinite(lat) || !isFinite(lng)) return;
+
+    window.__ykMeasurePoints.push({
+      lat:Number(lat),
+      lng:Number(lng)
+    });
+
+    redraw();
+
+  }
+
+
+  window.__ykMeasureAddPoint=addPoint;
+
+
+  /* -------------------------------------------------------
+     کلیک روی نقشه
+     ------------------------------------------------------- */
+
+  map.on('click',function(e){
+
+    addPoint(
       e.latlng.lat,
       e.latlng.lng
-    )
-  );
+    );
 
-  points=[];
-  markers=[];
+  });
 
-  updateMeasure()
+
+  /* -------------------------------------------------------
+     موقعیت کاربر
+     ------------------------------------------------------- */
+
+  const locBtn=document.getElementById('locBtn');
+
+  if(locBtn){
+
+    locBtn.onclick=function(){
+
+      if(!navigator.geolocation){
+
+        alert('موقعیت‌یابی در این گوشی در دسترس نیست.');
+
+        return;
+      }
+
+      locBtn.disabled=true;
+
+      navigator.geolocation.getCurrentPosition(
+
+        function(pos){
+
+          const lat=pos.coords.latitude;
+          const lng=pos.coords.longitude;
+
+          map.setView(
+            [lat,lng],
+            Math.max(map.getZoom(),17),
+            {animate:true}
+          );
+
+          L.circleMarker(
+            [lat,lng],
+            {
+              radius:9,
+              color:'#ffffff',
+              weight:3,
+              fillColor:'#2563eb',
+              fillOpacity:1
+            }
+          )
+          .addTo(layerGroup)
+          .bindTooltip('موقعیت شما',{
+            permanent:false
+          });
+
+          locBtn.disabled=false;
+
+        },
+
+        function(){
+
+          locBtn.disabled=false;
+
+          alert(
+            'دسترسی به موقعیت مکانی داده نشد.\n' +
+            'لطفاً GPS و اجازه Location را فعال کنید.'
+          );
+
+        },
+
+        {
+          enableHighAccuracy:true,
+          timeout:15000,
+          maximumAge:0
+        }
+      );
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     ماهواره‌ای / معمولی
+     ------------------------------------------------------- */
+
+  const satBtn=document.getElementById('satBtn');
+
+  if(satBtn){
+
+    satBtn.onclick=function(){
+
+      if(window.__ykMeasureSatellite){
+
+        if(map.hasLayer(satelliteLayer)){
+          map.removeLayer(satelliteLayer);
+        }
+
+        if(!map.hasLayer(normalLayer)){
+          normalLayer.addTo(map);
+        }
+
+        window.__ykMeasureSatellite=false;
+
+        satBtn.textContent='🛰️';
+
+      }else{
+
+        if(map.hasLayer(normalLayer)){
+          map.removeLayer(normalLayer);
+        }
+
+        if(!map.hasLayer(satelliteLayer)){
+          satelliteLayer.addTo(map);
+        }
+
+        window.__ykMeasureSatellite=true;
+
+        satBtn.textContent='🗺️';
+      }
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     حذف آخرین نقطه
+     ------------------------------------------------------- */
+
+  const undoBtn=document.getElementById('undoPoint');
+
+  if(undoBtn){
+
+    undoBtn.onclick=function(){
+
+      if(!window.__ykMeasurePoints.length) return;
+
+      window.__ykMeasurePoints.pop();
+
+      redraw();
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     پاک کردن همه
+     ------------------------------------------------------- */
+
+  const clearBtn=document.getElementById('clearBtn');
+
+  if(clearBtn){
+
+    clearBtn.onclick=function(){
+
+      window.__ykMeasurePoints=[];
+
+      redraw();
+
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     بستن اندازه‌گیری
+     ------------------------------------------------------- */
+
+  const closeBtn=document.getElementById('closeMeasure');
+
+  if(closeBtn){
+
+    closeBtn.onclick=function(){
+
+      try{
+        map.remove();
+      }catch(e){}
+
+      window.__ykMeasureMap=null;
+
+      document.body.classList.remove('measure-active');
+
+      go('home');
+
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     ثبت زمین با مساحت
+     ------------------------------------------------------- */
+
+  const useBtn=document.getElementById('useBtn');
+
+  if(useBtn){
+
+    useBtn.onclick=function(){
+
+      const points=window.__ykMeasurePoints;
+
+      const area=Number(window.__ykMeasureArea||0);
+
+      const perimeter=
+        Number(window.__ykMeasurePerimeter||0);
+
+      if(points.length<3 || area<=0){
+
+        alert(
+          'برای ثبت زمین حداقل ۳ نقطه مشخص کنید.'
+        );
+
+        return;
+      }
+
+      /* ذخیره اندازه‌گیری برای صفحه ثبت زمین */
+      sessionStorage.setItem(
+        'yk-measured-area',
+        String(area)
+      );
+
+      sessionStorage.setItem(
+        'yk-measured-perimeter',
+        String(perimeter)
+      );
+
+      sessionStorage.setItem(
+        'yk-measured-points',
+        JSON.stringify(
+          points.map(p=>[
+            p.lat,
+            p.lng
+          ])
+        )
+      );
+
+      go('add');
+
+    };
+  }
+
+
+  /* -------------------------------------------------------
+     جستجوی مکان
+     ------------------------------------------------------- */
+
+  const searchInput=document.getElementById('measureSearch');
+  const searchBtn=document.getElementById('searchBtn');
+
+  async function searchPlace(){
+
+    if(!searchInput) return;
+
+    const q=searchInput.value.trim();
+
+    if(!q) return;
+
+    searchBtn.disabled=true;
+
+    try{
+
+      /* اگر مختصات وارد شده باشد */
+      const parts=q
+        .replace(/،/g,',')
+        .split(',')
+        .map(x=>Number(x.trim()));
+
+      if(
+        parts.length===2 &&
+        isFinite(parts[0]) &&
+        isFinite(parts[1]) &&
+        Math.abs(parts[0])<=90 &&
+        Math.abs(parts[1])<=180
+      ){
+
+        map.setView(
+          [parts[0],parts[1]],
+          17,
+          {animate:true}
+        );
+
+        return;
+      }
+
+
+      const url=
+        'https://nominatim.openstreetmap.org/search?' +
+        'format=jsonv2' +
+        '&limit=1' +
+        '&accept-language=fa' +
+        '&q='+encodeURIComponent(q);
+
+      const res=await fetch(url,{
+        headers:{
+          'Accept':'application/json'
+        }
+      });
+
+      const data=await res.json();
+
+      if(!data || !data.length){
+
+        alert('مکان موردنظر پیدا نشد.');
+
+        return;
+      }
+
+      const lat=Number(data[0].lat);
+      const lon=Number(data[0].lon);
+
+      map.setView(
+        [lat,lon],
+        16,
+        {animate:true}
+      );
+
+      L.marker([lat,lon])
+        .addTo(layerGroup)
+        .bindPopup(
+          esc(data[0].display_name||q)
+        )
+        .openPopup();
+
+    }catch(e){
+
+      console.error(e);
+
+      alert(
+        'جستجوی مکان انجام نشد. اتصال اینترنت را بررسی کنید.'
+      );
+
+    }finally{
+
+      searchBtn.disabled=false;
+    }
+  }
+
+
+  if(searchBtn){
+
+    searchBtn.onclick=searchPlace;
+  }
+
+  if(searchInput){
+
+    searchInput.addEventListener(
+      'keydown',
+      function(e){
+
+        if(e.key==='Enter'){
+
+          e.preventDefault();
+
+          searchPlace();
+        }
+      }
+    );
+  }
+
+
+  /* -------------------------------------------------------
+     وضعیت اولیه
+     ------------------------------------------------------- */
+
+  update();
+
+  setTimeout(function(){
+
+    try{
+      map.invalidateSize();
+    }catch(e){}
+
+  },300);
+
 }
-
 function addPoint(lat,lng,a){
 
   if(a&&a>35)return;
