@@ -2848,7 +2848,81 @@ function initMap(){
   /* -------------------------------------------------------
      مساحت چندضلعی روی زمین
      ------------------------------------------------------- */
+const trackBtn = document.getElementById('trackBtn');
 
+let gpsWatch = null;
+let gpsRunning = false;
+
+if (trackBtn) {
+  trackBtn.onclick = function () {
+
+    if (gpsRunning) {
+      if (gpsWatch !== null) {
+        navigator.geolocation.clearWatch(gpsWatch);
+        gpsWatch = null;
+      }
+
+      gpsRunning = false;
+      trackBtn.textContent = '▶ شروع پیمایش GPS';
+
+      const acc = document.getElementById('mAcc');
+      if (acc) acc.textContent = 'پیمایش متوقف شد';
+
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert('GPS در این گوشی در دسترس نیست.');
+      return;
+    }
+
+    gpsRunning = true;
+    trackBtn.textContent = '■ توقف پیمایش GPS';
+
+    const acc = document.getElementById('mAcc');
+    if (acc) acc.textContent = 'در حال دریافت موقعیت GPS...';
+
+    gpsWatch = navigator.geolocation.watchPosition(
+      function (pos) {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy;
+
+        if (acc) {
+          acc.textContent =
+            'دقت GPS: ' + Math.round(accuracy) + ' متر';
+        }
+
+        map.setView([lat, lng], Math.max(map.getZoom(), 17));
+
+        addPoint(lat, lng);
+      },
+
+      function (err) {
+        gpsRunning = false;
+        gpsWatch = null;
+        trackBtn.textContent = '▶ شروع پیمایش GPS';
+
+        const acc = document.getElementById('mAcc');
+
+        if (acc) {
+          acc.textContent = 'دسترسی GPS داده نشد';
+        }
+
+        alert(
+          'برای پیمایش GPS باید Location گوشی و اجازه دسترسی مکان برای Chrome فعال باشد.'
+        );
+      },
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 15000
+      }
+    );
+  };
+}
   function polygonArea(points){
 
     if(!points || points.length<3) return 0;
