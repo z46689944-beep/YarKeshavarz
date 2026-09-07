@@ -1,0 +1,3725 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b3d2e">
+<meta name="description" content="یار کشاورز — مدیریت زمین، کشت، هزینه، انبار و آب‌وهوا">
+<!-- YarKeshavarz Trial 53 - AI assistant structure phase -->
+<title>یار کشاورز V3</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/@tomickigrzegorz/leaflet-rotate@0.2.4/dist/leaflet-rotate.css">
+
+<style>
+:root{
+--g:#0b3d2e;
+--g2:#17664b;
+--bg:#f4f7f4;
+--card:#fff;
+--text:#17352b;
+--muted:#71817a;
+--line:#e1e9e4;
+--red:#a33a3a;
+--shadow:0 10px 28px rgba(14,55,41,.08)
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:Tahoma,Arial,sans-serif
+}
+
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+
+.top{
+position:sticky;
+top:0;
+z-index:1000;
+height:66px;
+background:var(--g);
+color:#fff;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 14px;
+box-shadow:0 5px 18px #0002
+}
+
+.brand{
+display:flex;
+align-items:center;
+gap:10px
+}
+
+.logo{
+width:42px;
+height:42px;
+border-radius:13px;
+background:#ffffff18;
+display:grid;
+place-items:center;
+font-size:25px
+}
+
+.brand b{display:block}
+.brand small{opacity:.7;font-size:10px}
+
+.top button{
+border:0;
+background:#ffffff18;
+color:#fff;
+border-radius:12px;
+width:40px;
+height:40px;
+font-size:20px
+}
+
+main{
+max-width:900px;
+margin:auto;
+padding:14px 12px 95px
+}
+
+.hero{
+min-height:210px;
+border-radius:24px;
+padding:22px;
+color:#fff;
+display:flex;
+flex-direction:column;
+justify-content:end;
+background:linear-gradient(135deg,#0b3d2e,#287659);
+box-shadow:var(--shadow);
+margin-bottom:14px
+}
+
+.hero h1{
+margin:0 0 7px;
+font-size:28px
+}
+
+.hero p{
+margin:0;
+opacity:.86;
+font-size:13px
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px
+}
+
+.card{
+background:var(--card);
+border:1px solid var(--line);
+border-radius:18px;
+padding:14px;
+box-shadow:var(--shadow)
+}
+
+.metric{
+font-size:22px;
+font-weight:900;
+margin-top:5px
+}
+
+.muted{color:var(--muted)}
+.small{font-size:11px}
+
+.section{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+margin:19px 2px 9px
+}
+
+.section h2,.section h3{margin:0}
+
+.quick{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px
+}
+
+.quick button{
+min-height:78px;
+border:1px solid var(--line);
+background:#fff;
+border-radius:16px;
+font-weight:800;
+color:var(--g)
+}
+
+.primary,.secondary,.danger{
+border:0;
+border-radius:12px;
+padding:10px 13px;
+font-weight:800
+}
+
+.primary{
+background:var(--g);
+color:#fff
+}
+
+.secondary{
+background:#eaf2ee;
+color:var(--g)
+}
+
+.danger{
+background:#f8e8e8;
+color:var(--red)
+}
+
+.list{
+display:grid;
+gap:10px
+}
+
+.row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:9px
+}
+
+.actions{
+display:flex;
+gap:7px;
+flex-wrap:wrap;
+margin-top:11px
+}
+
+.badge{
+display:inline-block;
+background:#edf4ef;
+color:var(--g);
+border-radius:99px;
+padding:4px 8px;
+font-size:10px
+}
+
+.empty{
+text-align:center;
+color:var(--muted);
+padding:28px
+}
+
+.form{
+display:grid;
+gap:12px
+}
+
+.field{
+display:grid;
+gap:6px
+}
+
+.field label{
+font-size:12px;
+font-weight:800
+}
+
+.field input,
+.field select,
+.field textarea{
+width:100%;
+border:1px solid #d7e2dc;
+background:#fff;
+border-radius:12px;
+padding:11px;
+color:var(--text);
+outline:none
+}
+
+.field textarea{min-height:90px}
+
+.tabs{
+display:flex;
+gap:7px;
+overflow:auto;
+padding:4px 0 9px
+}
+
+.tabs button{
+white-space:nowrap;
+border:1px solid var(--line);
+background:#fff;
+border-radius:11px;
+padding:9px 12px
+}
+
+.tabs button.active{
+background:var(--g);
+color:#fff
+}
+
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+height:74px;
+background:#fffefcfa;
+border-top:1px solid var(--line);
+display:grid;
+grid-template-columns:repeat(5,1fr);
+z-index:3000;
+padding-bottom:env(safe-area-inset-bottom);
+backdrop-filter:blur(12px)
+}
+
+.bottom button{
+border:0;
+background:none;
+color:#78857f;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:3px;
+font-size:21px
+}
+
+.bottom button span{font-size:9px}
+
+.bottom button.active{
+color:var(--g);
+font-weight:900
+}
+
+.weather-now{
+background:linear-gradient(135deg,#0b3d2e,#247557);
+color:#fff;
+border-radius:22px;
+padding:18px
+}
+
+.weather-temp{
+font-size:48px;
+font-weight:900
+}
+
+.weather-icon{font-size:55px}
+
+.forecast{
+display:grid;
+gap:7px
+}
+
+.day{
+display:grid;
+grid-template-columns:1.4fr .5fr .7fr .8fr;
+align-items:center;
+background:#f6f9f7;
+border-radius:14px;
+padding:10px
+}
+
+.weather-error{
+padding:25px;
+text-align:center
+}
+
+.measure-wrap{
+position:fixed;
+inset:0;
+background:#fff;
+z-index:5000;
+padding:10px
+}
+
+.measure-map{
+position:absolute;
+inset:0
+}
+
+.measure-head{
+position:absolute;
+z-index:5100;
+top:12px;
+left:12px;
+right:12px;
+display:flex;
+gap:7px
+}
+
+.measure-head input{
+flex:1;
+border:0;
+border-radius:13px;
+padding:12px;
+box-shadow:0 7px 22px #0002
+}
+
+.measure-tools{
+position:absolute;
+z-index:5100;
+top:62px;
+right:12px;
+display:flex;
+gap:6px
+}
+
+.measure-tools button{
+width:42px;
+height:42px;
+cursor:pointer;
+border:0;
+border-radius:12px;
+background:#fff;
+box-shadow:0 7px 20px #0002
+}
+
+.measure-bottom{
+position:absolute;
+z-index:5100;
+bottom:10px;
+left:10px;
+right:10px;
+background:#fffffff7;
+border-radius:18px;
+padding:9px;
+box-shadow:0 7px 25px #0003;
+max-width:620px;
+margin:auto
+}
+
+.measure-stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:5px;
+text-align:center;
+margin-bottom:7px
+}
+
+.measure-stats b{
+display:block;
+font-size:12px
+}
+
+.measure-stats span{
+font-size:8px;
+color:var(--muted)
+}
+
+.measure-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:7px
+}
+
+.gps,#register{
+width:100%;
+min-height:46px;
+margin:0;
+font-size:13px;
+position:relative;
+z-index:2;
+box-sizing:border-box;
+border:0;
+border-radius:13px;
+padding:10px;
+font-weight:900
+}
+
+.gps{
+background:#8f2929;
+color:#fff
+}
+
+#measureStatus{
+min-height:14px;
+margin:4px 0 0
+}
+
+.hint{
+text-align:center;
+color:var(--muted);
+font-size:9px;
+margin:6px
+}
+
+#register:disabled{
+opacity:.45;
+cursor:not-allowed
+}
+
+.chat{
+display:grid;
+gap:8px
+}
+
+.bubble{
+padding:11px 13px;
+border-radius:15px;
+max-width:90%;
+line-height:1.9;
+font-size:12px
+}
+
+.bot{
+background:#eaf2ee
+}
+
+.me{
+background:var(--g);
+color:#fff;
+margin-right:auto
+}
+
+.ad{
+min-height:150px;
+color:#fff;
+background:linear-gradient(135deg,#153d31,#2b7155);
+display:flex;
+flex-direction:column;
+justify-content:end
+}
+
+.news{
+display:grid;
+gap:10px
+}
+
+.news article{
+background:#fff;
+border:1px solid var(--line);
+border-radius:17px;
+padding:14px
+}
+
+.quick button{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:4px;
+font-size:12px
+}
+
+.quick button .qi{
+font-size:27px;
+line-height:1
+}
+
+.field-tools{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin:10px 0
+}
+
+.field-tool{
+border:1px solid var(--line);
+background:#fff;
+border-radius:16px;
+padding:12px;
+text-align:right;
+display:grid;
+grid-template-columns:auto 1fr;
+column-gap:9px;
+align-items:center;
+box-shadow:var(--shadow);
+color:var(--g)
+}
+
+.field-tool span{
+grid-row:1/3;
+font-size:31px
+}
+
+.field-tool b{font-size:14px}
+
+.field-tool small{
+font-size:9px;
+color:var(--muted);
+margin-top:2px
+}
+
+@media(max-width:420px){
+.field-tools{grid-template-columns:1fr}
+}
+
+.stock-actions{
+display:flex;
+gap:8px;
+margin-top:11px
+}
+
+.stock-actions button{
+flex:1;
+min-height:44px;
+border:0;
+border-radius:12px;
+font-weight:900
+}
+
+.stock-plus{
+background:#e7f3eb;
+color:var(--g)
+}
+
+.stock-minus{
+background:#fff0ed;
+color:#9a3730
+}
+
+.calc-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:7px
+}
+
+.calc-grid button{
+min-height:52px;
+border:1px solid var(--line);
+background:#fff;
+border-radius:12px;
+font-weight:900
+}
+
+.calc-display{
+background:#123f31;
+color:#fff;
+border-radius:16px;
+padding:15px;
+text-align:left;
+font-size:26px;
+font-weight:900;
+direction:ltr;
+min-height:62px
+}
+
+.crop-card{
+border-right:4px solid var(--g2)
+}
+
+.crop-actions{
+display:flex;
+gap:7px;
+flex-wrap:wrap;
+margin-top:9px
+}
+
+.crop-actions button{
+flex:1;
+min-width:110px
+}
+
+.home-weather{
+margin-top:14px;
+background:#fff;
+border:1px solid var(--line);
+border-radius:20px;
+padding:13px;
+box-shadow:var(--shadow)
+}
+
+.home-weather-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px
+}
+
+.home-weather-main{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-top:8px
+}
+
+.home-weather-temp{
+font-size:38px;
+font-weight:900
+}
+
+.home-weather-icon{
+font-size:46px
+}
+
+.home-hourly{
+display:flex;
+gap:7px;
+overflow-x:auto;
+padding:9px 1px 3px;
+scrollbar-width:none
+}
+
+.home-hour{
+min-width:72px;
+text-align:center;
+background:#f3f8f5;
+border-radius:13px;
+padding:8px 5px
+}
+
+.home-hour b{
+display:block;
+font-size:11px
+}
+
+.home-hour span{
+display:block;
+font-size:23px;
+margin:3px 0
+}
+
+.home-hour small{
+font-size:10px;
+color:var(--muted)
+}
+
+.hourly-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:7px
+}
+
+.hour-card{
+background:#f6f9f7;
+border-radius:14px;
+padding:9px;
+text-align:center
+}
+
+.hour-card b{font-size:11px}
+
+.hour-card .hi{
+font-size:23px;
+margin:4px 0
+}
+
+.hour-card small{
+display:block;
+color:var(--muted);
+font-size:9px;
+line-height:1.7
+}
+
+.weather-location-note{
+background:#edf5f0;
+border-radius:13px;
+padding:9px;
+font-size:11px;
+color:var(--g);
+margin-top:9px
+}
+
+.calc-land-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-bottom:10px
+}
+
+.calc-area{
+text-align:center;
+background:#edf5f0;
+border-radius:14px;
+padding:8px 13px;
+min-width:78px
+}
+
+.calc-area b{
+display:block;
+font-size:18px;
+color:var(--g)
+}
+
+.calc-area small{
+font-size:9px;
+color:var(--muted)
+}
+
+.calc-form-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+
+.calc-form-grid.two{
+margin-top:8px
+}
+
+.calc-total{
+margin-top:10px;
+background:linear-gradient(135deg,#0b3d2e,#247557);
+color:#fff;
+text-align:center
+}
+
+.calc-total span,
+.calc-total strong,
+.calc-total small{
+display:block
+}
+
+.calc-total strong{
+font-size:26px;
+margin:5px 0
+}
+
+.calc-total small{
+opacity:.8
+}
+
+.calc-result-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+margin-top:10px
+}
+
+.calc-result-grid div{
+background:#f3f8f5;
+border-radius:14px;
+padding:11px;
+text-align:center
+}
+
+.calc-result-grid span{
+display:block;
+font-size:10px;
+color:var(--muted)
+}
+
+.calc-result-grid b{
+display:block;
+font-size:16px;
+margin-top:5px
+}
+
+.crop-focus{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-bottom:10px
+}
+
+@media(max-width:430px){
+.calc-form-grid{grid-template-columns:1fr}
+.measure-actions{grid-template-columns:1fr 1fr}
+}
+
+.hero{
+background-size:cover;
+background-position:center center;
+background-repeat:no-repeat
+}
+
+.hero:after{
+content:'';
+display:block;
+height:1px;
+width:100%
+}
+
+@media(max-width:560px){
+main{padding:11px 9px 92px}
+.quick{grid-template-columns:repeat(2,1fr)}
+.stat4,.measure-stats{grid-template-columns:repeat(2,1fr)}
+.day{grid-template-columns:1.3fr .5fr .7fr .7fr}
+.weather-temp{font-size:42px}
+}
+
+.hero{
+background-image:
+linear-gradient(180deg,#0000 20%,#082c22d9 100%),
+url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80");
+background-size:cover;
+background-position:center;
+min-height:245px
+}
+
+.hero p{
+font-weight:700;
+text-shadow:0 2px 8px #0008
+}
+
+.icon-card{
+display:flex;
+align-items:center;
+gap:10px
+}
+
+.icon-big{
+width:48px;
+height:48px;
+border-radius:15px;
+background:#edf4ef;
+display:grid;
+place-items:center;
+font-size:27px
+}
+
+.photo-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:7px;
+margin-top:10px
+}
+
+.photo-grid img{
+width:100%;
+aspect-ratio:1;
+border-radius:13px;
+object-fit:cover;
+border:1px solid var(--line)
+}
+
+.profile-head{
+display:flex;
+align-items:center;
+gap:12px
+}
+
+.avatar{
+width:82px;
+height:82px;
+border-radius:50%;
+object-fit:cover;
+background:#eaf2ee;
+border:3px solid #fff;
+box-shadow:var(--shadow);
+display:grid;
+place-items:center;
+font-size:35px
+}
+
+.equip-grid{
+display:grid;
+gap:10px
+}
+
+.equip-item{
+display:grid;
+grid-template-columns:54px 1fr auto;
+gap:10px;
+align-items:center
+}
+
+.equip-icon{
+width:54px;
+height:54px;
+border-radius:16px;
+background:#edf4ef;
+display:grid;
+place-items:center;
+font-size:29px
+}
+
+.equip-meta{
+font-size:11px;
+color:var(--muted);
+line-height:1.8
+}
+
+.weather-mini{
+margin-top:10px;
+border-radius:17px;
+padding:12px;
+background:#eef6f1
+}
+
+.weather-mini .temp{
+font-size:27px;
+font-weight:900
+}
+
+.weather-mini.loading{
+color:var(--muted)
+}
+
+.profile-menu{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin-top:10px
+}
+
+.profile-menu button{
+border:1px solid var(--line);
+background:#fff;
+border-radius:14px;
+padding:13px;
+font-weight:800;
+color:var(--g)
+}
+
+@media(max-width:560px){
+.hero{min-height:225px}
+.photo-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+.register-modal{
+position:fixed;
+inset:0;
+z-index:9999;
+background:#0008;
+display:flex;
+align-items:flex-end;
+justify-content:center;
+padding:12px
+}
+
+.register-card{
+width:min(560px,100%);
+background:#fff;
+border-radius:22px;
+padding:18px;
+box-shadow:0 20px 60px #0005
+}
+
+.register-card h3{
+margin:0 0 5px
+}
+
+.register-card label{
+display:block;
+margin-top:10px;
+font-weight:800;
+font-size:13px
+}
+
+.register-card input{
+width:100%;
+box-sizing:border-box;
+margin-top:5px;
+border:1px solid var(--line);
+border-radius:12px;
+padding:12px;
+font:inherit
+}
+
+.register-summary{
+margin:12px 0;
+padding:12px;
+border-radius:14px;
+background:#f2f8f5;
+display:flex;
+flex-direction:column;
+gap:4px
+}
+
+.register-summary b{
+font-size:20px
+}
+
+.register-card .actions{
+margin-top:14px;
+display:grid;
+grid-template-columns:1fr 1.4fr;
+gap:8px
+}
+
+.hero{
+background-size:cover!important;
+background-position:center!important;
+min-height:240px!important
+}
+
+.land-schematic{
+padding:2px 0
+}
+
+.schematic-head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px
+}
+
+.schematic-head span{
+font-size:12px;
+color:#718078
+}
+
+.land-schematic svg{
+display:block;
+width:100%;
+height:auto;
+border:1px solid #e1ebe6;
+border-radius:14px;
+background:#f8fbf9
+}
+
+.land-schematic svg text{
+font-family:Tahoma,Arial,sans-serif;
+fill:#17664b;
+font-size:10px;
+font-weight:700
+}
+
+.schematic-meta{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-top:10px;
+font-size:12px;
+color:#66736d
+}
+
+.land-schematic.empty{
+min-height:150px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+gap:7px;
+color:#607069
+}
+
+.land-schematic.empty div{
+font-size:32px
+}
+
+.land-schematic.empty small{
+font-size:12px;
+color:#8a9691
+}
+
+.schematic-modern{
+background:linear-gradient(180deg,#f8fbf9,#eef5f1);
+border:1px solid #dce9e2;
+border-radius:22px;
+padding:12px;
+overflow:hidden
+}
+
+.schematic-modern .schematic-head{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:9px
+}
+
+.schematic-modern .schematic-head b{
+font-size:15px
+}
+
+.schematic-modern svg{
+width:100%;
+height:auto;
+display:block;
+border-radius:17px;
+background:#f7faf8
+}
+
+.schematic-modern .schematic-meta{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:7px;
+margin-top:9px
+}
+
+.schematic-modern .schematic-meta div{
+background:#fff;
+border:1px solid #e1eae5;
+border-radius:13px;
+padding:9px;
+text-align:center
+}
+
+.schematic-modern .schematic-meta span{
+display:block;
+font-size:9px;
+color:var(--muted);
+margin-bottom:4px
+}
+
+.schematic-modern .schematic-meta b{
+font-size:13px;
+color:var(--g)
+}
+
+.edit-points{
+width:100%;
+margin-top:9px
+}
+
+.edit-points-btn{
+width:100%;
+border:1px solid #cfe0d7;
+background:#edf6f1;
+color:var(--g);
+border-radius:13px;
+padding:11px;
+font-weight:900
+}
+
+.fun-shell{
+position:fixed;
+inset:0;
+z-index:9000;
+background:linear-gradient(145deg,#071f18,#0d4d38 48%,#123d31);
+color:#fff;
+overflow:auto;
+display:none
+}
+
+.fun-shell.show{
+display:block
+}
+
+.fun-inner{
+max-width:900px;
+margin:auto;
+padding:16px 13px 34px
+}
+
+.fun-top{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin-bottom:14px
+}
+
+.fun-top h1{
+margin:0;
+font-size:23px
+}
+
+.fun-top small{
+opacity:.75
+}
+
+.fun-back{
+border:1px solid #ffffff2b;
+background:#ffffff18;
+color:#fff;
+border-radius:13px;
+padding:10px 13px;
+font-weight:900
+}
+
+.fun-score{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:8px;
+margin-bottom:12px
+}
+
+.fun-score .fs{
+background:#ffffff14;
+border:1px solid #ffffff20;
+backdrop-filter:blur(14px);
+border-radius:17px;
+padding:12px;
+text-align:center;
+box-shadow:0 12px 30px #0002
+}
+
+.fun-score b{
+display:block;
+font-size:21px
+}
+
+.fun-score span{
+font-size:10px;
+opacity:.72
+}
+
+.fun-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+
+.fun-card{
+border:1px solid #ffffff22;
+background:linear-gradient(145deg,#ffffff18,#ffffff0b);
+backdrop-filter:blur(18px);
+border-radius:21px;
+padding:15px;
+box-shadow:0 16px 35px #0003
+}
+
+.fun-card h2{
+margin:0 0 6px;
+font-size:17px
+}
+
+.fun-card p{
+font-size:11px;
+line-height:1.9;
+opacity:.8
+}
+
+.fun-icon{
+font-size:38px;
+margin-bottom:4px
+}
+
+.fun-btn{
+width:100%;
+border:1px solid #ffffff22;
+background:#ffffff16;
+color:#fff;
+border-radius:13px;
+padding:11px;
+font-weight:900;
+margin-top:8px
+}
+
+.fun-panel{
+margin-top:12px;
+border:1px solid #ffffff22;
+background:#ffffff12;
+backdrop-filter:blur(18px);
+border-radius:21px;
+padding:15px
+}
+
+.fun-question{
+font-size:16px;
+font-weight:900;
+line-height:1.9;
+margin-bottom:12px
+}
+
+.fun-options{
+display:grid;
+gap:8px
+}
+
+.fun-option{
+border:1px solid #ffffff25;
+background:#ffffff10;
+color:#fff;
+border-radius:13px;
+padding:11px;
+text-align:right;
+font-weight:800
+}
+
+.fun-option.correct{
+background:#2e8b57
+}
+
+.fun-option.wrong{
+background:#8e3b3b
+}
+
+.fun-fact{
+font-size:13px;
+line-height:2
+}
+
+@media(max-width:520px){
+.fun-grid{grid-template-columns:1fr}
+}
+
+/* ===== V3 GLASSMORPHISM UI ===== */
+
+:root{
+--glass-bg:rgba(255,255,255,.72);
+--glass-bg-strong:rgba(255,255,255,.86);
+--glass-border:rgba(255,255,255,.72);
+--glass-shadow:0 14px 38px rgba(13,55,40,.12);
+--glass-blur:blur(18px)
+}
+
+body{
+background:
+radial-gradient(circle at 8% 4%,rgba(72,157,116,.18),transparent 30%),
+radial-gradient(circle at 92% 12%,rgba(213,178,88,.13),transparent 28%),
+linear-gradient(145deg,#eef7f1 0%,#f7faf8 48%,#eaf4ee 100%)
+}
+
+header,.bottom-nav{
+background:rgba(255,255,255,.68)!important;
+backdrop-filter:blur(20px);
+-webkit-backdrop-filter:blur(20px);
+border-color:rgba(255,255,255,.78)!important;
+box-shadow:0 10px 30px rgba(11,61,46,.09)!important
+}
+
+.card,.home-weather,.field-tool,.hour-card,.home-hour,.calc-result-grid div{
+background:var(--glass-bg)!important;
+backdrop-filter:var(--glass-blur);
+-webkit-backdrop-filter:var(--glass-blur);
+border:1px solid var(--glass-border)!important;
+box-shadow:var(--glass-shadow)!important
+}
+
+.card{
+position:relative;
+overflow:hidden
+}
+
+.card:before{
+content:"";
+position:absolute;
+inset:0 0 auto 0;
+height:1px;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+pointer-events:none
+}
+
+button,.input,select,textarea{
+border-radius:15px!important
+}
+
+button{
+box-shadow:0 7px 18px rgba(11,61,46,.08)
+}
+
+button.primary,.primary{
+background:linear-gradient(135deg,#0b3d2e,#287659)!important;
+border:1px solid rgba(255,255,255,.25)!important
+}
+
+button.secondary,.secondary{
+background:rgba(255,255,255,.62)!important;
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px)
+}
+
+.quick button,.field-tool{
+min-height:86px;
+background:rgba(255,255,255,.62)!important;
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px)
+}
+
+.quick button .qi,.field-tool span{
+filter:drop-shadow(0 5px 8px rgba(11,61,46,.14))
+}
+
+.quick button .qi{
+display:grid;
+place-items:center;
+width:48px;
+height:48px;
+border-radius:16px;
+background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(226,242,233,.55));
+border:1px solid rgba(255,255,255,.85);
+box-shadow:inset 0 1px rgba(255,255,255,.9),0 8px 18px rgba(11
+x-shadow:0 -10px 35px rgba(16,49,37,.08);backdrop-filter:blur(18px)}.bottom button.active{color:var(--g2)}.weather-now{border-radius:23px;background:linear-gradient(145deg,#0a4b36,#1e7d59)}.calc-total{border-radius:22px}.home-weather,.weather-mini{border-radius:20px}.yar-land-entry{border-radius:22px!important}.yar41-head,.yar41-field,.yar41-form{border-radius:20px!important}.yar41-tools button{border-radius:16px!important;box-shadow:0 8px 22px rgba(13,55,40,.06)!important}@media(max-width:460px){main{padding-left:9px;padding-right:9px}.hero{min-height:260px}.quick{grid-template-columns:1fr 1fr}} </style><style id="land-thumb-modern">.land-title-row{align-items:center;gap:10px}.land-title-wrap{display:flex;align-items:center;gap:10px;min-width:0}.land-title-text{min-width:0}.land-title-text h3{margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.land-thumb{width:82px;height:58px;flex:0 0 82px;border-radius:15px;overflow:hidden;background:#f2f8f4;border:1px solid rgba(207,226,216,.95);box-shadow:0 7px 16px rgba(13,55,40,.08)}.land-thumb svg{display:block;width:100%;height:100%}.land-title-row>b{white-space:nowrap;font-size:13px}@media(max-width:390px){.land-thumb{width:72px;flex-basis:72px;height:52px}.land-title-row>b{font-size:12px}} 
+/* ===== KESHAVAR-YAR PRO V2 UI ===== */
+.yarpro{max-width:980px;margin:0 auto;padding:10px 4px 110px;color:#fff}.yarpro-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border:1px solid rgba(255,255,255,.2);border-radius:24px;background:rgba(12,35,29,.62);backdrop-filter:blur(18px);box-shadow:0 14px 38px rgba(0,0,0,.18)}.yarpro-brand{display:flex;align-items:center;gap:11px}.yarpro-avatar{width:48px;height:48px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:linear-gradient(145deg,#173f30,#1d6571);border:1px solid rgba(255,255,255,.25)}.yarpro-brand h2{margin:0;font-size:20px}.yarpro-brand span{display:block;margin-top:4px;font-size:12px;opacity:.78}.yarpro-switch{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);color:#fff;border-radius:14px;padding:9px 11px}.yarpro-context{margin-top:12px;padding:15px;border-radius:22px;border:1px solid rgba(255,255,255,.18);background:rgba(10,36,30,.55);backdrop-filter:blur(15px)}.yarpro-context-title{font-weight:800;margin-bottom:10px}.yarpro-stats{display:flex;flex-wrap:wrap;gap:7px}.yarpro-stats span{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.1);font-size:12px}.yarpro-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.yarpro-actions button{min-height:48px;border:1px solid rgba(255,255,255,.18);border-radius:15px;background:rgba(255,255,255,.12);color:#fff;font-weight:700}.yarpro-chat{min-height:42vh;max-height:54vh;overflow:auto;padding:10px;border-radius:22px;background:rgba(4,22,18,.43);border:1px solid rgba(255,255,255,.16)}.yarpro-form{position:sticky;bottom:74px;margin-top:10px;display:flex;gap:8px;padding:9px;border-radius:20px;background:rgba(9,31,26,.78);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.2)}.yarpro-form input{flex:1;min-width:0;border:0;outline:0;background:rgba(255,255,255,.1);color:#fff;border-radius:14px;padding:13px}.yarpro-form input::placeholder{color:rgba(255,255,255,.65)}.yarpro-camera,.yarpro-send{width:46px;border:0;border-radius:14px;background:rgba(255,255,255,.13);color:#fff;font-size:20px}.yarpro-send{background:linear-gradient(145deg,#1b6b50,#246d78)}.yarpro-hint{text-align:center;font-size:11px;opacity:.72;margin-top:8px}.yar-msg{display:flex;margin:8px 0}.yar-msg>div{max-width:88%;padding:10px 12px;border-radius:17px;line-height:1.8;font-size:13px;background:rgba(255,255,255,.1)}.yar-msg.user{justify-content:flex-end}.yar-msg.user>div{background:rgba(27,107,80,.78)}.yar-msg-image{display:block;max-width:230px;max-height:230px;border-radius:13px;margin-bottom:6px}.yar-photo-preview{align-items:center;gap:8px;margin:8px 0;padding:8px;border-radius:16px;background:rgba(255,255,255,.1)}.yar-photo-preview img{width:78px;height:78px;object-fit:cover;border-radius:12px}.yar-photo-preview button{width:34px;height:34px;border:0;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;font-size:22px}@media(max-width:620px){.yarpro{padding-left:2px;padding-right:2px}.yarpro-actions{grid-template-columns:repeat(2,1fr)}.yarpro-chat{min-height:45vh;max-height:57vh}.yarpro-form{bottom:68px}.yarpro-switch{font-size:11px;padding:8px}.yarpro-stats span{font-size:11px}}
+</style>
+<style id="v3-news-ads-modern">
+.news-hero,.ads-hero{padding:20px;border-radius:24px;margin:10px 0 14px;position:relative;overflow:hidden;color:#fff;background:linear-gradient(135deg,rgba(12,82,55,.92),rgba(20,110,96,.72));box-shadow:0 14px 35px rgba(0,0,0,.16)}
+.news-hero:after,.ads-hero:after{content:"";position:absolute;inset:auto -30px -55px auto;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.12)}
+.news-hero h2,.ads-hero h2{margin:0 0 7px;font-size:23px}.news-hero p,.ads-hero p{margin:0;opacity:.9}.filter-row{display:flex;gap:8px;overflow:auto;padding:2px 0 10px}.filter-row button{white-space:nowrap;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.88);border-radius:14px;padding:9px 13px}.filter-row button.active{background:#0b7652;color:#fff}.news-grid,.ads-grid{display:grid;grid-template-columns:1fr;gap:11px}.news-item,.ad-item{border-radius:20px;padding:15px;background:rgba(255,255,255,.9);box-shadow:0 9px 25px rgba(0,0,0,.09);border:1px solid rgba(255,255,255,.55)}.news-top,.ad-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.badge-news,.badge-ad{font-size:11px;padding:5px 8px;border-radius:999px;background:#e7f6ef;color:#08623f}.news-item h3,.ad-item h3{margin:9px 0 7px;font-size:17px}.news-item p,.ad-item p{margin:0;line-height:1.8}.meta-line{font-size:11px;color:#71807a;margin-top:9px}.ad-contact{margin-top:12px;width:100%}.empty-state{text-align:center;padding:28px 15px}.empty-state .big{font-size:38px}.news-detail{line-height:2}.news-detail h2{margin-top:4px}.ad-price{font-size:18px;font-weight:800;color:#0b7652}.ad-contact{display:block;text-align:center}.
+@media(min-width:700px){.news-grid,.ads-grid{grid-template-columns:1fr 1fr}}
+</style>
+
+<style id="v3-premium-modern">
+:root{
+ --bg:#07130f;--surface:rgba(255,255,255,.88);--surface2:rgba(255,255,255,.68);
+ --text:#10251b;--muted:#62746a;--green:#169447;--green2:#0c6d35;--blue:#1776b8;
+ --line:rgba(19,73,45,.13);--shadow:0 14px 40px rgba(5,30,18,.16);
+}
+html,body{min-height:100%;scroll-behavior:smooth}
+body{
+ background:
+ radial-gradient(circle at 15% 5%,rgba(49,180,104,.18),transparent 30%),
+ radial-gradient(circle at 90% 20%,rgba(30,122,190,.13),transparent 28%),
+ linear-gradient(135deg,#eef8f1 0%,#f8fbf8 48%,#edf6f1 100%);
+ color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+.app,.page,.content{background:transparent!important}
+.topbar{
+ background:rgba(255,255,255,.72)!important;backdrop-filter:blur(18px) saturate(150%);
+ -webkit-backdrop-filter:blur(18px) saturate(150%);border-bottom:1px solid rgba(255,255,255,.55)!important;
+ box-shadow:0 8px 28px rgba(7,45,25,.08)!important;
+}
+.card{
+ background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.70))!important;
+ border:1px solid rgba(255,255,255,.78)!important;border-radius:24px!important;
+ box-shadow:var(--shadow)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+ transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 18px 48px rgba(5,30,18,.19)!important}
+h1,h2,h3{letter-spacing:-.02em}
+button,.btn{
+ border:0!important;border-radius:16px!important;font-weight:800!important;
+ transition:transform .18s ease,filter .18s ease,box-shadow .18s ease!important;
+}
+button:active,.btn:active{transform:scale(.97)!important}
+input,select,textarea{
+ background:rgba(255,255,255,.78)!important;border:1px solid rgba(21,88,52,.14)!important;
+ border-radius:16px!important;min-height:48px;box-shadow:inset 0 1px 2px rgba(0,0,0,.025);
+}
+input:focus,select:focus,textarea:focus{
+ outline:none!important;border-color:rgba(22,148,71,.45)!important;
+ box-shadow:0 0 0 4px rgba(22,148,71,.10)!important;
+}
+.bottom{
+ background:rgba(255,255,255,.78)!important;backdrop-filter:blur(20px) saturate(160%);
+ -webkit-backdrop-filter:blur(20px) saturate(160%);border-top:1px solid rgba(255,255,255,.75)!important;
+ box-shadow:0 -12px 35px rgba(6,39,23,.10)!important;
+}
+.bottom button{color:#607168!important;border-radius:15px!important}
+.bottom button.active,.bottom button[aria-current="page"]{color:var(--green)!important;background:rgba(22,148,71,.10)!important}
+.hero,.home-hero{
+ border-radius:30px!important;overflow:hidden!important;box-shadow:0 20px 55px rgba(5,35,20,.22)!important;
+}
+.hero:after,.home-hero:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.28))}
+.badge{
+ border:1px solid rgba(22,148,71,.15)!important;background:rgba(22,148,71,.10)!important;
+ color:var(--green2)!important;border-radius:999px!important;padding:6px 10px!important;
+}
+.land-thumb{
+ width:62px!important;height:44px!important;min-width:62px!important;border-radius:14px!important;
+ padding:3px!important;background:linear-gradient(145deg,#edf8f0,#dcefe3)!important;
+ border:1px solid rgba(22,148,71,.13)!important;box-shadow:0 7px 16px rgba(9,66,35,.10)!important;
+}
+.land-title-row{align-items:center!important}
+.section-title{font-weight:900}
+.toast{
+ border-radius:16px!important;background:rgba(10,35,23,.92)!important;color:#fff!important;
+ box-shadow:0 12px 35px rgba(0,0,0,.22)!important;backdrop-filter:blur(10px);
+}
+table{border-radius:18px;overflow:hidden}
+hr{border:0!important;border-top:1px solid var(--line)!important}
+@media(max-width:600px){
+ .card{border-radius:20px!important;padding:15px!important}
+ .hero,.home-hero{border-radius:24px!important}
+}
+</style>
+<style>
+/* ===== V3 LAND / WEATHER / ECONOMY ===== */
+.land-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.land-head h2{margin:0}
+.land-head small{color:#66776e}
+
+.land-tabs{
+  display:flex;
+  gap:7px;
+  overflow:auto;
+  padding:3px 1px 10px;
+}
+.land-tabs button{
+  flex:0 0 auto;
+  padding:10px 13px;
+  background:rgba(255,255,255,.82);
+  color:#365047;
+  border:1px solid rgba(20,90,50,.10)!important;
+}
+.land-tabs button.active{
+  background:#117449;
+  color:#fff;
+}
+
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+.stat-box{
+  padding:13px;
+  border-radius:18px;
+  background:rgba(240,248,243,.82);
+  border:1px solid rgba(17,116,73,.08);
+}
+.stat-box b{
+  display:block;
+  font-size:19px;
+  margin-top:5px;
+}
+.stat-box span{
+  font-size:11px;
+  color:#718078;
+}
+
+.money-positive{color:#08784d!important}
+.money-negative{color:#b3382d!important}
+
+.econ-summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:10px 0;
+}
+.econ-box{
+  padding:12px 8px;
+  border-radius:18px;
+  text-align:center;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(15,80,48,.08);
+}
+.econ-box span{
+  display:block;
+  font-size:11px;
+  color:#718078;
+}
+.econ-box strong{
+  display:block;
+  margin-top:5px;
+  font-size:15px;
+}
+
+.stage-item{
+  padding:13px;
+  margin-top:9px;
+  border-radius:18px;
+  background:rgba(248,251,249,.88);
+  border:1px solid rgba(20,80,50,.09);
+}
+.stage-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+.stage-top b{font-size:14px}
+.stage-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.stage-meta span{
+  padding:5px 8px;
+  border-radius:10px;
+  background:#edf5ef;
+  color:#587067;
+  font-size:11px;
+}
+.stage-actions{
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+}
+.stage-actions button{
+  flex:1;
+  padding:9px;
+  background:#eef5f0;
+  color:#335047;
+  font-size:12px;
+}
+.stage-actions button.danger{
+  color:#a93228;
+  background:#fff0ee;
+}
+
+.weather-card{
+  position:relative;
+  overflow:hidden;
+  padding:18px;
+  border-radius:23px;
+  color:#fff;
+  background:linear-gradient(135deg,#126c4d,#237f87);
+  box-shadow:0 15px 35px rgba(13,79,62,.20);
+}
+.weather-card:after{
+  content:"";
+  position:absolute;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  left:-45px;
+  bottom:-70px;
+  background:rgba(255,255,255,.10);
+}
+.weather-main{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.weather-temp{
+  font-size:42px;
+  font-weight:900;
+}
+.weather-icon{
+  font-size:48px;
+}
+.weather-days{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin-top:14px;
+}
+.weather-day{
+  padding:9px 5px;
+  text-align:center;
+  border-radius:14px;
+  background:rgba(255,255,255,.12);
+  font-size:11px;
+}
+.weather-day b{
+  display:block;
+  margin:4px 0;
+  font-size:15px;
+}
+
+.weather-note{
+  margin-top:9px;
+  padding:11px;
+  border-radius:15px;
+  background:rgba(255,255,255,.10);
+  line-height:1.8;
+  font-size:12px;
+}
+
+.measure-card{
+  overflow:hidden;
+  border-radius:25px;
+  background:rgba(255,255,255,.90);
+}
+.measure-toolbar{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:12px;
+}
+.measure-toolbar button{
+  padding:9px 11px;
+  background:#edf6f0;
+  color:#245542;
+  font-size:12px;
+}
+.measure-toolbar button.primary{
+  background:#117449;
+  color:#fff;
+}
+#measureMap{
+  height:390px;
+  width:100%;
+  background:#dfe9e4;
+}
+.measure-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  padding:10px;
+}
+.measure-metric{
+  text-align:center;
+  padding:10px 5px;
+  border-radius:15px;
+  background:#f0f7f2;
+}
+.measure-metric span{
+  display:block;
+  color:#718078;
+  font-size:10px;
+}
+.measure-metric b{
+  display:block;
+  margin-top:4px;
+  font-size:14px;
+}
+
+.photo-box{
+  border-radius:22px;
+  padding:15px;
+  background:linear-gradient(145deg,rgba(238,249,242,.92),rgba(255,255,255,.82));
+  border:1px solid rgba(19,100,58,.09);
+}
+.photo-box h3{margin-top:0}
+.photo-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.photo-actions button{
+  padding:12px;
+  background:#eaf5ee;
+  color:#235642;
+}
+.photo-preview{
+  margin-top:10px;
+  display:none;
+}
+.photo-preview img{
+  width:100%;
+  max-height:260px;
+  object-fit:cover;
+  border-radius:18px;
+}
+
+.ai-history{
+  margin-top:10px;
+}
+.ai-history-item{
+  padding:12px;
+  border-radius:17px;
+  background:rgba(248,250,249,.9);
+  border:1px solid rgba(20,80,50,.08);
+  margin-top:8px;
+}
+.ai-history-item img{
+  width:100%;
+  max-height:190px;
+  object-fit:cover;
+  border-radius:14px;
+  margin-bottom:8px;
+}
+.ai-history-item .date{
+  font-size:10px;
+  color:#7a8881;
+}
+.ai-history-item p{
+  line-height:1.8;
+  margin:6px 0 0;
+  font-size:12px;
+}
+
+.profile-head{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.profile-avatar{
+  width:70px;
+  height:70px;
+  border-radius:24px;
+  display:grid;
+  place-items:center;
+  font-size:34px;
+  background:linear-gradient(145deg,#176d4c,#26808a);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(14,91,66,.20);
+}
+.profile-head h2{margin:0 0 5px}
+.profile-head p{margin:0;color:#687970;font-size:12px}
+
+.account-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 0;
+  border-bottom:1px solid rgba(15,70,45,.08);
+}
+.account-row:last-child{border-bottom:0}
+.account-row span{color:#65766e;font-size:13px}
+.account-row b{font-size:13px}
+
+.news-cover{
+  min-height:180px;
+  display:flex;
+  align-items:flex-end;
+  padding:18px;
+  border-radius:25px;
+  color:#fff;
+  background:
+   linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.62)),
+   url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80")
+   center/cover;
+}
+.news-cover h2{margin:0;font-size:25px}
+.news-cover p{margin:5px 0 0;font-size:12px;opacity:.9}
+
+.ad-cover{
+  padding:20px;
+  border-radius:25px;
+  color:#fff;
+  background:linear-gradient(135deg,#0c6748,#267b8c);
+}
+.ad-cover h2{margin:0 0 7px}
+.ad-cover p{margin:0;line-height:1.8;font-size:13px}
+
+.inventory-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+.inventory-item{
+  padding:13px;
+  border-radius:19px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(20,80,50,.08);
+}
+.inventory-item b{display:block;font-size:15px}
+.inventory-item small{color:#74827c}
+.inventory-item .qty{
+  margin-top:8px;
+  font-size:20px;
+  font-weight:900;
+}
+.inventory-actions{
+  display:flex;
+  gap:6px;
+  margin-top:9px;
+}
+.inventory-actions button{
+  flex:1;
+  padding:8px;
+  background:#edf6f0;
+  color:#245542;
+  font-size:12px;
+}
+
+@media(max-width:430px){
+  .econ-summary{grid-template-columns:1fr 1fr 1fr}
+  .weather-days{grid-template-columns:repeat(2,1fr)}
+  #measureMap{height:330px}
+  .measure-metrics{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+
+<style id="v3-fix-readability">
+/* خوانایی متن در نسخه روشن */
+body,
+main,
+section,
+.card,
+.page,
+.content{
+  color:#10251b!important;
+}
+.card h1,.card h2,.card h3,.card h4,
+section h1,section h2,section h3{
+  color:#10251b!important;
+}
+.card p,
+.card small,
+.card label{
+  color:#53665d;
+}
+input,select,textarea{
+  color:#14271f!important;
+}
+input::placeholder,
+textarea::placeholder{
+  color:#78867f!important;
+  opacity:1!important;
+}
+.bottom button{
+  color:#53665d!important;
+}
+.bottom button.active{
+  color:#0b7b4d!important;
+}
+</style>
+<script>
+const YAR_AI_ENDPOINT='https://REPLACE-WITH-YOUR-WORKER.workers.dev';
+
+const YK_KEY='yk-v3-clean';
+
+let state={
+  lands:[],
+  inventory:[],
+  profile:{},
+  messages:[]
+};
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(YK_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(parsed && typeof parsed==='object'){
+        state={...state,...parsed};
+      }
+    }
+  }catch(e){
+    console.warn('loadState',e);
+  }
+
+  if(!Array.isArray(state.lands))state.lands=[];
+  if(!Array.isArray(state.inventory))state.inventory=[];
+  if(!state.profile || typeof state.profile!=='object')state.profile={};
+  if(!Array.isArray(state.messages))state.messages=[];
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(YK_KEY,JSON.stringify(state));
+  }catch(e){
+    console.warn('saveState',e);
+  }
+}
+
+loadState();
+
+function esc(v){
+  return String(v??'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function money(v){
+  const n=Number(v)||0;
+  return n.toLocaleString('fa-IR');
+}
+
+function uid(){
+  return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+}
+
+function toast(text){
+  let el=document.querySelector('.toast');
+  if(!el){
+    el=document.createElement('div');
+    el.className='toast';
+    Object.assign(el.style,{
+      position:'fixed',
+      left:'50%',
+      bottom:'88px',
+      transform:'translateX(-50%)',
+      zIndex:'99999',
+      padding:'12px 16px',
+      maxWidth:'90%',
+      textAlign:'center'
+    });
+    document.body.appendChild(el);
+  }
+  el.textContent=text;
+  el.style.display='block';
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>{
+    el.style.display='none';
+  },2600);
+}
+
+function normalizeLand(l){
+  l=l||{};
+  return {
+    id:l.id||uid(),
+    name:l.name||'زمین بدون نام',
+    region:l.region||'',
+    owner:l.owner||'مالک',
+    rent:l.rent||'',
+    soil:l.soil||'',
+    water:l.water||'',
+    irrigation:l.irrigation||'',
+    crop:l.crop||'',
+    notes:l.notes||'',
+    area:Number(l.area)||0,
+    perimeter:Number(l.perimeter)||0,
+    points:Array.isArray(l.points)?l.points:[],
+    expenses:Array.isArray(l.expenses)?l.expenses:[],
+    incomes:Array.isArray(l.incomes)?l.incomes:[],
+    aiPhotos:Array.isArray(l.aiPhotos)?l.aiPhotos:[],
+    aiAnalyses:Array.isArray(l.aiAnalyses)?l.aiAnalyses:[],
+    weather:l.weather||null,
+    createdAt:l.createdAt||Date.now(),
+    updatedAt:Date.now()
+  };
+}
+
+state.lands=state.lands.map(normalizeLand);
+saveState();
+
+function totalExpenses(l){
+  return (l?.expenses||[]).reduce((s,x)=>s+(Number(x.total)||Number(x.amount)||0),0);
+}
+
+function totalIncome(l){
+  return (l?.incomes||[]).reduce((s,x)=>s+(Number(x.amount)||0),0);
+}
+
+function profit(l){
+  return totalIncome(l)-totalExpenses(l);
+}
+
+function formatArea(a){
+  const n=Number(a)||0;
+  if(n>=10000){
+    return `${(n/10000).toLocaleString('fa-IR',{maximumFractionDigits:2})} هکتار`;
+  }
+  return `${n.toLocaleString('fa-IR',{maximumFractionDigits:2})} مترمربع`;
+}
+
+function landThumb(l){
+  const pts=Array.isArray(l.points)?l.points:[];
+  let p=pts;
+
+  if(p.length<3){
+    p=[
+      [18,46],[30,20],[61,12],[87,31],
+      [79,67],[49,84],[22,73]
+    ];
+  }else{
+    const xs=p.map(x=>Number(x[1]??x.lng??x.x??0));
+    const ys=p.map(x=>Number(x[0]??x.lat??x.y??0));
+    const minX=Math.min(...xs),maxX=Math.max(...xs);
+    const minY=Math.min(...ys),maxY=Math.max(...ys);
+    const dx=maxX-minX||1,dy=maxY-minY||1;
+    p=p.map(x=>[
+      10+((Number(x[0]??x.lat??x.y??0)-minY)/dy)*80,
+      10+((Number(x[1]??x.lng??x.x??0)-minX)/dx)*80
+    ]);
+  }
+
+  const path=p.map((x,i)=>
+    `${i?'L':'M'} ${Number(x[1]).toFixed(1)} ${Number(x[0]).toFixed(1)}`
+  ).join(' ')+' Z';
+
+  return `
+  <div class="land-thumb" aria-hidden="true">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="lg${esc(l.id)}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#72bd79"/>
+          <stop offset="100%" stop-color="#d7edc9"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="#edf7e8"/>
+      <path d="${path}" fill="url(#lg${esc(l.id)})" stroke="#26734b" stroke-width="2"/>
+      <path d="M5 78 Q35 60 58 76 T98 67"
+        fill="none" stroke="#9ac98b" stroke-width="2" opacity=".8"/>
+    </svg>
+  </div>`;
+}
+
+function openLand(id){
+  const l=state.lands.find(x=>x.id===id);
+  if(!l){
+    toast('زمین پیدا نشد');
+    return;
+  }
+
+  window.currentLandId=id;
+
+  const cost=totalExpenses(l);
+  const income=totalIncome(l);
+  const net=income-cost;
+
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+    <div class="land-head">
+      <div>
+        <button class="btn" onclick="go('lands')">← بازگشت</button>
+      </div>
+      <div style="text-align:right">
+        <h2>${esc(l.name)}</h2>
+        <small>${esc(l.region||'موقعیت ثبت نشده')}</small>
+      </div>
+    </div>
+
+    <div class="card" style="padding:15px">
+      <div class="land-title-row" style="display:flex;justify-content:space-between;gap:10px">
+        <div class="land-title-wrap">
+          ${landThumb(l)}
+          <div class="land-title-text">
+            <h3>${esc(l.name)}</h3>
+            <small>${esc(l.owner||'')}</small>
+          </div>
+        </div>
+        <b>${formatArea(l.area)}</b>
+      </div>
+
+      <div class="stat-grid" style="margin-top:12px">
+        <div class="stat-box">
+          <span>هزینه واقعی</span>
+          <b>${money(cost)}</b>
+        </div>
+        <div class="stat-box">
+          <span>درآمد</span>
+          <b class="money-positive">${money(income)}</b>
+        </div>
+        <div class="stat-box">
+          <span>سود / زیان</span>
+          <b class="${net>=0?'money-positive':'money-negative'}">${money(net)}</b>
+        </div>
+        <div class="stat-box">
+          <span>محصول</span>
+          <b>${esc(l.crop||'ثبت نشده')}</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="yar-land-entry card" style="padding:15px;margin-top:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="yarpro-avatar">🌾</div>
+        <div>
+          <h3 style="margin:0">کشاورزیار این زمین</h3>
+          <small>دستیار هوشمند مخصوص همین زمین</small>
+        </div>
+      </div>
+      <p style="line-height:1.9">
+        درباره وضعیت، کشت، هزینه‌ها، آب‌وهوا یا عکس این زمین سؤال کن.
+      </p>
+      <button class="btn" onclick="landYar('${esc(l.id)}')">
+        🌱 ورود به کشاورزیار زمین
+      </button>
+    </div>
+
+    <div class="land-tabs">
+      <button class="active" onclick="landTab('overview')">نمای کلی</button>
+      <button onclick="landTab('weather')">🌤️ آب‌وهوا</button>
+      <button onclick="landTab('economy')">🌱 کشت و اقتصاد</button>
+      <button onclick="landTab('edit')">✏️ ویرایش</button>
+    </div>
+
+    <section id="landTabArea"></section>
+  </main>
+  `;
+
+  landTab('overview');
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+function landTab(tab){
+  const l=state.lands.find(x=>x.id===window.currentLandId);
+  const box=document.querySelector('#landTabArea');
+  if(!l||!box)return;
+
+  document.querySelectorAll('.land-tabs button')
+    .forEach(b=>b.classList.remove('active'));
+
+  const buttons=[...document.querySelectorAll('.land-tabs button')];
+  const index={overview:0,weather:1,economy:2,edit:3}[tab];
+  if(buttons[index])buttons[index].classList.add('active');
+
+  if(tab==='overview'){
+    box.innerHTML=`
+    <div class="card">
+      <h3>📋 اطلاعات زمین</h3>
+      <div class="account-row"><span>مالکیت</span><b>${esc(l.owner)}</b></div>
+      <div class="account-row"><span>اجاره</span><b>${esc(l.rent||'ندارد')}</b></div>
+      <div class="account-row"><span>خاک</span><b>${esc(l.soil||'ثبت نشده')}</b></div>
+      <div class="account-row"><span>منبع آب</span><b>${esc(l.water||'ثبت نشده')}</b></div>
+      <div class="account-row"><span>آبیاری</span><b>${esc(l.irrigation||'ثبت نشده')}</b></div>
+      <div class="account-row"><span>کشت</span><b>${esc(l.crop||'ثبت نشده')}</b></div>
+      <div class="account-row"><span>یادداشت</span><b>${esc(l.notes||'-')}</b></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>📐 اندازه زمین</h3>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <span>مساحت</span>
+          <b>${formatArea(l.area)}</b>
+        </div>
+        <div class="stat-box">
+          <span>محیط</span>
+          <b>${money(l.perimeter)} متر</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="photo-box card" style="margin-top:12px">
+      <h3>📷 تحلیل عکس زمین</h3>
+      <p>عکس محصول، برگ، خاک یا مشکل زمین را برای کشاورزیار بفرست.</p>
+
+      <div class="photo-actions">
+        <button onclick="landPhotoPick('${esc(l.id)}')">🖼️ انتخاب عکس</button>
+        <button onclick="landPhotoCamera('${esc(l.id)}')">📷 دوربین</button>
+      </div>
+
+      <input
+        id="landPhotoInput"
+        type="file"
+        accept="image/*"
+        style="display:none"
+        onchange="landPhotoSelected(event,'${esc(l.id)}')"
+      />
+
+      <div id="landPhotoPreview" class="photo-preview"></div>
+    </div>
+
+    <div class="ai-history card" style="margin-top:12px">
+      <h3>🧠 سابقه تحلیل عکس</h3>
+      ${renderAiHistory(l)}
+    </div>
+    `;
+  }
+
+  if(tab==='weather'){
+    box.innerHTML=`
+      <div class="card">
+        <h3>🌤️ آب‌وهوای این زمین</h3>
+        <p>موقعیت زمین: ${esc(l.region||'ثبت نشده')}</p>
+        <div id="landWeatherBox">
+          <div class="empty-state">
+            <div class="big">🌦️</div>
+            <p>در حال دریافت اطلاعات آب‌وهوا...</p>
+          </div>
+        </div>
+      </div>
+    `;
+    loadLandWeather(l);
+  }
+
+  if(tab==='economy'){
+    renderLandEconomy(l,box);
+  }
+
+  if(tab==='edit'){
+    renderLandEdit(l,box);
+  }
+}
+
+function renderAiHistory(l){
+  const arr=Array.isArray(l.aiAnalyses)?l.aiAnalyses:[];
+  if(!arr.length){
+    return `
+      <div class="empty-state">
+        <div class="big">📷</div>
+        <p>هنوز تحلیل عکسی ثبت نشده است.</p>
+      </div>
+    `;
+  }
+
+  return arr.slice().reverse().map(x=>`
+    <div class="ai-history-item">
+      ${x.image?`<img src="${esc(x.image)}" alt="عکس تحلیل شده">`:''}
+      <div class="date">${new Date(x.createdAt||Date.now()).toLocaleString('fa-IR')}</div>
+      <p>${esc(x.result||x.reply||'در انتظار نتیجه تحلیل')}</p>
+    </div>
+  `).join('');
+}
+
+function renderLandEconomy(l,box){
+  const expenses=l.expenses||[];
+  const incomes=l.incomes||[];
+
+  box.innerHTML=`
+    <div class="econ-summary">
+      <div class="econ-box">
+        <span>هزینه</span>
+        <strong class="money-negative">${money(totalExpenses(l))}</strong>
+      </div>
+      <div class="econ-box">
+        <span>درآمد</span>
+        <strong class="money-positive">${money(totalIncome(l))}</strong>
+      </div>
+      <div class="econ-box">
+        <span>خالص</span>
+        <strong class="${profit(l)>=0?'money-positive':'money-negative'}">${money(profit(l))}</strong>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💸 هزینه‌های مراحل کشت</h3>
+      <button class="btn" onclick="addLandExpense('${esc(l.id)}')">
+        + ثبت هزینه
+      </button>
+
+      <div>
+        ${
+          expenses.length
+          ? expenses.map(x=>`
+            <div class="stage-item">
+              <div class="stage-top">
+                <b>${esc(x.stage||x.title||'هزینه')}</b>
+                <strong>${money(x.total||x.amount)} تومان</strong>
+              </div>
+              <div class="stage-meta">
+                <span>${esc(x.date||'بدون تاریخ')}</span>
+                ${x.quantity?`<span>${money(x.quantity)} ${esc(x.unit||'واحد')}</span>`:''}
+                ${x.unitPrice?`<span>هر واحد ${money(x.unitPrice)}</span>`:''}
+              </div>
+              <div class="stage-actions">
+                <button onclick="editLandExpense('${esc(l.id)}','${esc(x.id||'')}')">ویرایش</button>
+                <button class="danger" onclick="deleteLandExpense('${esc(l.id)}','${esc(x.id||'')}')">حذف</button>
+              </div>
+            </div>
+          `).join('')
+          : `<div class="empty-state"><div class="big">💸</div><p>هنوز هزینه‌ای ثبت نشده.</p></div>`
+        }
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>💰 درآمد و فروش</h3>
+      <button class="btn" onclick="addLandIncome('${esc(l.id)}')">
+        + ثبت درآمد
+      </button>
+
+      ${
+        incomes.length
+        ? incomes.map(x=>`
+          <div class="stage-item">
+            <div class="stage-top">
+              <b>${esc(x.title||'فروش محصول')}</b>
+              <strong class="money-positive">${money(x.amount)} تومان</strong>
+            </div>
+            <div class="stage-meta">
+              <span>${esc(x.date||'بدون تاریخ')}</span>
+              ${x.quantity?`<span>${money(x.quantity)} ${esc(x.unit||'واحد')}</span>`:''}
+            </div>
+            <div class="stage-actions">
+              <button class="danger" onclick="deleteLandIncome('${esc(l.id)}','${esc(x.id||'')}')">حذف</button>
+            </div>
+          </div>
+        `).join('')
+        : `<div class="empty-state"><div class="big">💰</div><p>هنوز درآمدی ثبت نشده.</p></div>`
+      }
+    </div>
+  `;
+}
+
+function addLandExpense(id){
+  const stage=prompt('مرحله هزینه را وارد کن:', 'آماده‌سازی زمین');
+  if(stage===null)return;
+
+  const quantity=prompt('مقدار:', '1');
+  if(quantity===null)return;
+
+  const unit=prompt('واحد:', 'مورد');
+  if(unit===null)return;
+
+  const unitPrice=prompt('قیمت هر واحد (تومان):','0');
+  if(unitPrice===null)return;
+
+  const total=(Number(quantity)||0)*(Number(unitPrice)||0);
+
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return;
+
+  l.expenses=l.expenses||[];
+  l.expenses.push({
+    id:uid(),
+    stage,
+    quantity:Number(quantity)||0,
+    unit,
+    unitPrice:Number(unitPrice)||0,
+    total,
+    date:new Date().toISOString().slice(0,10)
+  });
+
+  saveState();
+  landTab('economy');
+  toast('هزینه ثبت شد');
+}
+
+function editLandExpense(landId,expenseId){
+  const l=state.lands.find(x=>x.id===landId);
+  const x=(l?.expenses||[]).find(e=>e.id===expenseId);
+  if(!x)return;
+
+  const total=prompt('مبلغ نهایی هزینه (تومان):',String(x.total||0));
+  if(total===null)return;
+
+  x.total=Number(total)||0;
+  saveState();
+  landTab('economy');
+  toast('هزینه ویرایش شد');
+}
+
+function deleteLandExpense(landId,expenseId){
+  const l=state.lands.find(x=>x.id===landId);
+  if(!l)return;
+
+  if(!confirm('این هزینه حذف شود؟'))return;
+
+  l.expenses=(l.expenses||[]).filter(x=>x.id!==expenseId);
+  saveState();
+  landTab('economy');
+  toast('هزینه حذف شد');
+}
+
+function addLandIncome(id){
+  const title=prompt('عنوان درآمد:', 'فروش محصول');
+  if(title===null)return;
+
+  const amount=prompt('مبلغ درآمد (تومان):','0');
+  if(amount===null)return;
+
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return;
+
+  l.incomes=l.incomes||[];
+  l.incomes.push({
+    id:uid(),
+    title,
+    amount:Number(amount)||0,
+    date:new Date().toISOString().slice(0,10)
+  });
+
+  saveState();
+  landTab('economy');
+  toast('درآمد ثبت شد');
+}
+
+function deleteLandIncome(landId,incomeId){
+  const l=state.lands.find(x=>x.id===landId);
+  if(!l)return;
+
+  if(!confirm('این درآمد حذف شود؟'))return;
+
+  l.incomes=(l.incomes||[]).filter(x=>x.id!==incomeId);
+  saveState();
+  landTab('economy');
+  toast('درآمد حذف شد');
+}
+</script>
+<script>
+function renderLandEdit(l,box){
+  box.innerHTML=`
+  <div class="card">
+    <h3>✏️ ویرایش اطلاعات زمین</h3>
+
+    <label>نام زمین</label>
+    <input id="editLandName" value="${esc(l.name)}">
+
+    <label>منطقه / موقعیت</label>
+    <input id="editLandRegion" value="${esc(l.region)}">
+
+    <label>وضعیت مالکیت</label>
+    <select id="editLandOwner">
+      <option ${l.owner==='مالک'?'selected':''}>مالک</option>
+      <option ${l.owner==='اجاره‌ای'?'selected':''}>اجاره‌ای</option>
+      <option ${l.owner==='شراکتی'?'selected':''}>شراکتی</option>
+    </select>
+
+    <label>اطلاعات اجاره</label>
+    <input id="editLandRent" value="${esc(l.rent)}">
+
+    <label>نوع خاک</label>
+    <input id="editLandSoil" value="${esc(l.soil)}">
+
+    <label>منبع آب</label>
+    <input id="editLandWater" value="${esc(l.water)}">
+
+    <label>روش آبیاری</label>
+    <input id="editLandIrrigation" value="${esc(l.irrigation)}">
+
+    <label>محصول / کشت</label>
+    <input id="editLandCrop" value="${esc(l.crop)}">
+
+    <label>یادداشت</label>
+    <textarea id="editLandNotes">${esc(l.notes)}</textarea>
+
+    <button class="btn" onclick="saveLandEdit('${esc(l.id)}')">
+      💾 ذخیره تغییرات
+    </button>
+
+    <button class="btn" style="margin-top:8px;background:#fff0ee!important;color:#a83228!important"
+      onclick="deleteLand('${esc(l.id)}')">
+      🗑️ حذف این زمین
+    </button>
+  </div>
+  `;
+}
+
+function saveLandEdit(id){
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return;
+
+  l.name=document.querySelector('#editLandName')?.value.trim()||'زمین بدون نام';
+  l.region=document.querySelector('#editLandRegion')?.value.trim()||'';
+  l.owner=document.querySelector('#editLandOwner')?.value||'مالک';
+  l.rent=document.querySelector('#editLandRent')?.value.trim()||'';
+  l.soil=document.querySelector('#editLandSoil')?.value.trim()||'';
+  l.water=document.querySelector('#editLandWater')?.value.trim()||'';
+  l.irrigation=document.querySelector('#editLandIrrigation')?.value.trim()||'';
+  l.crop=document.querySelector('#editLandCrop')?.value.trim()||'';
+  l.notes=document.querySelector('#editLandNotes')?.value.trim()||'';
+  l.updatedAt=Date.now();
+
+  saveState();
+  openLand(id);
+  toast('اطلاعات زمین ذخیره شد');
+}
+
+function deleteLand(id){
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return;
+
+  if(!confirm(`زمین «${l.name}» حذف شود؟`))return;
+
+  state.lands=state.lands.filter(x=>x.id!==id);
+  saveState();
+
+  window.currentLandId=null;
+  go('lands');
+  toast('زمین حذف شد');
+}
+
+/* ===== PHOTO ANALYSIS ===== */
+
+function landPhotoPick(id){
+  const input=document.querySelector('#landPhotoInput');
+  if(input){
+    input.setAttribute('capture','');
+    input.click();
+  }
+}
+
+function landPhotoCamera(id){
+  const input=document.querySelector('#landPhotoInput');
+  if(input){
+    input.setAttribute('capture','environment');
+    input.click();
+  }
+}
+
+function landPhotoSelected(event,id){
+  const file=event.target.files?.[0];
+  if(!file)return;
+
+  if(!file.type.startsWith('image/')){
+    toast('لطفاً یک عکس انتخاب کن');
+    return;
+  }
+
+  if(file.size>12*1024*1024){
+    toast('حجم عکس زیاد است');
+    return;
+  }
+
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    const src=reader.result;
+
+    const preview=document.querySelector('#landPhotoPreview');
+    if(!preview)return;
+
+    preview.style.display='block';
+
+    preview.innerHTML=`
+      <img src="${src}" alt="پیش‌نمایش عکس">
+
+      <div style="display:flex;gap:7px;margin-top:8px">
+        <button class="btn" onclick="analyzeLandPhoto('${esc(id)}')">
+          🧠 تحلیل عکس
+        </button>
+
+        <button class="btn"
+          style="background:#fff0ee!important;color:#a83228!important"
+          onclick="clearLandPhoto()">
+          حذف
+        </button>
+      </div>
+    `;
+
+    window.pendingLandPhoto={
+      landId:id,
+      image:src
+    };
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function clearLandPhoto(){
+  window.pendingLandPhoto=null;
+
+  const preview=document.querySelector('#landPhotoPreview');
+
+  if(preview){
+    preview.innerHTML='';
+    preview.style.display='none';
+  }
+
+  const input=document.querySelector('#landPhotoInput');
+  if(input)input.value='';
+}
+
+function yarRecordImageAnalysis(l,image){
+  l.aiAnalyses=l.aiAnalyses||[];
+
+  const record={
+    id:uid(),
+    createdAt:Date.now(),
+    image,
+    result:'در حال تحلیل...',
+    status:'pending'
+  };
+
+  l.aiAnalyses.push(record);
+  saveState();
+
+  return record;
+}
+
+function yarUpdateImageAnalysis(l,id,data){
+  l.aiAnalyses=l.aiAnalyses||[];
+
+  const item=l.aiAnalyses.find(x=>x.id===id);
+
+  if(!item)return;
+
+  Object.assign(item,data);
+  saveState();
+}
+
+async function analyzeLandPhoto(id){
+  const l=state.lands.find(x=>x.id===id);
+  const pending=window.pendingLandPhoto;
+
+  if(!l||!pending||pending.landId!==id){
+    toast('ابتدا یک عکس انتخاب کن');
+    return;
+  }
+
+  const record=yarRecordImageAnalysis(l,pending.image);
+
+  clearLandPhoto();
+
+  landTab('overview');
+
+  toast('عکس برای تحلیل ارسال شد');
+
+  try{
+    const result=await yarSendToBackend({
+      message:'این عکس را برای این زمین به‌صورت حرفه‌ای بررسی کن. نوع محصول یا گیاه، نشانه‌های کمبود، بیماری، آفت، وضعیت خاک یا هر نکته قابل مشاهده را توضیح بده و در پایان اقدامات پیشنهادی را به زبان ساده ارائه کن.',
+      image:pending.image,
+      land:l
+    });
+
+    yarUpdateImageAnalysis(l,record.id,{
+      result:result.reply||'تحلیل دریافت نشد.',
+      status:'done',
+      updatedAt:Date.now()
+    });
+
+    landTab('overview');
+
+  }catch(err){
+
+    console.error(err);
+
+    yarUpdateImageAnalysis(l,record.id,{
+      result:'تحلیل آنلاین انجام نشد. اتصال هوش مصنوعی یا اینترنت را بررسی کن.',
+      status:'error',
+      updatedAt:Date.now()
+    });
+
+    landTab('overview');
+    toast('تحلیل آنلاین انجام نشد');
+  }
+}
+
+/* ===== AI CONTEXT ===== */
+
+function yarAiContext(id){
+  if(!id)return null;
+
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return null;
+
+  return {
+    id:l.id,
+    name:l.name,
+    region:l.region,
+    owner:l.owner,
+    area:l.area,
+    crop:l.crop,
+    soil:l.soil,
+    water:l.water,
+    irrigation:l.irrigation,
+    notes:l.notes,
+    expenses:(l.expenses||[]).slice(-20),
+    incomes:(l.incomes||[]).slice(-20)
+  };
+}
+
+function yarCompactState(){
+  return {
+    lands:(state.lands||[]).map(l=>({
+      id:l.id,
+      name:l.name,
+      region:l.region,
+      area:l.area,
+      crop:l.crop,
+      soil:l.soil,
+      water:l.water,
+      irrigation:l.irrigation
+    })),
+    inventory:(state.inventory||[]).slice(-30)
+  };
+}
+
+async function yarSendToBackend({message,image=null,land=null}){
+  const endpoint=String(YAR_AI_ENDPOINT||'').trim();
+
+  if(!endpoint||endpoint.includes('REPLACE-WITH-YOUR-WORKER')){
+    return {
+      reply:yarReply(message,land)
+    };
+  }
+
+  const payload={
+    message:String(message||''),
+    image:image||null,
+    land:land?yarAiContext(land.id):null,
+    state:yarCompactState()
+  };
+
+  const response=await fetch(endpoint,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify(payload)
+  });
+
+  if(!response.ok){
+    throw new Error('AI backend HTTP '+response.status);
+  }
+
+  const data=await response.json();
+
+  if(!data||typeof data.reply!=='string'){
+    throw new Error('Invalid AI response');
+  }
+
+  return data;
+}
+
+/* ===== GENERAL KESHAVAR-YAR ===== */
+
+function yarReply(message,land=null){
+  const q=String(message||'').trim();
+
+  if(!q){
+    return 'سؤالت را درباره کشت، زمین، هزینه، آب، کود، آفت یا محصول بپرس.';
+  }
+
+  if(land){
+    return `برای زمین «${land.name}» بهتر است بر اساس محصول، خاک، آب و سابقه هزینه‌ها تصمیم بگیری. اگر سؤال مشخصت را بگویی، راهنمایی دقیق‌تری می‌دهم.`;
+  }
+
+  if(/هزینه|خرج|قیمت/.test(q)){
+    return 'برای محاسبه دقیق هزینه، نوع محصول، مساحت زمین، مقدار بذر و کود و هزینه عملیات را وارد کن.';
+  }
+
+  if(/کود|سم|آفت|بیماری/.test(q)){
+    return 'برای پیشنهاد دقیق‌تر، نام محصول، مرحله رشد و در صورت امکان یک عکس واضح از برگ یا بوته بفرست.';
+  }
+
+  if(/آب|آبیاری/.test(q)){
+    return 'زمان آبیاری به محصول، مرحله رشد، نوع خاک، دما و روش آبیاری بستگی دارد.';
+  }
+
+  if(/گندم|جو|ذرت|برنج/.test(q)){
+    return 'برای انتخاب کشت مناسب باید منطقه، آب در دسترس، نوع خاک، فصل و هدف اقتصادی بررسی شود.';
+  }
+
+  return 'متوجه شدم. برای پاسخ دقیق‌تر، سؤال را با جزئیات بیشتری درباره زمین یا محصولت بگو.';
+}
+
+/* ===== MAIN YAR UI ===== */
+
+function yar(){
+  const app=document.querySelector('#app')||document.body;
+
+  window.currentYarLandId=null;
+
+  app.innerHTML=`
+  <main class="content">
+    <div class="yarpro">
+
+      <div class="yarpro-head">
+        <div class="yarpro-brand">
+          <div class="yarpro-avatar">🌾</div>
+          <div>
+            <h2>کشاورزیار</h2>
+            <span>دستیار هوشمند کشاورزی</span>
+          </div>
+        </div>
+
+        <button class="yarpro-switch" onclick="go('home')">
+          خانه
+        </button>
+      </div>
+
+      <div class="yarpro-context">
+        <div class="yarpro-context-title">
+          👨‍🌾 کشاورزیار عمومی
+        </div>
+
+        <div class="yarpro-stats">
+          <span>🌱 کشت</span>
+          <span>💧 آبیاری</span>
+          <span>🧪 کود و سم</span>
+          <span>💰 اقتصاد</span>
+          <span>📷 تحلیل عکس</span>
+        </div>
+      </div>
+
+      <div class="yarpro-actions">
+        <button onclick="yarQuick('برای این فصل چه محصولی پیشنهاد می‌کنی؟')">
+          🌱 پیشنهاد کشت
+        </button>
+
+        <button onclick="yarQuick('چطور هزینه‌های مزرعه را کمتر کنم؟')">
+          💰 کاهش هزینه
+        </button>
+
+        <button onclick="yarQuick('برای تشخیص آفت چه عکسی بفرستم؟')">
+          🐛 تشخیص آفت
+        </button>
+
+        <button onclick="yarQuick('برای آبیاری چه نکاتی را رعایت کنم؟')">
+          💧 آبیاری
+        </button>
+      </div>
+
+      <div id="yarChat" class="yarpro-chat">
+        <div class="yar-msg">
+          <div>
+            سلام 🌾<br>
+            من کشاورزیار هستم. درباره کشت، زمین، آبیاری، کود، آفت، هزینه و درآمد از من سؤال کن.
+          </div>
+        </div>
+      </div>
+
+      <div id="yarPhotoPreview" class="yar-photo-preview" style="display:none"></div>
+
+      <div class="yarpro-form">
+        <button class="yarpro-camera" onclick="yarPickPhoto()">📷</button>
+
+        <input
+          id="yarInput"
+          placeholder="سؤالت را بنویس..."
+          onkeydown="if(event.key==='Enter')yarSend()"
+        >
+
+        <button class="yarpro-send" onclick="yarSend()">➤</button>
+      </div>
+
+      <div class="yarpro-hint">
+        پاسخ‌های دقیق‌تر با اطلاعات واقعی مزرعه ارائه می‌شوند.
+      </div>
+
+      <input
+        id="yarPhotoInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style="display:none"
+        onchange="yarPhotoSelected(event)"
+      >
+
+    </div>
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+function landYar(id){
+  const l=state.lands.find(x=>x.id===id);
+  if(!l)return;
+
+  window.currentYarLandId=id;
+
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+    <div class="yarpro">
+
+      <div class="yarpro-head">
+        <div class="yarpro-brand">
+          <div class="yarpro-avatar">🌾</div>
+          <div>
+            <h2>کشاورزیار</h2>
+            <span>متصل به زمین «${esc(l.name)}»</span>
+          </div>
+        </div>
+
+        <button class="yarpro-switch" onclick="openLand('${esc(l.id)}')">
+          زمین
+        </button>
+      </div>
+
+      <div class="yarpro-context">
+        <div class="yarpro-context-title">
+          🌱 دستیار اختصاصی این زمین
+        </div>
+
+        <div class="yarpro-stats">
+          <span>زمین: ${esc(l.name)}</span>
+          <span>مساحت: ${formatArea(l.area)}</span>
+          <span>کشت: ${esc(l.crop||'ثبت نشده')}</span>
+          <span>خاک: ${esc(l.soil||'ثبت نشده')}</span>
+        </div>
+      </div>
+
+      <div id="yarChat" class="yarpro-chat">
+        <div class="yar-msg">
+          <div>
+            سلام 👨‍🌾<br>
+            من کشاورزیار این زمین هستم. سؤال‌هایم را بر اساس اطلاعات «${esc(l.name)}» پاسخ می‌دهم.
+          </div>
+        </div>
+      </div>
+
+      <div id="yarPhotoPreview" class="yar-photo-preview" style="display:none"></div>
+
+      <div class="yarpro-form">
+        <button class="yarpro-camera" onclick="yarPickPhoto()">📷</button>
+
+        <input
+          id="yarInput"
+          placeholder="درباره این زمین بپرس..."
+          onkeydown="if(event.key==='Enter')yarSend()"
+        >
+
+        <button class="yarpro-send" onclick="yarSend()">➤</button>
+      </div>
+
+      <input
+        id="yarPhotoInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style="display:none"
+        onchange="yarPhotoSelected(event)"
+      >
+
+    </div>
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+</script>
+<script>
+function yarPickPhoto(){
+  const input=document.getElementById('yarPhotoInput');
+  if(input)input.click();
+}
+
+function yarPhotoSelected(input){
+  const file=input?.files?.[0];
+  if(!file)return;
+
+  if(!file.type.startsWith('image/')){
+    toast('لطفاً یک عکس انتخاب کن');
+    return;
+  }
+
+  if(file.size>12*1024*1024){
+    toast('حجم عکس زیاد است');
+    return;
+  }
+
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    window.yarPhotoData=reader.result;
+
+    const preview=document.getElementById('yarPhotoPreview');
+    if(!preview)return;
+
+    preview.style.display='flex';
+    preview.innerHTML=`
+      <img src="${esc(window.yarPhotoData)}" alt="پیش‌نمایش">
+      <button type="button" onclick="yarRemovePhoto()">×</button>
+    `;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function yarRemovePhoto(){
+  window.yarPhotoData=null;
+
+  const preview=document.getElementById('yarPhotoPreview');
+  if(preview){
+    preview.style.display='none';
+    preview.innerHTML='';
+  }
+
+  const input=document.getElementById('yarPhotoInput');
+  if(input)input.value='';
+}
+
+function yarQuick(text){
+  const input=document.getElementById('yarInput');
+  if(input){
+    input.value=text;
+    yarSend();
+  }
+}
+
+async function yarSend(){
+  const input=document.getElementById('yarInput');
+  const chat=document.getElementById('yarChat');
+
+  if(!input||!chat)return;
+
+  const text=input.value.trim();
+  const image=window.yarPhotoData||null;
+
+  if(!text && !image){
+    toast('اول سؤال یا عکس را وارد کن');
+    return;
+  }
+
+  const landId=window.currentYarLandId||null;
+  const land=landId?state.lands.find(x=>x.id===landId):null;
+
+  yarMessages.push({
+    role:'user',
+    text:text||'تحلیل این عکس را انجام بده',
+    image:image||null
+  });
+
+  saveYarChat();
+  yarRender();
+
+  input.value='';
+  yarRemovePhoto();
+
+  yarMessages.push({
+    role:'assistant',
+    text:'در حال بررسی اطلاعات و آماده‌سازی پاسخ...'
+  });
+
+  yarRender();
+
+  try{
+    const result=await yarSendToBackend({
+      message:text||'این عکس را برای من بررسی کن.',
+      image,
+      land
+    });
+
+    yarMessages.pop();
+
+    yarMessages.push({
+      role:'assistant',
+      text:result.reply||'پاسخی دریافت نشد.'
+    });
+
+    saveYarChat();
+    yarRender();
+
+  }catch(error){
+
+    console.error(error);
+
+    yarMessages.pop();
+
+    yarMessages.push({
+      role:'assistant',
+      text:'اتصال به هوش مصنوعی انجام نشد. اینترنت و آدرس Backend را بررسی کن.'
+    });
+
+    saveYarChat();
+    yarRender();
+
+    toast('اتصال هوش مصنوعی برقرار نشد');
+  }
+}
+
+function openNews(){
+  go('news');
+}
+
+function openAds(){
+  go('ads');
+}
+
+function openInventory(){
+  go('inventory');
+}
+
+function openProfile(){
+  go('profile');
+}
+
+function openAccount(){
+  go('account');
+}
+
+/* ===== WEATHER ===== */
+
+async function loadLandWeather(l){
+  const box=document.getElementById('landWeatherBox');
+  if(!box)return;
+
+  if(!l.region){
+    box.innerHTML=`
+      <div class="empty-state">
+        <div class="big">📍</div>
+        <p>موقعیت این زمین ثبت نشده است.</p>
+        <button class="btn" onclick="landTab('edit')">ثبت موقعیت</button>
+      </div>
+    `;
+    return;
+  }
+
+  try{
+
+    const geo=await fetch(
+      'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+
+      encodeURIComponent(l.region)
+    );
+
+    const places=await geo.json();
+
+    if(!places.length){
+      box.innerHTML=`
+        <div class="empty-state">
+          <div class="big">📍</div>
+          <p>موقعیت زمین پیدا نشد.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const lat=Number(places[0].lat);
+    const lon=Number(places[0].lon);
+
+    const url=
+      'https://api.open-meteo.com/v1/forecast'+
+      '?latitude='+lat+
+      '&longitude='+lon+
+      '&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code'+
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max'+
+      '&forecast_days=7'+
+      '&timezone=auto';
+
+    const response=await fetch(url);
+    const data=await response.json();
+
+    l.weather={
+      lat,
+      lon,
+      current:data.current,
+      daily:data.daily,
+      updatedAt:Date.now()
+    };
+
+    saveState();
+
+    const weatherIcon=code=>{
+      code=Number(code);
+      if(code===0)return'☀️';
+      if(code<=3)return'🌤️';
+      if(code<=48)return'🌫️';
+      if(code<=67)return'🌧️';
+      if(code<=77)return'🌨️';
+      if(code<=82)return'🌦️';
+      if(code<=99)return'⛈️';
+      return'🌤️';
+    };
+
+    const current=data.current||{};
+
+    box.innerHTML=`
+      <div class="weather-card">
+        <div class="weather-main">
+          <div>
+            <div style="font-size:13px;opacity:.85">
+              ${esc(l.region)}
+            </div>
+            <div class="weather-temp">
+              ${Math.round(Number(current.temperature_2m)||0)}°
+            </div>
+            <div style="font-size:12px">
+              رطوبت ${Math.round(Number(current.relative_humidity_2m)||0)}٪
+            </div>
+          </div>
+
+          <div class="weather-icon">
+            ${weatherIcon(current.weather_code)}
+          </div>
+        </div>
+
+        <div class="weather-note">
+          💨 سرعت باد:
+          ${Math.round(Number(current.wind_speed_10m)||0)}
+          کیلومتر بر ساعت
+          <br>
+          💧 بارش فعلی:
+          ${Number(current.precipitation||0).toLocaleString('fa-IR')}
+          میلی‌متر
+        </div>
+
+        <div class="weather-days">
+          ${
+            (data.daily?.time||[]).map((day,i)=>`
+              <div class="weather-day">
+                <span>${new Date(day).toLocaleDateString('fa-IR',{weekday:'short'})}</span>
+                <b>${weatherIcon(data.daily.weather_code[i])}</b>
+                <span>
+                  ${Math.round(data.daily.temperature_2m_max[i])}°
+                  /
+                  ${Math.round(data.daily.temperature_2m_min[i])}°
+                </span>
+                <small>
+                  بارش ${data.daily.precipitation_probability_max[i]||0}٪
+                </small>
+              </div>
+            `).join('')
+          }
+        </div>
+      </div>
+    `;
+
+  }catch(e){
+
+    console.error(e);
+
+    box.innerHTML=`
+      <div class="empty-state">
+        <div class="big">⚠️</div>
+        <p>دریافت آب‌وهوا انجام نشد.</p>
+        <button class="btn" onclick="loadLandWeather(window.currentLandId?state.lands.find(x=>x.id===window.currentLandId):null)">
+          تلاش دوباره
+        </button>
+      </div>
+    `;
+  }
+}
+
+/* ===== SIMPLE INVENTORY ===== */
+
+function inventory(){
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+
+    <div class="card">
+      <div class="section">
+        <div>
+          <h2>📦 انبار</h2>
+          <p>ورودی و مصرف نهاده‌ها را جداگانه مدیریت کن.</p>
+        </div>
+      </div>
+
+      <div class="inventory-actions">
+        <button class="btn" onclick="inventoryAdd()">➕ ورودی انبار</button>
+        <button class="btn" onclick="inventoryUse()">➖ مصرف</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>موجودی فعلی</h3>
+      <div class="inventory-grid">
+        ${
+          state.inventory.length
+          ? state.inventory.map((x,i)=>`
+            <div class="inventory-item">
+              <b>${esc(x.name)}</b>
+              <small>${esc(x.unit||'واحد')}</small>
+              <div class="qty">${money(x.qty)}</div>
+
+              <div class="inventory-actions">
+                <button onclick="inventoryAdd(${i})">ورودی</button>
+                <button onclick="inventoryUse(${i})">مصرف</button>
+              </div>
+            </div>
+          `).join('')
+          : `
+            <div class="empty-state" style="grid-column:1/-1">
+              <div class="big">📦</div>
+              <p>انبار هنوز خالی است.</p>
+            </div>
+          `
+        }
+      </div>
+    </div>
+
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+function inventoryAdd(index){
+  let item;
+
+  if(index!==undefined){
+    item=state.inventory[index];
+  }else{
+    const name=prompt('نام قلم انبار:');
+    if(!name)return;
+
+    const unit=prompt('واحد:', 'کیلو');
+    if(unit===null)return;
+
+    item={
+      id:uid(),
+      name,
+      unit,
+      qty:0,
+      input:0,
+      used:0
+    };
+
+    state.inventory.push(item);
+  }
+
+  const amount=prompt('مقدار ورودی:','0');
+  if(amount===null)return;
+
+  const n=Number(amount)||0;
+
+  item.qty=(Number(item.qty)||0)+n;
+  item.input=(Number(item.input)||0)+n;
+
+  saveState();
+  inventory();
+
+  toast('ورودی انبار ثبت شد');
+}
+
+function inventoryUse(index){
+  if(index===undefined){
+    if(!state.inventory.length){
+      toast('ابتدا یک قلم به انبار اضافه کن');
+      return;
+    }
+
+    const name=prompt(
+      'نام قلم برای مصرف را وارد کن:\n'+
+      state.inventory.map(x=>x.name).join('، ')
+    );
+
+    if(!name)return;
+
+    index=state.inventory.findIndex(
+      x=>x.name.trim()===name.trim()
+    );
+
+    if(index<0){
+      toast('این قلم در انبار پیدا نشد');
+      return;
+    }
+  }
+
+  const item=state.inventory[index];
+
+  const amount=prompt(
+    `مصرف ${item.name} — موجودی: ${money(item.qty)}`,
+    '0'
+  );
+
+  if(amount===null)return;
+
+  const n=Number(amount)||0;
+
+  if(n<=0)return;
+
+  if(n>Number(item.qty||0)){
+    toast('موجودی کافی نیست');
+    return;
+  }
+
+  item.qty-=n;
+  item.used=(Number(item.used)||0)+n;
+
+  saveState();
+  inventory();
+
+  toast('مصرف انبار ثبت شد');
+}
+
+/* ===== PROFILE ===== */
+
+function profile(){
+  const p=state.profile||{};
+
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+
+    <div class="card">
+      <div class="profile-head">
+        <div class="profile-avatar">👨‍🌾</div>
+        <div>
+          <h2>${esc(p.name||'کشاورز')}</h2>
+          <p>${esc(p.phone||'اطلاعات حساب هنوز تکمیل نشده')}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>👤 اطلاعات کشاورز</h3>
+
+      <label>نام و نام خانوادگی</label>
+      <input id="profileName" value="${esc(p.name||'')}">
+
+      <label>شماره تماس</label>
+      <input id="profilePhone" value="${esc(p.phone||'')}">
+
+      <label>شهر / منطقه</label>
+      <input id="profileRegion" value="${esc(p.region||'')}">
+
+      <button class="btn" onclick="saveProfile()">
+        💾 ذخیره اطلاعات
+      </button>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>💾 پشتیبان</h3>
+      <p>برای جلوگیری از از دست رفتن اطلاعات، یک نسخه پشتیبان ذخیره کن.</p>
+
+      <button class="btn" onclick="backup()">
+        📥 دریافت پشتیبان
+      </button>
+
+      <label class="btn" style="display:block;text-align:center;margin-top:8px">
+        📤 بازیابی پشتیبان
+        <input id="restoreProfile" type="file" accept=".json" hidden
+          onchange="restoreBackup(event)">
+      </label>
+    </div>
+
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+function saveProfile(){
+  state.profile={
+    name:document.getElementById('profileName')?.value.trim()||'',
+    phone:document.getElementById('profilePhone')?.value.trim()||'',
+    region:document.getElementById('profileRegion')?.value.trim()||''
+  };
+
+  saveState();
+  profile();
+
+  toast('اطلاعات ذخیره شد');
+}
+
+function restoreBackup(event){
+  const file=event.target.files?.[0];
+  if(!file)return;
+
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+
+      if(!data||typeof data!=='object'){
+        throw new Error('invalid');
+      }
+
+      state={...state,...data};
+      saveState();
+
+      toast('پشتیبان بازیابی شد');
+      go('home');
+
+    }catch(e){
+      toast('فایل پشتیبان معتبر نیست');
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+/* ===== ACCOUNT ===== */
+
+function account(){
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+
+    <div class="card">
+      <h2>👤 حساب کاربری</h2>
+
+      <div class="account-row">
+        <span>نام</span>
+        <b>${esc(state.profile?.name||'ثبت نشده')}</b>
+      </div>
+
+      <div class="account-row">
+        <span>شماره تماس</span>
+        <b>${esc(state.profile?.phone||'ثبت نشده')}</b>
+      </div>
+
+      <div class="account-row">
+        <span>منطقه</span>
+        <b>${esc(state.profile?.region||'ثبت نشده')}</b>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>⚙️ مدیریت حساب</h3>
+
+      <button class="btn" onclick="go('profile')">
+        ✏️ ویرایش پروفایل
+      </button>
+
+      <button class="btn" style="margin-top:8px"
+        onclick="backup()">
+        💾 پشتیبان‌گیری
+      </button>
+    </div>
+
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+/* ===== NEWS ===== */
+
+function news(){
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+
+    <div class="news-cover">
+      <div>
+        <h2>📰 اخبار کشاورزی</h2>
+        <p>آخرین مطالب و اطلاعات کاربردی برای کشاورزان</p>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <button class="active">همه</button>
+      <button>کشت</button>
+      <button>بازار</button>
+      <button>هواشناسی</button>
+    </div>
+
+    <div class="news-grid">
+
+      <article class="news-item">
+        <div class="news-top">
+          <span class="badge-news">کشاورزی</span>
+          <span class="meta-line">امروز</span>
+        </div>
+        <h3>مدیریت بهتر هزینه‌های مزرعه</h3>
+        <p>
+          ثبت دقیق هزینه‌ها کمک می‌کند سود واقعی هر زمین را بهتر بررسی کنی.
+        </p>
+      </article>
+
+      <article class="news-item">
+        <div class="news-top">
+          <span class="badge-news">آبیاری</span>
+          <span class="meta-line">امروز</span>
+        </div>
+        <h3>اهمیت برنامه‌ریزی آبیاری</h3>
+        <p>
+          زمان‌بندی آبیاری باید با نوع محصول، خاک و شرایط آب‌وهوایی هماهنگ باشد.
+        </p>
+      </article>
+
+      <article class="news-item">
+        <div class="news-top">
+          <span class="badge-news">اقتصاد</span>
+          <span class="meta-line">جدید</span>
+        </div>
+        <h3>چرا ثبت درآمد مهم است؟</h3>
+        <p>
+          بدون ثبت درآمد، محاسبه سود و زیان واقعی مزرعه دقیق نخواهد بود.
+        </p>
+      </article>
+
+    </div>
+
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+/* ===== ADS ===== */
+
+function ads(){
+  const app=document.querySelector('#app')||document.body;
+
+  app.innerHTML=`
+  <main class="content">
+
+    <div class="ad-cover">
+      <h2>📢 تبلیغات کشاورزی</h2>
+      <p>
+        محصولات، خدمات و تجهیزات مورد نیاز کشاورزان را معرفی کن.
+      </p>
+    </div>
+
+    <div class="ads-grid" style="margin-top:12px">
+
+      <article class="ad-item">
+        <div class="ad-top">
+          <span class="badge-ad">نهاده</span>
+          <span>🌱</span>
+        </div>
+        <h3>بذر و نهاده کشاورزی</h3>
+        <p>
+          معرفی فروشنده یا محصول مورد نیاز کشاورزان.
+        </p>
+        <div class="ad-price">تماس برای اطلاعات</div>
+      </article>
+
+      <article class="ad-item">
+        <div class="ad-top">
+          <span class="badge-ad">تجهیزات</span>
+          <span>🚜</span>
+        </div>
+        <h3>ادوات و تجهیزات</h3>
+        <p>
+          معرفی خدمات و تجهیزات کشاورزی.
+        </p>
+        <div class="ad-price">اطلاعات بیشتر</div>
+      </article>
+
+    </div>
+
+  </main>
+  `;
+
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
+/* ===== ROUTER ===== */
+
+function go(route){
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+
+  if(route==='home')return home();
+  if(route==='lands')return lands();
+  if(route==='add')return addLand();
+  if(route==='measure')return measure();
+  if(route==='weather')return weather();
+  if(route==='profile')return profile();
+  if(route==='account')return account();
+  if(route==='ads')return ads();
+  if(route==='news')return news();
+  if(route==='inventory')return inventory();
+  if(route==='yar')return yar();
+  if(route==='game')return game();
+
+  home();
+}
+
+window.go=go;
+window.openLand=openLand;
+window.landTab=landTab;
+window.landYar=landYar;
+window.yar=yar;
+window.yarSend=yarSend;
+window.yarPickPhoto=yarPickPhoto;
+window.yarPhotoSelected=yarPhotoSelected;
+window.yarRemovePhoto=yarRemovePhoto;
+window.yarQuick=yarQuick;
+window.inventory=inventory;
+window.profile=profile;
+window.account=account;
+window.ads=ads;
+window.news=news;
+
+go('home');
+</script>
+
+</body>
+</html>
