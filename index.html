@@ -939,7 +939,7 @@ const YAR_CHAT_KEY='yk-yar-chat-v2';
 let yarMessages=(()=>{try{return JSON.parse(localStorage.getItem(YAR_CHAT_KEY)||'[]')}catch(e){return[]}})();
 let yarPhotoData=null, yarPhotoName='';
 let yarLandMode=false;
-const YAR_AI_ENDPOINT='https://REPLACE-WITH-YOUR-WORKER.workers.dev';
+https://yarkeshavarz-ai-v3.z46689944.workers.dev
 
 function saveYarChat(){try{localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(yarMessages.slice(-60)))}catch(e){}}
 function yarNum(x){return Number(x||0).toLocaleString('fa-IR',{maximumFractionDigits:2})}
