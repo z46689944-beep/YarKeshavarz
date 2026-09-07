@@ -1,4 +1,5 @@
 const KEY='yk-v3-clean';
+const API_URL="https://yarkeshavarz-ai-v3.z46689944.workers.dev";
 const $=s=>document.querySelector(s), app=$('#app'), title=$('#pageTitle');
 
 const base={
