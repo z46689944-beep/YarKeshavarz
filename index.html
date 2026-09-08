@@ -1029,7 +1029,10 @@ function yarReply(q,id){
   if(/زمین|قطعه|مزرعه/.test(x))return l?`این گفت‌وگو در حالت اختصاصی «${l.name}» است؛ پاسخ‌ها را بر اساس اطلاعات همین قطعه می‌دهم.`:`در حالت عمومی هستیم؛ ${c.lands.length.toLocaleString('fa-IR')} قطعه و مجموع ${yarNum(c.area)} هکتار در برنامه ثبت شده است.`;
   return l?`متوجه شدم 🌱 درباره «${l.name}» می‌توانی سؤال را دقیق‌تر بپرسی؛ مثلاً «وضعیت فعلی زمین چطور است؟»، «چه چیزی کم دارم؟» یا «این عکس چه مشکلی دارد؟».`:`متوجه شدم 🌱 سؤال را آزادانه بپرس؛ کشاورزیار در حالت عمومی درباره مزرعه، کشت، آفات، آبیاری، هزینه، درآمد و عکس‌ها کمکت می‌کند.`;
 }
-function yarPickPhoto(){const e=document.getElementById('yarPhotoInputChat');if(e)e.click()}
+function yarPickPhoto(){
+  const e=document.getElementById('yarPhotoInputChat');
+  if(e)e.click();
+}
 function yarPhotoSelected(input){const f=input?.files?.[0];if(!f)return;if(!f.type.startsWith('image/'))return toast('فقط فایل تصویری انتخاب کن');if(f.size>12*1024*1024)return toast('حجم عکس باید کمتر از ۱۲ مگابایت باشد');const r=new FileReader();r.onload=()=>{yarPhotoData=r.result;yarPhotoName=f.name||'photo.jpg';const p=document.getElementById('yarPhotoPreviewChat'),im=document.getElementById('yarPhotoPreviewImgChat');if(im)im.src=yarPhotoData;if(p)p.style.display='flex'};r.readAsDataURL(f)}
 function yarRemovePhoto(){yarPhotoData=null;yarPhotoName='';const p=document.getElementById('yarPhotoPreviewChat'),i=document.getElementById('yarPhotoInputChat');if(p)p.style.display='none';if(i)i.value=''}
 function yarAddImageMessage(data,caption){yarMessages.push({role:'user',text:caption||'این عکس را تحلیل کن',image:data})}
@@ -1065,7 +1068,12 @@ async function yarSendImages(q){
 async function yarSend(){
   const i=document.getElementById('yarInput'),q=(i?.value||'').trim(), id=selected||null;
   if(!q&&!yarPhotoData)return;
-  if(q&&!yarPhotoData&&yarWantsImages(q)){if(i)i.value='';return yarSendImages(q)}
+  if(q&&!yarPhotoData&&yarWantsImages(q)){
+  if(/^(عکس|تصویر|تصاویر)\s+(از|ِ)?\s*.+(میخوام|می‌خوام|میخواهم|می‌خواهم)$/i.test(q)){
+    if(i)i.value='';
+    return yarSendImages(q);
+  }
+}
   const endpoint=String(YAR_AI_ENDPOINT||'').trim();
   const image=yarPhotoData||null;
   const question=q||'این عکس را در چارچوب کشاورزی تحلیل کن.';
@@ -1166,7 +1174,7 @@ function yar(){
  <input id="yarPhotoInputPanel" type="file" accept="image/*" style="display:none" onchange="yarPhotoSelected(this)">
  <div class="yar-photo-actions">
   <button class="primary" onclick="yarPickPhoto()">🖼️ انتخاب عکس</button>
-  <button class="secondary" onclick="toast('دوربین در نسخه PWA نیاز به دسترسی مرورگر دارد')">📸 دوربین</button>
+  <button class="secondary" onclick="yarPickPhoto()">📸 دوربین</button>
  </div>
  <div id="yarPhotoPreviewPanel" class="yar-preview"><img id="yarPhotoPreviewImgPanel" alt="پیش‌نمایش عکس"></div>
 </section>
