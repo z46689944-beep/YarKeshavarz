@@ -316,6 +316,14 @@ main{position:relative}
 .bottom button.active{color:#7ee39a!important}
 .measure-wrap,.fun-shell,.register-modal{background:#fff!important}
 
+
+.yar-final-tools{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;padding:7px 2px 3px!important;margin:6px 0 0!important;scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important;justify-content:flex-start!important}
+.yar-final-tools::-webkit-scrollbar{display:none!important}
+.yar-final-tools button{flex:0 0 auto!important;min-width:76px!important;height:58px!important;border:1px solid #dce8e1!important;border-radius:15px!important;background:#fff!important;color:#17362a!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:5px 7px!important;box-shadow:0 5px 14px rgba(13,55,40,.07)!important}
+.yar-final-tools button span{font-size:20px!important;line-height:1!important}
+.yar-final-tools button b{font-size:9px!important;white-space:nowrap!important}
+.yar-final .yarpro-chat{height:calc(100dvh - 190px)!important;min-height:0!important;max-height:none!important}
+.yar-final .yarpro-form{margin-top:8px!important}
 </style>
 <style id="yar-v3-modern-overrides">:root{--g:#0b4f38;--g2:#16825a;--ink:#102f25;--muted:#71847b;--bg:#eef4f0;--line:#dce8e1;--shadow:0 14px 38px rgba(13,55,40,.09)}html{background:var(--bg)}body{background:radial-gradient(circle at 100% 0%,rgba(45,151,103,.09),transparent 28%),linear-gradient(180deg,#f7faf8,var(--bg));color:var(--ink)}.top{height:70px;background:rgba(7,57,42,.94);backdrop-filter:blur(18px);box-shadow:0 8px 30px rgba(3,35,25,.18)}main{max-width:760px;padding:15px 12px 108px}.card{border-color:rgba(214,229,220,.9);border-radius:20px;box-shadow:var(--shadow)}.primary{background:linear-gradient(135deg,var(--g),var(--g2));box-shadow:0 8px 18px rgba(11,79,56,.18)}.secondary{background:#eaf4ee;color:var(--g);border:1px solid #d7e8de}.field input,.field select,.field textarea{border-color:#d6e4dc;background:#fbfdfc;border-radius:14px;padding:12px}.field input:focus,.field select:focus,.field textarea:focus{border-color:#56a985;box-shadow:0 0 0 3px rgba(46,145,100,.1)}.hero{min-height:285px;border-radius:28px;background-position:center;background-size:cover;box-shadow:0 18px 50px rgba(11,58,42,.18)}.hero h1{font-size:31px}.grid{gap:9px}.quick{gap:9px}.quick button{min-height:94px;border-radius:20px;box-shadow:0 9px 25px rgba(13,55,40,.06)}.section{margin:22px 2px 11px}.section h2,.section h3{font-size:19px}.land-card{padding:15px}.land-card h3{font-size:16px}.tabs{scrollbar-width:none}.tabs button{border-color:#dbe7e0;background:#fff}.tabs button.active{background:linear-gradient(135deg,var(--g),var(--g2));box-shadow:0 7px 16px rgba(11,79,56,.16)}.bottom{height:78px;background:rgba(255,255,255,.91);border-top:1px solid #dbe6e0;box-shadow:0 -10px 35px rgba(16,49,37,.08);backdrop-filter:blur(18px)}.bottom button.active{color:var(--g2)}.weather-now{border-radius:23px;background:linear-gradient(145deg,#0a4b36,#1e7d59)}.calc-total{border-radius:22px}.home-weather,.weather-mini{border-radius:20px}.yar-land-entry{border-radius:22px!important}.yar41-head,.yar41-field,.yar41-form{border-radius:20px!important}.yar41-tools button{border-radius:16px!important;box-shadow:0 8px 22px rgba(13,55,40,.06)!important}@media(max-width:460px){main{padding-left:9px;padding-right:9px}.hero{min-height:260px}.quick{grid-template-columns:1fr 1fr}} </style><style id="land-thumb-modern">.land-title-row{align-items:center;gap:10px}.land-title-wrap{display:flex;align-items:center;gap:10px;min-width:0}.land-title-text{min-width:0}.land-title-text h3{margin:0 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.land-thumb{width:82px;height:58px;flex:0 0 82px;border-radius:15px;overflow:hidden;background:#f2f8f4;border:1px solid rgba(207,226,216,.95);box-shadow:0 7px 16px rgba(13,55,40,.08)}.land-thumb svg{display:block;width:100%;height:100%}.land-title-row>b{white-space:nowrap;font-size:13px}@media(max-width:390px){.land-thumb{width:72px;flex-basis:72px;height:52px}.land-title-row>b{font-size:12px}} 
 /* ===== KESHAVAR-YAR PRO V2 UI ===== */
@@ -1191,53 +1199,18 @@ function yar(){
       ${l?`<button class="yarpro-switch" onclick="yarLandMode=false;selected=null;go('yar')">عمومی</button>`:''}
     </header>
 
-    <section class="yar-final-hero ${l?'field':'general'}">
-      <div class="yar-final-hero-icon">${l?'🌾':'🤖'}</div>
-      <div><b>${l?'تحلیل و مشاوره اختصاصی زمین':'مرکز مشاوره کشاورزی'}</b><p>${l?'هر زمان بخواهی، وضعیت فعلی همین قطعه را با آخرین اطلاعات ثبت‌شده بررسی می‌کنم.':'سؤال آزاد بپرس، عکس بفرست و برای مدیریت مزرعه راهکار بگیر.'}</p></div>
-    </section>
-
-    
-<section class="yar-photo-card">
- <h3>📷 تحلیل عکس کشاورزیار</h3>
- <p class="yar-analysis-note">عکس برگ، محصول، خاک یا زمین را انتخاب کن یا با دوربین بگیر؛ سپس سؤال خودت را بنویس و ارسال کن.</p>
- <input id="yarPhotoInputGallery" type="file" accept="image/*" onchange="yarPhotoSelected(this)" hidden>
- <div class="yar-photo-actions">
-  <button class="primary" type="button" onclick="yarPickPhoto()">🖼️ انتخاب از گالری</button>
-  <button class="secondary" type="button" onclick="yarPickCamera()">📸 دوربین</button>
- </div>
-</section>
-
-<section class="yar-final-context">
-      <div class="yar-final-context-title">${l?'📍 پرونده فعال: '+esc(l.name):'🌱 نمای کلی مزرعه'}</div>
-      <div class="yar-final-stats">
-        ${l?`<div><b>${yarNum(l.area)}</b><small>هکتار</small></div><div><b>${esc(l.crop||'—')}</b><small>محصول</small></div><div><b>${yarMoney(c.t.cost)}</b><small>هزینه</small></div><div><b>${yarMoney(c.t.profit)}</b><small>سود ثبت‌شده</small></div>`
-        :`<div><b>${c.lands.length.toLocaleString('fa-IR')}</b><small>زمین</small></div><div><b>${yarNum(c.area)}</b><small>هکتار</small></div><div><b>${yarMoney(c.cost)}</b><small>هزینه</small></div><div><b>${yarMoney(c.profit)}</b><small>سود</small></div>`}
-      </div>
-    </section>
-
-    <section class="yar-final-analysis ${analysisClass}">
-      <div class="yar-final-analysis-top"><div><b>${analysis.title}</b><small>${analysis.level}</small></div><button onclick="${l?`yarAnalyzeLand('${l.id}')`:`yarAsk('وضعیت کلی مزرعه را تحلیل کن')`}">🔄 به‌روزرسانی</button></div>
-      <div class="yar-final-analysis-items">${analysis.items.slice(0,l?'5':'4').map(x=>`<div>${esc(x)}</div>`).join('')}</div>
-    </section>
-
-    <div class="yar-final-actions">
-      ${l?`
-        <button class="yf-main" onclick="yarAnalyzeLand('${l.id}')"><span>🔎</span><b>تحلیل وضعیت فعلی</b><small>آخرین اطلاعات زمین</small></button>
-        <button onclick="yarAsk('وضعیت کشت این زمین را بررسی کن')"><span>🌱</span><b>وضعیت کشت</b><small>محصول و شرایط</small></button>
-        <button onclick="yarAsk('اقتصاد و هزینه‌های این زمین را بررسی کن')"><span>💰</span><b>اقتصاد زمین</b><small>هزینه، درآمد، سود</small></button>
-        <button onclick="yarAsk('نیازهای این زمین و انبار را بررسی کن')"><span>📦</span><b>نیاز و انبار</b><small>نهاده‌های موردنیاز</small></button>`
-      :`
-        <button class="yf-main" onclick="yarAsk('وضعیت کلی مزرعه را تحلیل کن')"><span>📊</span><b>تحلیل مزرعه</b><small>جمع‌بندی اطلاعات</small></button>
-        <button onclick="yarAsk('برای کشت چه پیشنهادی داری؟')"><span>🌱</span><b>مشاوره کشت</b><small>انتخاب و برنامه‌ریزی</small></button>
-        <button onclick="yarAsk('وضعیت انبار را بررسی کن')"><span>📦</span><b>انبار و نهاده</b><small>موجودی و کمبودها</small></button>
-        <button onclick="yarAsk('برای مدیریت هزینه و درآمد چه پیشنهادی داری؟')"><span>💰</span><b>اقتصاد مزرعه</b><small>هزینه و درآمد</small></button>`}
-      <button onclick="yarPickPhoto()"><span>📷</span><b>تحلیل عکس</b><small>ارسال تصویر برای بررسی</small></button>
-    </div>
-
     <div id="yarChat" class="yarpro-chat"></div>
+    <input id="yarPhotoInputGallery" type="file" accept="image/*" onchange="yarPhotoSelected(this)" hidden>
     <input id="yarPhotoInputCamera" type="file" accept="image/*" capture="environment" onchange="yarPhotoSelected(this)" hidden>
     <div id="yarPhotoPreview" class="yar-photo-preview" style="display:none"><img id="yarPhotoPreviewImg" alt="پیش‌نمایش عکس"><button type="button" onclick="yarRemovePhoto()">×</button></div>
     <form class="yarpro-form yar-final-form" onsubmit="event.preventDefault();yarSend()"><button type="button" class="yarpro-camera" onclick="yarPickCamera()">📷</button><input id="yarInput" autocomplete="off" placeholder="${l?'درباره همین زمین سؤال کن…':'هر سؤال کشاورزی که داری…'}"><button type="submit" class="yarpro-send">➤</button></form>
+    <div class="yar-final-tools" aria-label="ابزارهای کشاورزیار">
+      <button type="button" onclick="${l?`yarAnalyzeLand('${l.id}')`:`yarAsk('اطلاعات و وضعیت مزرعه را بررسی کن')`}"><span>🌾</span><b>تحلیل مزرعه</b></button>
+      <button type="button" onclick="yarAsk('برای کشت چه پیشنهادی داری؟')"><span>🌱</span><b>مشاور کشت</b></button>
+      <button type="button" onclick="yarAsk('وضعیت انبار و نهاده را بررسی کن')"><span>📦</span><b>انبار و نهاده</b></button>
+      <button type="button" onclick="yarAsk('اقتصاد مزرعه و هزینه و درآمد را بررسی کن')"><span>💰</span><b>اقتصاد مزرعه</b></button>
+      <button type="button" onclick="yarPickPhoto()"><span>📷</span><b>تحلیل عکس</b></button>
+    </div>
     <div class="yarpro-hint">${l?'این گفت‌وگو به پرونده همین زمین متصل است.':'حالت عمومی فعال است؛ برای سؤال درباره یک قطعه، از داخل پرونده همان زمین وارد کشاورزیار شو.'}</div>
   </section>`;
   yarRender();
