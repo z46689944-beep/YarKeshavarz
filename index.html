@@ -1030,8 +1030,31 @@ function yarReply(q,id){
   return l?`متوجه شدم 🌱 درباره «${l.name}» می‌توانی سؤال را دقیق‌تر بپرسی؛ مثلاً «وضعیت فعلی زمین چطور است؟»، «چه چیزی کم دارم؟» یا «این عکس چه مشکلی دارد؟».`:`متوجه شدم 🌱 سؤال را آزادانه بپرس؛ کشاورزیار در حالت عمومی درباره مزرعه، کشت، آفات، آبیاری، هزینه، درآمد و عکس‌ها کمکت می‌کند.`;
 }
 function yarPickPhoto(){
-  const e=document.getElementById('yarPhotoInputChat');
-  if(e)e.click();
+const p=document.getElementById('yarPhotoPreviewPanel'),
+im=document.getElementById('yarPhotoPreviewImgPanel');
+  if(e){
+    e.value='';
+    e.click();
+  }
+}
+
+function yarPickCamera(){
+  let e=document.getElementById('yarPhotoInputCamera');
+  if(!e){
+    e=document.createElement('input');
+    e.id='yarPhotoInputCamera';
+    e.type='file';
+    e.accept='image/*';
+    e.capture='environment';
+    e.style.display='none';
+    e.onchange=function(){
+      yarPhotoSelected(this);
+    };
+    document.body.appendChild(e);
+  }
+  e.value='';
+  e.click();
+}
 }
 function yarPhotoSelected(input){const f=input?.files?.[0];if(!f)return;if(!f.type.startsWith('image/'))return toast('فقط فایل تصویری انتخاب کن');if(f.size>12*1024*1024)return toast('حجم عکس باید کمتر از ۱۲ مگابایت باشد');const r=new FileReader();r.onload=()=>{yarPhotoData=r.result;yarPhotoName=f.name||'photo.jpg';const p=document.getElementById('yarPhotoPreviewChat'),im=document.getElementById('yarPhotoPreviewImgChat');if(im)im.src=yarPhotoData;if(p)p.style.display='flex'};r.readAsDataURL(f)}
 function yarRemovePhoto(){yarPhotoData=null;yarPhotoName='';const p=document.getElementById('yarPhotoPreviewChat'),i=document.getElementById('yarPhotoInputChat');if(p)p.style.display='none';if(i)i.value=''}
@@ -1173,8 +1196,8 @@ function yar(){
  <p class="yar-analysis-note">عکس برگ، محصول، خاک یا زمین را ارسال کن. عکس همراه با پرونده فعال زمین ذخیره می‌شود و برای تحلیل هوشمند آماده خواهد بود.</p>
  <input id="yarPhotoInputPanel" type="file" accept="image/*" style="display:none" onchange="yarPhotoSelected(this)">
  <div class="yar-photo-actions">
-  <button class="primary" onclick="yarPickPhoto()">🖼️ انتخاب عکس</button>
-  <button class="secondary" onclick="yarPickPhoto()">📸 دوربین</button>
+  <button class="secondary" onclick="yarPickCamera()">📸 دوربین</button>
+  
  </div>
  <div id="yarPhotoPreviewPanel" class="yar-preview"><img id="yarPhotoPreviewImgPanel" alt="پیش‌نمایش عکس"></div>
 </section>
