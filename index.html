@@ -1029,9 +1029,9 @@ function yarReply(q,id){
   if(/زمین|قطعه|مزرعه/.test(x))return l?`این گفت‌وگو در حالت اختصاصی «${l.name}» است؛ پاسخ‌ها را بر اساس اطلاعات همین قطعه می‌دهم.`:`در حالت عمومی هستیم؛ ${c.lands.length.toLocaleString('fa-IR')} قطعه و مجموع ${yarNum(c.area)} هکتار در برنامه ثبت شده است.`;
   return l?`متوجه شدم 🌱 درباره «${l.name}» می‌توانی سؤال را دقیق‌تر بپرسی؛ مثلاً «وضعیت فعلی زمین چطور است؟»، «چه چیزی کم دارم؟» یا «این عکس چه مشکلی دارد؟».`:`متوجه شدم 🌱 سؤال را آزادانه بپرس؛ کشاورزیار در حالت عمومی درباره مزرعه، کشت، آفات، آبیاری، هزینه، درآمد و عکس‌ها کمکت می‌کند.`;
 }
-function yarPickPhoto(){const e=document.getElementById('yarPhotoInput');if(e)e.click()}
-function yarPhotoSelected(input){const f=input?.files?.[0];if(!f)return;if(!f.type.startsWith('image/'))return toast('فقط فایل تصویری انتخاب کن');if(f.size>12*1024*1024)return toast('حجم عکس باید کمتر از ۱۲ مگابایت باشد');const r=new FileReader();r.onload=()=>{yarPhotoData=r.result;yarPhotoName=f.name||'photo.jpg';const p=document.getElementById('yarPhotoPreview'),im=document.getElementById('yarPhotoPreviewImg');if(im)im.src=yarPhotoData;if(p)p.style.display='flex'};r.readAsDataURL(f)}
-function yarRemovePhoto(){yarPhotoData=null;yarPhotoName='';const p=document.getElementById('yarPhotoPreview'),i=document.getElementById('yarPhotoInput');if(p)p.style.display='none';if(i)i.value=''}
+function yarPickPhoto(){const e=document.getElementById('yarPhotoInputChat');if(e)e.click()}
+function yarPhotoSelected(input){const f=input?.files?.[0];if(!f)return;if(!f.type.startsWith('image/'))return toast('فقط فایل تصویری انتخاب کن');if(f.size>12*1024*1024)return toast('حجم عکس باید کمتر از ۱۲ مگابایت باشد');const r=new FileReader();r.onload=()=>{yarPhotoData=r.result;yarPhotoName=f.name||'photo.jpg';const p=document.getElementById('yarPhotoPreviewChat'),im=document.getElementById('yarPhotoPreviewImgChat');if(im)im.src=yarPhotoData;if(p)p.style.display='flex'};r.readAsDataURL(f)}
+function yarRemovePhoto(){yarPhotoData=null;yarPhotoName='';const p=document.getElementById('yarPhotoPreviewChat'),i=document.getElementById('yarPhotoInputChat');if(p)p.style.display='none';if(i)i.value=''}
 function yarAddImageMessage(data,caption){yarMessages.push({role:'user',text:caption||'این عکس را تحلیل کن',image:data})}
 function yarWantsImages(q){
   const t=String(q||'').trim().toLowerCase();
@@ -1163,12 +1163,12 @@ function yar(){
 <section class="yar-photo-card">
  <h3>📷 تحلیل عکس کشاورزیار</h3>
  <p class="yar-analysis-note">عکس برگ، محصول، خاک یا زمین را ارسال کن. عکس همراه با پرونده فعال زمین ذخیره می‌شود و برای تحلیل هوشمند آماده خواهد بود.</p>
- <input id="yarPhotoInput" type="file" accept="image/*" style="display:none" onchange="yarPhotoSelected(this)">
+ <input id="yarPhotoInputPanel" type="file" accept="image/*" style="display:none" onchange="yarPhotoSelected(this)">
  <div class="yar-photo-actions">
   <button class="primary" onclick="yarPickPhoto()">🖼️ انتخاب عکس</button>
   <button class="secondary" onclick="toast('دوربین در نسخه PWA نیاز به دسترسی مرورگر دارد')">📸 دوربین</button>
  </div>
- <div id="yarPhotoPreview" class="yar-preview"><img id="yarPhotoPreviewImg" alt="پیش‌نمایش عکس"></div>
+ <div id="yarPhotoPreviewPanel" class="yar-preview"><img id="yarPhotoPreviewImgPanel" alt="پیش‌نمایش عکس"></div>
 </section>
 
 <section class="yar-final-context">
@@ -1199,14 +1199,14 @@ function yar(){
     </div>
 
     <div id="yarChat" class="yarpro-chat"></div>
-    <input id="yarPhotoInput" type="file" accept="image/*" capture="environment" onchange="yarPhotoSelected(this)" hidden>
-    <div id="yarPhotoPreview" class="yar-photo-preview" style="display:none"><img id="yarPhotoPreviewImg" alt="پیش‌نمایش عکس"><button type="button" onclick="yarRemovePhoto()">×</button></div>
+    <input id="yarPhotoInputChat" type="file" accept="image/*" capture="environment" onchange="yarPhotoSelected(this)" hidden>
+    <div id="yarPhotoPreviewChat" class="yar-photo-preview" style="display:none"><img id="yarPhotoPreviewImgChat" alt="پیش‌نمایش عکس"><button type="button" onclick="yarRemovePhoto()">×</button></div>
     <form class="yarpro-form yar-final-form" onsubmit="event.preventDefault();yarSend()"><button type="button" class="yarpro-camera" onclick="yarPickPhoto()">📷</button><input id="yarInput" autocomplete="off" placeholder="${l?'درباره همین زمین سؤال کن…':'هر سؤال کشاورزی که داری…'}"><button type="submit" class="yarpro-send">➤</button></form>
     <div class="yarpro-hint">${l?'این گفت‌وگو به پرونده همین زمین متصل است.':'حالت عمومی فعال است؛ برای سؤال درباره یک قطعه، از داخل پرونده همان زمین وارد کشاورزیار شو.'}</div>
   </section>`;
   yarRender();
 }
-function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>`<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.images?.length?`<div class="yar-image-grid">${m.images.map(x=>`<a href="${esc(x.page||x.url)}" target="_blank" rel="noopener" class="yar-image-card"><img src="${esc(x.url)}" alt="${esc(x.title)}" loading="lazy"><span>${esc(x.title)}</span></a>`).join('')}</div>`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}</div></div>`).join('');b.scrollTop=b.scrollHeight} 
+function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>`<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.images?.length?`<div class="yar-image-grid">${m.images.map(x=>`<figure class="yar-image-card"><img src="${esc(x.url)}" alt="${esc(x.title)}" loading="lazy"><figcaption>${esc(x.title)}</figcaption></figure>`).join('')}</div>`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}</div></div>`).join('');b.scrollTop=b.scrollHeight} 
 
 function yarAsk(q){const i=document.getElementById('yarInput');if(i){i.value=q;yarSend()}}
 function yarClear(){yarMessages=[];saveYarChat();yar()}
@@ -1342,6 +1342,81 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
     justify-content:center !important;
   }
 }
+<style id="yar-chat-final-fix">
+/* YAR CHAT — mobile full-screen, fixed composer, inline images */
+@media (max-width:700px){
+  body:has(.yar-final){overflow:hidden !important;}
+  .yar-final{
+    position:fixed !important;
+    inset:0 !important;
+    z-index:5000 !important;
+    width:100vw !important;
+    height:100dvh !important;
+    min-height:100dvh !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    border-radius:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+  .yar-final .yarpro-head{
+    flex:0 0 auto !important;
+    position:relative !important;
+    top:auto !important;
+    margin:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+  }
+  .yar-final .yarpro-chat{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    height:auto !important;
+    overflow-y:auto !important;
+    padding:14px 12px 92px !important;
+    margin:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    -webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+  }
+  .yar-final .yar-msg{margin:0 0 12px !important;}
+  .yar-final .yar-msg>div{max-width:88% !important;}
+  .yar-final .yar-msg.user{justify-content:flex-start !important;}
+  .yar-final .yar-msg.bot{justify-content:flex-end !important;}
+  .yar-final .yarpro-form{
+    position:fixed !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+    z-index:5100 !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    box-sizing:border-box !important;
+    border-radius:0 !important;
+    background:rgba(255,255,255,.98) !important;
+    box-shadow:0 -6px 24px rgba(0,0,0,.10) !important;
+  }
+  .yar-final .yarpro-form input{
+    height:46px !important;
+    min-height:46px !important;
+    font-size:16px !important;
+  }
+  .yar-final .yarpro-camera,.yar-final .yarpro-send{
+    width:44px !important;height:44px !important;min-width:44px !important;
+  }
+  .yar-final .yar-image-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;}
+  .yar-final .yar-image-card{margin:0 !important;overflow:hidden !important;border-radius:14px !important;}
+  .yar-final .yar-image-card img{width:100% !important;aspect-ratio:1/1 !important;object-fit:cover !important;display:block !important;}
+  .yar-final .yar-image-card figcaption{padding:6px 7px !important;font-size:9px !important;line-height:1.5 !important;}
+  .yar-final .yar-photo-preview{position:fixed !important;left:10px !important;right:10px !important;bottom:66px !important;z-index:5200 !important;margin:0 !important;}
+}
+</style>
 </style><!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
 </body>
 </html>
