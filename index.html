@@ -1418,5 +1418,225 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
 }
 </style>
 </style><!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
+  <script>
+/* Yar Keshavarz V3 — Mobile Chat Fix */
+(function(){
+  const css = `
+  .yarpro{
+    min-height:100dvh!important;
+    background:#f5f8f6!important;
+  }
+  .yarpro-head{
+    position:sticky!important;
+    top:0!important;
+    z-index:20!important;
+    backdrop-filter:blur(14px);
+  }
+  .yarpro-chat{
+    min-height:calc(100dvh - 170px)!important;
+    padding:14px 10px 110px!important;
+    overflow-y:auto!important;
+    scroll-behavior:smooth;
+  }
+  .yarpro-form{
+    position:fixed!important;
+    bottom:0!important;
+    left:0!important;
+    right:0!important;
+    z-index:9999!important;
+    padding:10px!important;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom))!important;
+    background:#ffffffee!important;
+    backdrop-filter:blur(18px)!important;
+    border-top:1px solid #dfe9e3!important;
+  }
+  .yarpro-form input,
+  .yarpro-form textarea{
+    border-radius:18px!important;
+    min-height:48px!important;
+  }
+  .yarpro-form button{
+    min-width:48px!important;
+    min-height:48px!important;
+    border-radius:16px!important;
+  }
+  .yar-img-results{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    margin-top:10px;
+  }
+  .yar-img-results figure{
+    margin:0;
+    background:#fff;
+    border:1px solid #dfe9e3;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 5px 18px #17352b14;
+  }
+  .yar-img-results img{
+    display:block;
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+  }
+  .yar-img-results figcaption{
+    padding:7px;
+    font-size:9px;
+    line-height:1.5;
+    color:#52645c;
+  }
+  .yar-gallery-btn{
+    background:#eaf4ee!important;
+    color:#0b3d2e!important;
+  }
+  .yar-camera-btn{
+    background:#0b3d2e!important;
+    color:#fff!important;
+  }
+  @media(max-width:420px){
+    .yar-img-results{grid-template-columns:repeat(2,1fr)}
+  }`;
+
+  const s=document.createElement('style');
+  s.textContent=css;
+  document.head.appendChild(s);
+
+  /* Create gallery/camera controls automatically */
+  function setupPhotoButtons(){
+    const form=document.querySelector('.yarpro-form');
+    if(!form || form.dataset.photoFix) return;
+    form.dataset.photoFix='1';
+
+    let gallery=document.getElementById('yarGalleryFixInput');
+    let camera=document.getElementById('yarCameraFixInput');
+
+    if(!gallery){
+      gallery=document.createElement('input');
+      gallery.type='file';
+      gallery.accept='image/*';
+      gallery.id='yarGalleryFixInput';
+      gallery.style.display='none';
+      document.body.appendChild(gallery);
+    }
+
+    if(!camera){
+      camera=document.createElement('input');
+      camera.type='file';
+      camera.accept='image/*';
+      camera.capture='environment';
+      camera.id='yarCameraFixInput';
+      camera.style.display='none';
+      document.body.appendChild(camera);
+    }
+
+    gallery.onchange=function(){
+      if(this.files && this.files[0]){
+        const old=document.getElementById('yarPhotoInput');
+        if(old){
+          try{
+            const dt=new DataTransfer();
+            dt.items.add(this.files[0]);
+            old.files=dt.files;
+            old.dispatchEvent(new Event('change',{bubbles:true}));
+          }catch(e){}
+        }
+      }
+    };
+
+    camera.onchange=gallery.onchange;
+
+    const send=form.querySelector('button[type="submit"]');
+    if(send){
+      const gb=document.createElement('button');
+      gb.type='button';
+      gb.className='yar-gallery-btn';
+      gb.innerHTML='🖼️';
+      gb.title='انتخاب عکس از گالری';
+      gb.onclick=()=>gallery.click();
+
+      const cb=document.createElement('button');
+      cb.type='button';
+      cb.className='yar-camera-btn';
+      cb.innerHTML='📷';
+      cb.title='گرفتن عکس';
+      cb.onclick=()=>camera.click();
+
+      form.insertBefore(gb,send);
+      form.insertBefore(cb,send);
+    }
+  }
+
+  /* Better Wikimedia image search */
+  window.yarSendImages = async function(q){
+    try{
+      const url =
+        'https://commons.wikimedia.org/w/api.php?' +
+        'action=query&generator=search' +
+        '&gsrsearch='+encodeURIComponent(q) +
+        '&gsrnamespace=6&gsrlimit=8' +
+        '&prop=imageinfo&iiprop=url|extmetadata' +
+        '&iiurlwidth=2000&format=json&origin=*';
+
+      const r=await fetch(url);
+      const d=await r.json();
+      const pages=Object.values((d.query||{}).pages||{});
+
+      const imgs=pages
+        .map(x=>{
+          const ii=(x.imageinfo||[])[0]||{};
+          return {
+            url:ii.thumburl||ii.url||'',
+            title:x.title||'',
+            page:'https://commons.wikimedia.org/wiki/'+encodeURIComponent((x.title||'').replace(/^File:/,'File:')).replace(/%2F/g,'/')
+          };
+        })
+        .filter(x=>x.url);
+
+      if(!imgs.length) return [];
+
+      return imgs;
+    }catch(e){
+      console.warn('Image search failed',e);
+      return [];
+    }
+  };
+
+  /* Make image results appear directly inside chat */
+  const oldRender=window.yarRender;
+  if(typeof oldRender==='function'){
+    window.yarRender=function(){
+      oldRender.apply(this,arguments);
+
+      document.querySelectorAll('.yarpro-chat a').forEach(a=>{
+        const href=a.href||'';
+        if(href.includes('commons.wikimedia.org')){
+          const img=a.querySelector('img');
+          if(img){
+            const fig=document.createElement('figure');
+            fig.className='yar-img-results';
+            fig.innerHTML=
+              '<img src="'+img.src+'" loading="lazy">'+
+              '<figcaption>'+((img.alt||'تصویر گیاه').replace(/</g,'&lt;'))+'</figcaption>';
+            a.replaceWith(fig);
+          }
+        }
+      });
+    };
+  }
+
+  /* Default photo button = gallery */
+  const oldPick=window.yarPickPhoto;
+  window.yarPickPhoto=function(){
+    const g=document.getElementById('yarGalleryFixInput');
+    if(g) g.click();
+    else if(typeof oldPick==='function') oldPick.apply(this,arguments);
+  };
+
+  setupPhotoButtons();
+  setTimeout(setupPhotoButtons,500);
+  setTimeout(setupPhotoButtons,1500);
+})();
+</script>
 </body>
 </html>
