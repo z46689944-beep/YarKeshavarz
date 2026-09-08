@@ -1,5 +1,4 @@
-
-QuickEdit Text Editor Android<!doctype html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -1248,6 +1247,101 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
 </div></div>
 <style id="ownership-rent-modern">.ownership-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ownership-option{display:flex;align-items:center;gap:10px;text-align:right;border:1.5px solid #d8e6df;background:#fbfdfc;color:#173f32;border-radius:18px;padding:12px;min-height:72px;cursor:pointer}.ownership-option.active{border-color:#2f9b6c;background:linear-gradient(135deg,#eefaf4,#f7fcf9);box-shadow:0 8px 22px rgba(25,110,74,.10)}.ownership-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#e7f4ed;font-size:22px;flex:0 0 42px}.ownership-option b,.ownership-option small{display:block}.ownership-option small{color:#70847a;font-size:11px;margin-top:3px}.rent-details{margin-top:10px;padding:12px;border:1px solid #d9e8df;border-radius:18px;background:rgba(239,248,243,.8)}.rent-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rent-grid .field{margin:0}.rent-grid input{width:100%;box-sizing:border-box}@media(max-width:430px){.rent-grid{grid-template-columns:1fr}.ownership-choice{gap:7px}.ownership-option{padding:9px;min-height:66px}.ownership-icon{width:38px;height:38px;flex-basis:38px}} 
 .expense-list{margin-top:12px;display:grid;gap:8px}.expense-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #e7ece9}.expense-row-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.mini-btn{padding:6px 9px!important;font-size:12px!important}.expense-row-actions>b{white-space:nowrap}
+
+/* V3 CHATGPT-STYLE FULLSCREEN — UI ONLY */
+@media (max-width:700px){
+  .yar-final{
+    min-height:100dvh !important;
+    height:100dvh !important;
+    max-height:none !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+    border-radius:0 !important;
+  }
+  .yar-final .yarpro-head{
+    flex:0 0 auto !important;
+    position:relative !important;
+    margin:0 !important;
+    border-radius:0 !important;
+  }
+  .yar-final .yar-final-hero,
+  .yar-final .yar-photo-card,
+  .yar-final .yar-final-context,
+  .yar-final .yar-final-analysis,
+  .yar-final .yar-final-actions,
+  .yar-final .yarpro-hint{
+    display:none !important;
+  }
+  .yar-final .yarpro-chat{
+    display:flex !important;
+    flex:1 1 auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    height:auto !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+    flex-direction:column !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    padding:18px 12px 14px !important;
+    margin:0 !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+  .yar-final .yar-msg{
+    width:100% !important;
+    box-sizing:border-box !important;
+    margin:0 0 14px !important;
+  }
+  .yar-final .yar-msg > div{
+    max-width:88% !important;
+    line-height:1.9 !important;
+  }
+  .yar-final .yar-msg.user{
+    display:flex !important;
+    justify-content:flex-start !important;
+  }
+  .yar-final .yar-msg.bot{
+    display:flex !important;
+    justify-content:flex-end !important;
+  }
+  .yar-final .yarpro-form{
+    flex:0 0 auto !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:8px !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+    margin:0 !important;
+    padding:9px 10px calc(9px + env(safe-area-inset-bottom)) !important;
+    position:relative !important;
+    bottom:auto !important;
+    background:rgba(255,255,255,.98) !important;
+    border-top:1px solid rgba(0,0,0,.08) !important;
+  }
+  .yar-final .yarpro-form input{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    height:46px !important;
+    border-radius:24px !important;
+    padding:0 16px !important;
+    font-size:15px !important;
+  }
+  .yar-final .yarpro-camera,
+  .yar-final .yarpro-send{
+    flex:0 0 44px !important;
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    border-radius:50% !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+}
 </style><!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
 </body>
 </html>
