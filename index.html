@@ -575,7 +575,26 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
 </style>
 <style id="analysis-history-v65">
 .analysis-history{display:flex;flex-direction:column;gap:10px;margin-top:12px}.analysis-item{background:#f6f9f7;border-radius:16px;padding:12px;border:1px solid rgba(30,80,60,.12)}.analysis-item .small{margin-top:6px}
-</style></head>
+</style>
+<style id="yar-bottom-chat-fix">
+.yar-final{padding:8px 8px 0!important;overflow:hidden!important}
+.yar-final .yarpro-head{position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:4505!important;margin:0!important;border-radius:0 0 18px 18px!important}
+.yar-final .yarpro-chat{position:absolute!important;top:78px!important;left:8px!important;right:8px!important;bottom:148px!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:auto!important;border-radius:20px!important}
+.yar-final .yarpro-form{position:fixed!important;left:8px!important;right:8px!important;bottom:76px!important;z-index:4510!important;margin:0!important;height:62px!important;box-sizing:border-box!important}
+.yar-final .yar-final-tools{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:4511!important;height:70px!important;box-sizing:border-box!important;margin:0!important;padding:6px 7px 6px!important;display:flex!important;flex-wrap:nowrap!important;gap:7px!important;overflow-x:auto!important;overflow-y:hidden!important;justify-content:flex-start!important;background:rgba(248,251,249,.98)!important;border-top:1px solid #dce8e1!important;box-shadow:0 -8px 22px rgba(13,55,40,.08)!important;backdrop-filter:blur(18px)!important}
+.yar-final .yar-final-tools button{flex:0 0 calc((100vw - 42px)/5)!important;min-width:74px!important;height:58px!important;padding:4px 3px!important;border-radius:15px!important}
+.yar-final .yar-final-tools button span{font-size:20px!important}
+.yar-final .yar-final-tools button b{font-size:8.5px!important}
+.yar-final .yarpro-hint{display:none!important}
+.yar-final .yar-photo-preview{position:fixed!important;left:10px!important;right:10px!important;bottom:142px!important;z-index:4512!important;margin:0!important}
+@media(max-width:420px){
+ .yar-final .yarpro-chat{top:72px!important;bottom:144px!important}
+ .yar-final .yarpro-form{bottom:74px!important}
+ .yar-final .yar-final-tools{height:68px!important}
+ .yar-final .yar-final-tools button{flex-basis:calc((100vw - 42px)/5)!important;min-width:70px!important}
+}
+</style>
+</head>
 <body>
 <header class="top"><div class="brand"><div class="logo">🌾</div><div><b>یار کشاورز</b><small id="pageTitle">خانه</small></div></div><button id="backup">↥</button></header>
 <main id="app"></main>
