@@ -684,35 +684,11 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
   .yar-final .yar-final-tools button{height:56px!important;min-height:56px!important;max-height:56px!important;flex-basis:calc((100vw - 42px)/5)!important}
 }
 </style>
-
-<style id="yar-v3-mobile-tools-final">
-/* V3 MOBILE FINAL: keep the five assistant tools visible above the composer. */
-body:has(.yar-final) .bottom{display:none!important}
-.yar-final .yar-final-tools{
-  position:fixed!important;left:8px!important;right:8px!important;bottom:140px!important;
-  z-index:9050!important;height:62px!important;box-sizing:border-box!important;margin:0!important;
-  padding:2px 0!important;display:flex!important;flex-wrap:nowrap!important;gap:5px!important;
-  overflow:hidden!important;background:transparent!important;border:0!important;box-shadow:none!important;
-  backdrop-filter:none!important;
-}
-.yar-final .yar-final-tools button{
-  flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;
-  height:58px!important;min-height:58px!important;max-height:58px!important;padding:3px 1px!important;
-  border:1px solid #dce8e1!important;border-radius:13px!important;background:#fff!important;
-  color:#17362a!important;display:flex!important;flex-direction:column!important;
-  align-items:center!important;justify-content:center!important;gap:2px!important;
-  box-shadow:0 4px 12px rgba(13,55,40,.10)!important;font-weight:800!important;
-}
-.yar-final .yar-final-tools button span{font-size:19px!important;line-height:1!important}
-.yar-final .yar-final-tools button b{font-size:8px!important;line-height:1.15!important;white-space:nowrap!important}
-.yar-final .yarpro-form{bottom:72px!important;z-index:9060!important}
-.yar-final .yarpro-chat{bottom:210px!important}
-@media(max-width:420px){
-  .yar-final .yar-final-tools{bottom:140px!important;height:60px!important}
-  .yar-final .yar-final-tools button{height:56px!important;min-height:56px!important;max-height:56px!important}
-  .yar-final .yarpro-form{bottom:72px!important}
-  .yar-final .yarpro-chat{bottom:206px!important}
-}
+<style id="yar-tools-under-input-final">
+/* پنج ابزار دقیقاً زیر کادر تایپ */
+.yar-final .yarpro-form{position:fixed!important;left:8px!important;right:8px!important;bottom:76px!important;z-index:9020!important}
+.yar-final .yar-final-tools{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;z-index:9030!important;height:68px!important;margin:0!important;padding:6px 7px!important;box-sizing:border-box!important;display:flex!important;flex-wrap:nowrap!important;align-items:center!important;overflow-x:auto!important;overflow-y:hidden!important}
+@media(max-width:420px){.yar-final .yarpro-form{bottom:74px!important}.yar-final .yar-final-tools{bottom:0!important;height:68px!important}}
 </style>
 </head>
 <body>
@@ -1272,7 +1248,7 @@ async function yarSend(){
       if(id)yarUpdateImageAnalysis(id,analysisId,{status:'تحلیل شد',result:d.reply||'تحلیل دریافت نشد.',action:'پیشنهادها در متن تحلیل ارائه شده‌اند.'});
       yarRender();saveYarChat();
     }catch(e){
-      const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'هوش مصنوعی آنلاین در دسترس نبود؛ پاسخ تخصصی محلی نمایش داده شد.'};
+      const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'اتصال امن هوش مصنوعی برقرار نشد. تنظیمات Worker و API را بررسی کن.'};
       if(id)yarUpdateImageAnalysis(id,analysisId,{status:'خطا',result:'تحلیل دریافت نشد.',action:'اتصال هوش مصنوعی بررسی شود.'});
       yarRender();saveYarChat();
     }
