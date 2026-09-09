@@ -594,6 +594,51 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
  .yar-final .yar-final-tools button{flex-basis:calc((100vw - 42px)/5)!important;min-width:70px!important}
 }
 </style>
+
+<style id="yar-v3-final-polish">
+/* V3 FINAL POLISH */
+.yar-final .yarpro-head > button.yarpro-switch:first-child{
+  width:32px!important; min-width:32px!important; max-width:32px!important;
+  height:32px!important; min-height:32px!important; max-height:32px!important;
+  padding:0!important; margin:0!important;
+  border:0!important; border-radius:9px!important;
+  font-size:18px!important; line-height:32px!important;
+  display:grid!important; place-items:center!important;
+  flex:0 0 32px!important; box-sizing:border-box!important;
+}
+.yar-final .yar-final-tools{
+  position:fixed!important; left:0!important; right:0!important; bottom:0!important;
+  z-index:99999!important; height:72px!important;
+  display:flex!important; flex-direction:row!important; flex-wrap:nowrap!important;
+  align-items:center!important; justify-content:space-between!important; gap:6px!important;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom))!important;
+  background:#f8fbf9!important; border-top:1px solid #d8e7df!important;
+  box-shadow:0 -8px 24px rgba(13,55,40,.10)!important; box-sizing:border-box!important;
+}
+.yar-final .yar-final-tools button{
+  display:flex!important; flex:1 1 0!important; width:auto!important; min-width:0!important;
+  height:58px!important; padding:4px 2px!important; margin:0!important;
+  align-items:center!important; justify-content:center!important; flex-direction:column!important;
+  gap:3px!important; border:1px solid #dce8e1!important; border-radius:15px!important;
+  background:#fff!important; color:#17362a!important; box-shadow:0 4px 12px rgba(13,55,40,.07)!important;
+}
+.yar-final .yar-final-tools button span{font-size:22px!important; line-height:1!important}
+.yar-final .yar-final-tools button b{font-size:9px!important; line-height:1.2!important; white-space:nowrap!important}
+.yar-final .yarpro-form{bottom:80px!important}
+.yar-final .yarpro-chat{bottom:150px!important}
+.yar-image-results{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.yar-image-card a{pointer-events:none!important; cursor:default!important}
+.yar-image-card img{cursor:default!important}
+@media(max-width:420px){
+  .yar-final .yar-final-tools{height:70px!important}
+  .yar-final .yarpro-form{bottom:76px!important}
+  .yar-final .yarpro-chat{bottom:144px!important}
+  .yar-final .yar-final-tools button{height:56px!important}
+  .yar-final .yar-final-tools button span{font-size:20px!important}
+  .yar-final .yar-final-tools button b{font-size:8.5px!important}
+}
+</style>
+
 </head>
 <body>
 <header class="top"><div class="brand"><div class="logo">🌾</div><div><b>یار کشاورز</b><small id="pageTitle">خانه</small></div></div><button id="backup">↥</button></header>
@@ -1065,16 +1110,29 @@ function yarQuickAnalysis(id){
 function yarAnalysisText(id){const a=yarQuickAnalysis(id);return `📊 ${a.title}\n\n${a.items.map(x=>'• '+x).join('\n')}`}
 function yarReply(q,id){
   const x=String(q||'').trim().toLowerCase(), c=yarContext(id), l=c.l;
-  if(!x)return 'سؤالت را بنویس تا بررسی کنم.';
-  if(/سلام|درود|خوبی|چطوری/.test(x))return l?`سلام 🌱 من کشاورزیارِ «${l.name}» هستم. هر سؤالی درباره همین قطعه داری بپرس؛ حتی می‌توانی عکس بفرستی.`:'سلام 🌱 من کشاورزیارم. درباره کشاورزی، کشت، آبیاری، آفات، هزینه، بازار و وضعیت مزرعه هر سؤالی داری بپرس.';
-  if(/تحلیل|وضعیت فعلی|الان|اکنون|شرایط/.test(x))return yarAnalysisText(id);
-  if(/هزینه|خرج/.test(x))return l?`برای «${l.name}» هزینه ثبت‌شده ${yarMoney(c.t.cost)} است. برای تحلیل دقیق‌تر، بذر، کود، سم، آب، کارگر و سایر هزینه‌ها را جداگانه ثبت کن.`:`در کل مزرعه ${yarMoney(c.cost)} هزینه ثبت شده است.`;
-  if(/درآمد|فروش/.test(x))return l?`برای «${l.name}» درآمد ثبت‌شده ${yarMoney(c.t.income)} و سود فعلی ${yarMoney(c.t.profit)} است.`:`در کل مزرعه درآمد ${yarMoney(c.income)} و سود ${yarMoney(c.profit)} ثبت شده است.`;
-  if(/انبار|موجودی|کود|بذر|سم|نهاده/.test(x)){if(!c.stock.length)return 'هنوز قلمی در انبار ثبت نشده است. ابتدا ورودی‌های انبار را ثبت کن.';return '📦 موجودی‌های ثبت‌شده: '+c.stock.slice(0,8).map(i=>`${i.name||'قلم'} (${yarNum(i.qty)} ${i.unit||''})`).join('، ')+'.';}
-  if(/کشت|کاشت|بکار/.test(x))return l?`برای «${l.name}»${l.crop?' محصول فعلی '+l.crop+' است. ':''}برای پیشنهاد کشت دقیق، خاک، آب، منطقه و زمان کشت را با هم بررسی می‌کنیم.`:'برای پیشنهاد کشت کلی، اطلاعات زمین‌ها و شرایط مزرعه را بررسی می‌کنم.';
-  if(/آب|آبیاری|باران|هوا/.test(x))return l?`برای «${l.name}» ${l.irrigation?'روش آبیاری '+l.irrigation+' ثبت شده است. ':''}${l.water?'منبع آب '+l.water+' ثبت شده است. ':''}برای پیش‌بینی آب‌وهوا باید موقعیت زمین مشخص باشد.`:'برای آب‌وهوا می‌توانی وارد پرونده هر زمین شوی تا تحلیل بر اساس موقعیت همان قطعه انجام شود.';
-  if(/زمین|قطعه|مزرعه/.test(x))return l?`این گفت‌وگو در حالت اختصاصی «${l.name}» است؛ پاسخ‌ها را بر اساس اطلاعات همین قطعه می‌دهم.`:`در حالت عمومی هستیم؛ ${c.lands.length.toLocaleString('fa-IR')} قطعه و مجموع ${yarNum(c.area)} هکتار در برنامه ثبت شده است.`;
-  return l?`متوجه شدم 🌱 درباره «${l.name}» می‌توانی سؤال را دقیق‌تر بپرسی؛ مثلاً «وضعیت فعلی زمین چطور است؟»، «چه چیزی کم دارم؟» یا «این عکس چه مشکلی دارد؟».`:`متوجه شدم 🌱 سؤال را آزادانه بپرس؛ کشاورزیار در حالت عمومی درباره مزرعه، کشت، آفات، آبیاری، هزینه، درآمد و عکس‌ها کمکت می‌کند.`;
+  if(!x)return 'سؤالت را بنویس تا کشاورزیار مرحله‌به‌مرحله بررسی کند.';
+  if(/سلام|درود/.test(x))return l?`سلام 🌱 من کشاورزیارِ «${l.name}» هستم. اطلاعات زمین، هزینه، انبار و شرایط کشت را در نظر می‌گیرم. سؤالت را بپرس.`:'سلام 🌱 من کشاورزیارم. درباره کشت، خاک، آب، آفات، هزینه، درآمد و وضعیت مزرعه می‌توانی سؤال کنی.';
+  if(/خوبی|چطوری/.test(x))return 'ممنون 🌱 آماده‌ام. اگر سؤال کشاورزی، تحلیل زمین یا عکس داری بفرست تا دقیق بررسی کنیم.';
+  if(/تحلیل|وضعیت فعلی|الان|اکنون|شرایط/.test(x))return yarAnalysisText(id)+'\n\n🎯 اولویت پیشنهادی: اطلاعات ناقص زمین را کامل کن و بعد تصمیم کشت یا هزینه را بر اساس داده‌های ثبت‌شده بگیر.';
+  if(/هزینه|خرج|قیمت تمام/.test(x)){
+    if(!l)return `💰 هزینه ثبت‌شده کل مزرعه ${yarMoney(c.cost)} است.\n\nبرای تحلیل حرفه‌ای، هزینه‌ها را به بذر، کود، سم، آب و انرژی، کارگر، ماشین‌آلات و سایر موارد تفکیک کن تا مشخص شود کدام بخش بیشترین فشار را ایجاد کرده است.`;
+    const t=c.t;return `💰 تحلیل اقتصادی «${l.name}»\n\n• هزینه ثبت‌شده: ${yarMoney(t.cost)}\n• درآمد ثبت‌شده: ${yarMoney(t.income)}\n• سود فعلی: ${yarMoney(t.profit)}\n\n📌 برای تصمیم دقیق‌تر، هزینه بذر، کود، سم، آب، کارگر و ماشین‌آلات را جداگانه ثبت کن؛ آن‌وقت می‌توانیم سهم هر هزینه و نقطه فشار اقتصادی را بررسی کنیم.`;
+  }
+  if(/درآمد|فروش|سود/.test(x))return l?`📈 برای «${l.name}» درآمد ثبت‌شده ${yarMoney(c.t.income)} و سود فعلی ${yarMoney(c.t.profit)} است.\n\nاگر مقدار محصول، قیمت فروش و هزینه‌های اصلی را ثبت کنی، می‌توانیم سود هر هکتار را هم برآورد کنیم.`:`📈 در کل مزرعه درآمد ${yarMoney(c.income)}، هزینه ${yarMoney(c.cost)} و سود ثبت‌شده ${yarMoney(c.profit)} است.`;
+  if(/انبار|موجودی|کود|بذر|سم|نهاده/.test(x)){
+    if(!c.stock.length)return '📦 هنوز قلمی در انبار ثبت نشده است. ورودی‌های انبار را ثبت کن تا بتوانیم کمبود نهاده‌ها و مصرف را بررسی کنیم.';
+    const items=c.stock.slice(0,12).map(i=>`• ${i.name||'قلم'}: ${yarNum(i.qty)} ${i.unit||''}`).join('\n');
+    return `📦 وضعیت انبار\n\n${items}\n\n🎯 اگر مصرف هر قلم را هم ثبت کنی، می‌توانم موجودی قابل استفاده و اقلام رو به اتمام را بهتر مشخص کنم.`;
+  }
+  if(/کشت|کاشت|بکار|محصول|چه بکارم/.test(x)){
+    if(!l)return '🌱 برای پیشنهاد کشت دقیق، حداقل منطقه، مساحت، نوع خاک، منبع آب، روش آبیاری و زمان کشت لازم است. این اطلاعات را ثبت کن تا پیشنهاد قابل اتکاتری بدهم.';
+    return `🌱 پیشنهاد کشت برای «${l.name}»\n\n${l.crop?'محصول ثبت‌شده فعلی: '+l.crop+'.':'هنوز محصولی برای این زمین ثبت نشده است.'}\n${l.soil?'نوع خاک: '+l.soil+'.':'نوع خاک ثبت نشده است.'}\n${l.water?'منبع آب: '+l.water+'.':'منبع آب ثبت نشده است.'}\n${l.irrigation?'آبیاری: '+l.irrigation+'.':'روش آبیاری ثبت نشده است.'}\n\n⚠️ بدون منطقه و زمان کشت، انتخاب نهایی محصول قابل اعتماد نیست. این دو مورد را هم مشخص کن تا مقایسه دقیق‌تری انجام شود.`;
+  }
+  if(/آفت|بیماری|زرد|لکه|حشره|قارچ/.test(x))return l?`🩺 برای تشخیص «${l.name}» بهتر است عکس واضح از برگ، ساقه یا میوه بفرستی؛ همراه عکس، سن گیاه، مرحله رشد و زمان شروع علائم را هم بنویس. از روی یک نشانه به‌تنهایی نباید سم تجویز کرد.`:'🩺 برای تشخیص آفت یا بیماری، عکس واضح گیاه را بفرست و مرحله رشد و علائم را هم توضیح بده تا بررسی دقیق‌تر شود.';
+  if(/آب|آبیاری|باران|هوا/.test(x))return l?`💧 برای «${l.name}» ${l.irrigation?'روش آبیاری '+l.irrigation+' ثبت شده است. ':''}${l.water?'منبع آب '+l.water+' ثبت شده است. ':''}\nبرای زمان‌بندی دقیق آبیاری باید موقعیت زمین، محصول و مرحله رشد مشخص باشد.`:'💧 برای توصیه آبیاری دقیق، محصول، مرحله رشد، نوع خاک و موقعیت زمین مهم است.';
+  if(/زمین|قطعه|مزرعه/.test(x))return l?`📐 این گفت‌وگو به «${l.name}» متصل است. مساحت ${yarNum(l.area)} هکتار است و پاسخ‌ها را بر اساس اطلاعات همین پرونده تنظیم می‌کنم.`:`🌾 در حالت عمومی هستیم؛ ${c.lands.length.toLocaleString('fa-IR')} قطعه و مجموع ${yarNum(c.area)} هکتار ثبت شده است.`;
+  if(/عکس|تصویر/.test(x))return '📷 اگر عکس می‌خواهی، بنویس «عکس گندم» یا «تصویر آفت گوجه» تا تصاویر مرتبط نمایش داده شوند. اگر می‌خواهی عکس خودت تحلیل شود، آن را با 📷 ارسال کن.';
+  return l?`متوجه شدم 🌱 درباره «${l.name}» می‌توانم در کشت، آبیاری، آفات، هزینه، درآمد، انبار و تحلیل عکس کمک کنم. سؤال را با جزئیات بیشتر بپرس تا جواب دقیق‌تری بدهم.`:`متوجه شدم 🌱 سؤال را آزادانه بپرس. برای جواب دقیق‌تر، نام محصول، منطقه، مساحت یا موضوع موردنظر را هم بنویس.`;
 }
 function yarPickPhoto(){
   const e=document.getElementById('yarPhotoInputGallery');
@@ -1112,7 +1170,7 @@ function yarRemovePhoto(){
   if(c)c.value='';
 }
 function yarAddImageMessage(data,caption){yarMessages.push({role:'user',text:caption||'این عکس را تحلیل کن',image:data})}
-function yarImageIntent(q){const x=String(q||'').trim();return /(?:عکس|تصویر|عکس‌ها|تصاویر).*(?:می.?خوام|می.?خواهم|نشون|نشان|بیار|بده|لازم دارم)|(?:عکس|تصویر).*(?:آنغوزه|گندم|جو|ذرت|برنج|زعفران|پسته|انگور|سیب|گوجه|خیار|سیب.?زمینی|خاک|آفت|بیماری)/i.test(x)}
+function yarImageIntent(q){const x=String(q||'').trim();return /(?:عکس|تصویر|تصاویر|عکس‌ها)\s*(?:از|برای)?\s*\S+|(?:می.?خوام|می.?خواهم|نشون|نشان|بیار|بده|لازم دارم).*?(?:عکس|تصویر|تصاویر)/i.test(x)}
 async function yarSearchImages(q){
   const term=String(q||'').replace(/(?:می.?خوام|می.?خواهم|نشونم بده|نشانم بده|بیار|بده|عکس|تصویر|تصاویر|عکس‌ها)/gi,' ').replace(/\s+/g,' ').trim()||'کشاورزی';
   const url='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(term)+'&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url|extmetadata&iilimit=1&iiurlwidth=700&format=json&origin=*';
@@ -1135,7 +1193,7 @@ async function yarSend(){
     try{
       const imgs=await yarSearchImages(q);
       const k=yarMessages.findIndex(m=>m.pending);
-      if(k>=0)yarMessages[k]=imgs.length?{role:'bot',text:'🖼️ تصاویر مرتبط با درخواستت:',images:imgs}:{role:'bot',text:'برای این موضوع تصویر مناسبی پیدا نکردم. نام محصول یا موضوع را دقیق‌تر بنویس.'};
+      if(k>=0)yarMessages[k]=imgs.length?{role:'bot',text:'🖼️ تصاویر مرتبط با درخواستت (برای مشاهده مستقیم):',images:imgs}:{role:'bot',text:'برای این موضوع تصویر مناسبی پیدا نکردم. نام محصول یا موضوع را دقیق‌تر بنویس.'};
     }catch(e){
       const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'جستجوی تصویر فعلاً در دسترس نیست. دوباره تلاش کن.'};
     }
@@ -1242,7 +1300,7 @@ function yar(){
   </section>`;
   yarRender();
 }
-function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>{const imgs=Array.isArray(m.images)&&m.images.length?`<div class="yar-image-results">${m.images.slice(0,6).map(x=>`<figure class="yar-image-card"><a href="${esc(x.url||'')}" target="_blank" rel="noopener"><img src="${esc(x.thumb||x.url||'')}" alt="${esc(x.title||'تصویر کشاورزی')}" loading="lazy"></a><figcaption>${esc(x.title||'تصویر کشاورزی')}</figcaption></figure>`).join('')}</div>`:'';return `<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}${imgs}</div></div>`}).join('');b.scrollTop=b.scrollHeight}
+function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>{const imgs=Array.isArray(m.images)&&m.images.length?`<div class="yar-image-results">${m.images.slice(0,6).map(x=>`<figure class="yar-image-card"><img src="${esc(x.thumb||x.url||'')}" alt="${esc(x.title||'تصویر کشاورزی')}" loading="lazy" referrerpolicy="no-referrer"><figcaption>${esc(x.title||'تصویر کشاورزی')}</figcaption></figure>`).join('')}</div>`:'';return `<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}${imgs}</div></div>`}).join('');b.scrollTop=b.scrollHeight}
 function yarAsk(q){const i=document.getElementById('yarInput');if(i){i.value=q;yarSend()}}
 function yarClear(){yarMessages=[];saveYarChat();yar()}
 
