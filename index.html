@@ -975,13 +975,20 @@ function registerMeasured(){
   document.getElementById('saveMeasuredLand').onclick=()=>{let nl=buildLand();if(!nl.name){toast('نام زمین را وارد کن');document.getElementById('newLandName').focus();return}state.lands.push(nl);save();selected=nl.id;closeReg();toast('زمین با همه مشخصات ذخیره شد');measureReturn='land';setTimeout(()=>{closeMeasure();openLand(nl.id)},120)};
 }
 /* ===== PROFESSIONAL KESHAVAR-YAR V2 ===== */
-const YAR_CHAT_KEY='yk-yar-chat-v2';
+const YAR_CHAT_KEY='yk-yar-chat-v3';
 let yarMessages=(()=>{try{return JSON.parse(localStorage.getItem(YAR_CHAT_KEY)||'[]')}catch(e){return[]}})();
 let yarPhotoData=null, yarPhotoName='';
+try{
+  const _yc=JSON.parse(localStorage.getItem(YAR_CHAT_KEY)||'[]');
+  const _clean=[];
+  for(const _m of Array.isArray(_yc)?_yc:[]){const _last=_clean[_clean.length-1];if(_last&&_last.role===_m.role&&String(_last.text||'')===String(_m.text||'')&&!_m.image&&!_last.image)continue;_clean.push(_m)}
+  localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(_clean.slice(-60)));
+  yarMessages=_clean.slice(-60);
+}catch(e){}
 let yarLandMode=false;
 const YAR_AI_ENDPOINT='https://yarkeshavarz-ai-v3.z46689944.workers.dev';
 
-function saveYarChat(){try{localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(yarMessages.slice(-60)))}catch(e){}}
+function saveYarChat(){try{const clean=[];for(const m of yarMessages){const last=clean[clean.length-1];if(last&&last.role===m.role&&String(last.text||'')===String(m.text||'')&&!m.image&&!last.image)continue;clean.push(m)}yarMessages=clean.slice(-60);localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(yarMessages))}catch(e){}}
 function yarNum(x){return Number(x||0).toLocaleString('fa-IR',{maximumFractionDigits:2})}
 function yarMoney(x){return Math.round(Number(x||0)).toLocaleString('fa-IR')+' تومان'}
 function yarLand(id){return state.lands.find(x=>x.id===(id||selected))||null}
@@ -1174,7 +1181,7 @@ async function yarSend(){
     if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
     const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:d.reply||'پاسخی دریافت نشد.'};
   }catch(e){
-    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'اتصال امن هوش مصنوعی برقرار نشد؛ پاسخ محلی: '+yarReply(q,id)};
+    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:yarReply(q,id)};
   }
   saveYarChat();yarRender();if(i){i.value='';i.focus()}
 }
@@ -1395,6 +1402,7 @@ body:has(.yar-final){
     bottom:0!important;
   }
 }
-</style><!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
+</style><!-- V3 CHAT FIX: clean history, compact close button, silent local fallback. -->
+<!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
 </body>
 </html>
