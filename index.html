@@ -637,6 +637,27 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
   .yar-final .yar-final-tools button span{font-size:20px!important}
   .yar-final .yar-final-tools button b{font-size:8.5px!important}
 }
+<style id="yar-send-button-fix">
+/* دکمه ارسال چت: همیشه کنار کادر تایپ و کاملاً قابل مشاهده */
+.yar-final .yarpro-form{display:flex!important;align-items:center!important;gap:7px!important;padding:7px!important;}
+.yar-final .yarpro-form .yarpro-camera,
+.yar-final .yarpro-form .yarpro-send{
+  flex:0 0 48px!important;width:48px!important;min-width:48px!important;max-width:48px!important;
+  height:48px!important;min-height:48px!important;max-height:48px!important;
+  display:grid!important;place-items:center!important;
+  visibility:visible!important;opacity:1!important;
+  border:1px solid rgba(22,72,48,.18)!important;border-radius:14px!important;
+  box-sizing:border-box!important;cursor:pointer!important;
+}
+.yar-final .yarpro-form .yarpro-send{
+  background:linear-gradient(145deg,#176b4d,#247b84)!important;color:#fff!important;
+  font-size:23px!important;font-weight:900!important;line-height:1!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.18)!important;
+}
+.yar-final .yarpro-form input{
+  flex:1 1 auto!important;width:auto!important;min-width:0!important;height:48px!important;
+  box-sizing:border-box!important;font-size:14px!important;
+}
 </style>
 
 </head>
@@ -1288,7 +1309,7 @@ function yar(){
     <input id="yarPhotoInputGallery" type="file" accept="image/*" onchange="yarPhotoSelected(this)" hidden>
     <input id="yarPhotoInputCamera" type="file" accept="image/*" capture="environment" onchange="yarPhotoSelected(this)" hidden>
     <div id="yarPhotoPreview" class="yar-photo-preview" style="display:none"><img id="yarPhotoPreviewImg" alt="پیش‌نمایش عکس"><button type="button" onclick="yarRemovePhoto()">×</button></div>
-    <form class="yarpro-form yar-final-form" onsubmit="event.preventDefault();yarSend()"><button type="button" class="yarpro-camera" onclick="yarPickCamera()">📷</button><input id="yarInput" autocomplete="off" placeholder="${l?'درباره همین زمین سؤال کن…':'هر سؤال کشاورزی که داری…'}"><button type="submit" class="yarpro-send">➤</button></form>
+    <form class="yarpro-form yar-final-form" onsubmit="event.preventDefault();yarSend()"><button type="button" class="yarpro-camera" onclick="yarPickCamera()">📷</button><input id="yarInput" autocomplete="off" placeholder="${l?'درباره همین زمین سؤال کن…':'هر سؤال کشاورزی که داری…'}"><button type="submit" class="yarpro-send" aria-label="ارسال پیام" title="ارسال پیام">➤</button></form>
     <div class="yar-final-tools" aria-label="ابزارهای کشاورزیار">
       <button type="button" onclick="${l?`yarAnalyzeLand('${l.id}')`:`yarAsk('اطلاعات و وضعیت مزرعه را بررسی کن')`}"><span>🌾</span><b>تحلیل مزرعه</b></button>
       <button type="button" onclick="yarAsk('برای کشت چه پیشنهادی داری؟')"><span>🌱</span><b>مشاور کشت</b></button>
@@ -1299,9 +1320,11 @@ function yar(){
     <div class="yarpro-hint">${l?'این گفت‌وگو به پرونده همین زمین متصل است.':'حالت عمومی فعال است؛ برای سؤال درباره یک قطعه، از داخل پرونده همان زمین وارد کشاورزیار شو.'}</div>
   </section>`;
   yarRender();
+  yarBindInput();
 }
 function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>{const imgs=Array.isArray(m.images)&&m.images.length?`<div class="yar-image-results">${m.images.slice(0,6).map(x=>`<figure class="yar-image-card"><img src="${esc(x.thumb||x.url||'')}" alt="${esc(x.title||'تصویر کشاورزی')}" loading="lazy" referrerpolicy="no-referrer"><figcaption>${esc(x.title||'تصویر کشاورزی')}</figcaption></figure>`).join('')}</div>`:'';return `<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}${imgs}</div></div>`}).join('');b.scrollTop=b.scrollHeight}
 function yarAsk(q){const i=document.getElementById('yarInput');if(i){i.value=q;yarSend()}}
+function yarBindInput(){const i=document.getElementById('yarInput');if(!i||i.dataset.bound==='1')return;i.dataset.bound='1';i.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const f=i.closest('form');if(f)f.requestSubmit();else yarSend();}})}
 function yarClear(){yarMessages=[];saveYarChat();yar()}
 
 function game(){
