@@ -1274,6 +1274,108 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
 </div></div>
 <style id="ownership-rent-modern">.ownership-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ownership-option{display:flex;align-items:center;gap:10px;text-align:right;border:1.5px solid #d8e6df;background:#fbfdfc;color:#173f32;border-radius:18px;padding:12px;min-height:72px;cursor:pointer}.ownership-option.active{border-color:#2f9b6c;background:linear-gradient(135deg,#eefaf4,#f7fcf9);box-shadow:0 8px 22px rgba(25,110,74,.10)}.ownership-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#e7f4ed;font-size:22px;flex:0 0 42px}.ownership-option b,.ownership-option small{display:block}.ownership-option small{color:#70847a;font-size:11px;margin-top:3px}.rent-details{margin-top:10px;padding:12px;border:1px solid #d9e8df;border-radius:18px;background:rgba(239,248,243,.8)}.rent-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rent-grid .field{margin:0}.rent-grid input{width:100%;box-sizing:border-box}@media(max-width:430px){.rent-grid{grid-template-columns:1fr}.ownership-choice{gap:7px}.ownership-option{padding:9px;min-height:66px}.ownership-icon{width:38px;height:38px;flex-basis:38px}} 
 .expense-list{margin-top:12px;display:grid;gap:8px}.expense-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #e7ece9}.expense-row-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.mini-btn{padding:6px 9px!important;font-size:12px!important}.expense-row-actions>b{white-space:nowrap}
+  /* ===== KESHAVAR-YAR CLEAN FULLSCREEN ===== */
+
+/* خود صفحه کشاورزیار */
+.yar-final.yarpro{
+  margin:0!important;
+  padding:0 0 92px!important;
+  max-width:none!important;
+  width:100%!important;
+  min-height:100vh!important;
+}
+
+/* هدر کشاورزیار: بدون کادر و گوشه گرد */
+.yar-final .yarpro-head{
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  width:100%!important;
+  padding:14px 16px!important;
+}
+
+/* حذف فاصله سفید بالای چت */
+.yar-final .yar-final-hero,
+.yar-final .yarpro-context,
+.yar-final .yarpro-actions{
+  margin-top:0!important;
+}
+
+/* کادر چت یکپارچه با صفحه */
+.yar-final .yarpro-chat{
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  width:100%!important;
+  max-height:none!important;
+  min-height:calc(100vh - 230px)!important;
+  padding:12px 10px 120px!important;
+}
+
+/* فرم تایپ پایین صفحه */
+.yar-final .yarpro-form{
+  position:fixed!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  z-index:9998!important;
+  margin:0!important;
+  border-radius:0!important;
+  border:0!important;
+  box-shadow:0 -5px 20px rgba(0,0,0,.10)!important;
+  padding:9px 10px!important;
+}
+
+/* ضربدر: فقط خود علامت، بدون دایره و کادر */
+.yar-final .yarpro-close,
+.yar-final .yar-close,
+.yar-final button[aria-label*="بستن"],
+.yar-final button[aria-label*="خروج"]{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  width:42px!important;
+  height:42px!important;
+  padding:0!important;
+}
+
+/* اگر ضربدر داخل هدر با کلاس دیگری باشد */
+.yar-final .close,
+.yar-final .close-btn{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+}
+
+/* جلوگیری از ایجاد صفحه سفید هنگام فوکوس ورودی */
+html,body{
+  margin:0!important;
+  padding:0!important;
+  overflow-x:hidden!important;
+}
+
+body:has(.yar-final){
+  background:#eef4f0!important;
+}
+
+/* موبایل */
+@media(max-width:620px){
+  .yar-final.yarpro{
+    padding-bottom:78px!important;
+  }
+
+  .yar-final .yarpro-chat{
+    min-height:calc(100vh - 170px)!important;
+  }
+
+  .yar-final .yarpro-form{
+    bottom:0!important;
+  }
+}
 </style><!-- V3 FINAL CLEANUP: obsolete estimate calculator removed; route navigation resets scroll to top. -->
 </body>
 </html>
