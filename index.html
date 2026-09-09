@@ -600,7 +600,8 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
 <main id="app"></main>
 <nav class="bottom"><button data-r="home">⌂<span>خانه</span></button><button data-r="news">▤<span>اخبار</span></button><button data-r="game">🎮<span>سرگرمی</span></button><button data-r="yar" onclick="yarLandMode=false;selected=null;go('yar')">✦<span>کشاورزیار</span></button><button data-r="ads">◈<span>تبلیغات</span></button><button data-r="account">●<span>اکانت</span></button></nav>
 <input id="restore" type="file" accept="application/json" hidden>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
 const FUN_KEY='yk-fun-v2';
 let funState=(()=>{try{return Object.assign({score:0,high:0,streak:0,played:0},JSON.parse(localStorage.getItem(FUN_KEY)||'{}'))}catch(e){return {score:0,high:0,streak:0,played:0}}})();
 let funType='',funIndex=0,funAnswered=false;
@@ -1286,8 +1287,21 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
 }
 
 /* هدر کشاورزیار: بدون کادر و گوشه گرد */
+.yar-final .yarpro-head > .yarpro-switch:first-child{
+  width:30px!important;
+  min-width:30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  padding:0!important;
+  border-radius:8px!important;
+  font-size:17px!important;
+  line-height:30px!important;
+  box-shadow:none!important;
+}
+
 .yar-final .yarpro-head{
   margin:0!important;
+  min-height:52px!important;
   border:0!important;
   border-radius:0!important;
   box-shadow:none!important;
@@ -1328,7 +1342,7 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
   padding:9px 10px!important;
 }
 
-/* ضربدر: فقط خود علامت، بدون دایره و کادر */
+/* ضربدر کوچک و کم‌جا؛ فضای اصلی برای گفت‌وگو محفوظ می‌ماند */
 .yar-final .yarpro-close,
 .yar-final .yar-close,
 .yar-final button[aria-label*="بستن"],
@@ -1336,10 +1350,15 @@ window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLa
   background:transparent!important;
   border:0!important;
   box-shadow:none!important;
-  border-radius:0!important;
-  width:42px!important;
-  height:42px!important;
+  border-radius:8px!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
   padding:0!important;
+  margin:0!important;
+  font-size:18px!important;
+  line-height:30px!important;
 }
 
 /* اگر ضربدر داخل هدر با کلاس دیگری باشد */
