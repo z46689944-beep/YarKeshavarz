@@ -1,0 +1,5 @@
+{
+  "name": "yarkeshavarz-ai-v3",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-13"
+}
