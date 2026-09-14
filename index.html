@@ -842,7 +842,7 @@ function jalaliDateTime(v){
 function jalaliDate(v){let d=v instanceof Date?v:new Date(v||Date.now());if(isNaN(d))return '';let j=toJalali(d.getFullYear(),d.getMonth()+1,d.getDate());return faNum(j[0]+'/'+String(j[1]).padStart(2,'0')+'/'+String(j[2]).padStart(2,'0'))}
 
 'use strict';
-const KEY='yar-keshavarz-v3-single',app=document.getElementById('app'),title=document.getElementById('pageTitle');
+const KEY='yar-keshavarz-v4-single',app=document.getElementById('app'),title=document.getElementById('pageTitle');
 const base={lands:[],inventory:[],transactions:[],equipment:[],profile:{name:'',phone:'',email:'',photo:''}};
 const HERO_IMG='https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80';
 let state=load(),route='home',selected=null,map=null,points=[],markers=[],polygon=null,watch=null,satellite=false,measureReturn=null;
@@ -1331,8 +1331,7 @@ try{
   yarMessages=_clean.slice(-60);
 }catch(e){}
 let yarLandMode=false;
-const YAR_AI_ENDPOINT='https://yarkeshavarz-ai-v3.z46689944.workers.dev';
-
+const YAR_AI_ENDPOINT='https://yarkeshavarz-ai-v4.z46689944.workers.dev';
 function saveYarChat(){try{const clean=[];for(const m of yarMessages){const last=clean[clean.length-1];if(last&&last.role===m.role&&String(last.text||'')===String(m.text||'')&&!m.image&&!last.image)continue;clean.push(m)}yarMessages=clean.slice(-60);localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(yarMessages))}catch(e){}}
 function yarNum(x){return Number(x||0).toLocaleString('fa-IR',{maximumFractionDigits:2})}
 function yarMoney(x){return Math.round(Number(x||0)).toLocaleString('fa-IR')+' تومان'}
