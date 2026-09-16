@@ -1576,7 +1576,7 @@ async function yarSend(){
   }
 
   if(!endpoint || endpoint.includes('REPLACE-WITH-YOUR-WORKER')){
-    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q)
+    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q)};
     saveYarChat();yarRender();if(i){i.value='';i.focus()}return;
   }
 
