@@ -1569,8 +1569,23 @@ async function yarSend(){
   }
 
   try{
-    const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,mode:id?'land':'general',context:yarAiContext(id),history})});
-    const d=await r.json().catch(()=>({}));
+    const controller=new AbortController();
+const timer=setTimeout(()=>controller.abort(),8000);
+
+const r=await fetch(endpoint,{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  signal:controller.signal,
+  body:JSON.stringify({
+    message:q,
+    mode:id?'land':'general',
+    context:yarAiContext(id),
+    history
+  })
+});
+
+clearTimeout(timer);
+const d=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
     const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'پاسخی دریافت نشد.'};
   }catch(e){
