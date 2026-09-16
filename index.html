@@ -1526,7 +1526,7 @@ async function yarSend(){
     yarRender();saveYarChat();
     try{
       const imgs=await yarSearchImages(q);
-      const k=yarMessages.findIndex(m=>m.pending);
+      const k=yarMessages.findLastIndex(m=>m.pending);
       if(k>=0)yarMessages[k]=imgs.length?{role:'bot',text:'🖼️ تصاویر مرتبط با درخواستت (برای مشاهده مستقیم):',images:imgs}:{role:'bot',text:'برای این موضوع تصویر مرتبطی پیدا نکردم 🌱 اسم دقیق محصول یا موضوع را بنویس تا فقط تصاویر مرتبط را جست‌وجو کنم.'};
     }catch(e){
       const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'جستجوی تصویر فعلاً در دسترس نیست. دوباره تلاش کن.'};
