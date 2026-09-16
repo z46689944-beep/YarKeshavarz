@@ -1485,6 +1485,14 @@ async function yarSearchImages(q){
   }
   return [];
 }
+  async function yarOfflineAnswer(question){
+  try{
+    const mod = await import('./offline/offline-ai.js');
+    return mod.findOfflineAnswer(question);
+  }catch(e){
+    return '🌱 پاسخ آفلاین در دسترس نیست. فایل‌های پوشه offline را بررسی کنید.';
+  }
+  }
 async function yarSend(){
   const i=document.getElementById('yarInput'),q=(i?.value||'').trim(), id=selected||null;
   if(!q&&!yarPhotoData)return;
@@ -1567,7 +1575,12 @@ async function yarSend(){
     const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'پاسخی دریافت نشد.'};
   }catch(e){
     const k=yarMessages.findIndex(m=>m.pending);
-    if(k>=0)yarMessages[k]={role:'bot',text:'⚠️ فعلاً ارتباط با هوش مصنوعی برقرار نشد. اگر دوباره تلاش کردی و ادامه داشت، اتصال اینترنت یا Worker را بررسی کن. خطا: '+String(e.message||e).slice(0,180)};
+if(k>=0){
+  yarMessages[k]={
+    role:'bot',
+    text:await yarOfflineAnswer(q)
+  };
+}
   }
   saveYarChat();yarRender();if(i){i.value='';i.focus()}
 }
