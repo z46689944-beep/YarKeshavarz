@@ -1514,14 +1514,15 @@ async function yarSend(){
 
   if(!image && yarImageIntent(q)){
     yarMessages.push({role:'user',text:q});
-    yarMessages.push({role:'bot',text:'در حال پیدا کردن تصاویر مرتبط…',pending:true});
+    const pendingId=uid();
+    yarMessages.push({role:'bot',text:'در حال پیدا کردن تصاویر مرتبط…',pending:true,pendingId});
     yarRender();saveYarChat();
     try{
       const imgs=await yarSearchImages(q);
-      const k=yarMessages.findIndex(m=>m.pending);
+      const k=yarMessages.findIndex(m=>m.pendingId===pendingId);
       if(k>=0)yarMessages[k]=imgs.length?{role:'bot',text:'🖼️ تصاویر مرتبط با درخواستت (برای مشاهده مستقیم):',images:imgs}:{role:'bot',text:'برای این موضوع تصویر مرتبطی پیدا نکردم 🌱 اسم دقیق محصول یا موضوع را بنویس تا فقط تصاویر مرتبط را جست‌وجو کنم.'};
     }catch(e){
-      const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'جستجوی تصویر فعلاً در دسترس نیست. دوباره تلاش کن.'};
+      const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:'جستجوی تصویر فعلاً در دسترس نیست. دوباره تلاش کن.'};
     }
     saveYarChat();yarRender();if(i){i.value='';i.focus()}return;
   }
@@ -1529,9 +1530,10 @@ async function yarSend(){
   if(image){
     const analysisId=yarRecordImageAnalysis(id,{image,question,status:'در انتظار تحلیل',result:'در انتظار تحلیل',action:'در انتظار پیشنهاد'});
     yarAddImageMessage(image,question);if(i)i.value='';yarRemovePhoto();
-    yarMessages.push({role:'bot',text:'عکس دریافت شد؛ در حال تحلیل توسط کشاورزیار…',pending:true});yarRender();saveYarChat();
+    const pendingId=uid();
+    yarMessages.push({role:'bot',text:'عکس دریافت شد؛ در حال تحلیل توسط کشاورزیار…',pending:true,pendingId});yarRender();saveYarChat();
     if(!endpoint || endpoint.includes('REPLACE-WITH-YOUR-WORKER')){
-      setTimeout(()=>{const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'رابط هوش مصنوعی هنوز فعال نشده است. آدرس Worker را در YAR_AI_ENDPOINT قرار بده.'};yarRender();saveYarChat()},450);
+      setTimeout(()=>{const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:'رابط هوش مصنوعی هنوز فعال نشده است. آدرس Worker را در YAR_AI_ENDPOINT قرار بده.'};yarRender();saveYarChat()},450);
       if(id)yarUpdateImageAnalysis(id,analysisId,{status:'در انتظار اتصال AI'});
       return;
     }
@@ -1539,11 +1541,11 @@ async function yarSend(){
       const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:question,image,mode:id?'land':'general',context:yarAiContext(id),history})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
-      const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'تحلیل تصویر دریافت نشد.'};
+      const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'تحلیل تصویر دریافت نشد.'};
       if(id)yarUpdateImageAnalysis(id,analysisId,{status:'تحلیل شد',result:d.answer||d.reply||'تحلیل دریافت نشد.',action:'پیشنهادها در متن تحلیل ارائه شده‌اند.'});
       yarRender();saveYarChat();
     }catch(e){
-      const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:'اتصال امن هوش مصنوعی برقرار نشد. تنظیمات Worker و API را بررسی کن.'};
+      const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:'اتصال امن هوش مصنوعی برقرار نشد. تنظیمات Worker و API را بررسی کن.'};
       if(id)yarUpdateImageAnalysis(id,analysisId,{status:'خطا',result:'تحلیل دریافت نشد.',action:'اتصال هوش مصنوعی بررسی شود.'});
       yarRender();saveYarChat();
     }
@@ -1551,12 +1553,13 @@ async function yarSend(){
   }
 
   yarMessages.push({role:'user',text:q});
-  yarMessages.push({role:'bot',text:'در حال بررسی سؤال توسط کشاورزیار…',pending:true});
+  const pendingId=uid();
+  yarMessages.push({role:'bot',text:'در حال بررسی سؤال توسط کشاورزیار…',pending:true,pendingId});
   if(i){i.value='';i.focus()}
   yarRender();saveYarChat();
 
   if(!endpoint || endpoint.includes('REPLACE-WITH-YOUR-WORKER')){
-    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:yarReply(q,id)};
+    const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:yarReply(q,id)};
     saveYarChat();yarRender();if(i){i.value='';i.focus()}return;
   }
 
@@ -1564,9 +1567,9 @@ async function yarSend(){
     const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,mode:id?'land':'general',context:yarAiContext(id),history})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
-    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'پاسخی دریافت نشد.'};
+    const k=yarMessages.findIndex(m=>m.pendingId===pendingId);if(k>=0)yarMessages[k]={role:'bot',text:d.answer||d.reply||'پاسخی دریافت نشد.'};
   }catch(e){
-    const k=yarMessages.findIndex(m=>m.pending);
+    const k=yarMessages.findIndex(m=>m.pendingId===pendingId);
     if(k>=0)yarMessages[k]={role:'bot',text:'⚠️ فعلاً ارتباط با هوش مصنوعی برقرار نشد. اگر دوباره تلاش کردی و ادامه داشت، اتصال اینترنت یا Worker را بررسی کن. خطا: '+String(e.message||e).slice(0,180)};
   }
   saveYarChat();yarRender();if(i){i.value='';i.focus()}
