@@ -1,54 +1,52 @@
 import agricultureDB from "./agriculture-db.js";
 
-function findOfflineAnswer(question) {
-  const text = question.toLowerCase();
+function normalize(s=""){
+  return String(s).toLowerCase()
+    .replace(/[يى]/g,"ی").replace(/ك/g,"ک")
+    .replace(/[ۀة]/g,"ه").replace(/[‌ـ]/g,"")
+    .replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+    .replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace(/[^\p{L}\p{N}\s]/gu," ")
+    .replace(/\s+/g," ").trim();
+}
 
-  let bestMatch = null;
-  let score = 0;
+function tokens(s){ return normalize(s).split(" ").filter(x=>x.length>1); }
 
-  for (const item of agricultureDB) {
-    let currentScore = 0;
+function findOfflineAnswer(question){
+  const q=normalize(question);
+  if(!q) return "🌱 سؤال کشاورزی را بنویسید.";
 
-    for (const key of item.keywords || []) {
-      if (text.includes(key.toLowerCase())) {
-        currentScore++;
+  const qt=tokens(q);
+  let best=null, bestScore=0;
+
+  for(const item of agricultureDB){
+    let score=0;
+    const keys=(item.keywords||[]).map(normalize);
+    for(const key of keys){
+      if(!key) continue;
+      if(q.includes(key)) score += key.includes(" ") ? 5 : 2;
+      else {
+        const kt=tokens(key);
+        score += kt.filter(t=>qt.includes(t)).length;
       }
     }
-
-    if (currentScore > score) {
-      score = currentScore;
-      bestMatch = item;
-    }
+    if(normalize(item.topic)===q) score+=12;
+    if(score>bestScore){bestScore=score;best=item;}
   }
 
-  if (!bestMatch) {
-    return `
-🌱 یار کشاورز آفلاین
-
-اطلاعات کافی برای این سؤال پیدا نکردم.
-لطفاً نام محصول، مشکل گیاه یا نشانه‌ها را دقیق‌تر بنویسید.
-`;
+  if(!best || bestScore<2){
+    return "🌱 یار کشاورز آفلاین\n\nبرای این سؤال در بانک آفلاین پاسخ کافی پیدا نکردم.\nنام محصول + نشانه یا موضوع را دقیق‌تر بنویسید؛ مثلاً «گوجه، برگ زرد» یا «گندم، سن گندم».";
   }
 
-  let answer = `🌱 ${bestMatch.topic}\n\n`;
-
-  if (bestMatch.symptoms) {
-    answer += `🔎 نشانه‌ها:\n${bestMatch.symptoms}\n\n`;
-  }
-
-  if (bestMatch.cause) {
-    answer += `⚠️ علت احتمالی:\n${bestMatch.cause}\n\n`;
-  }
-
-  if (bestMatch.solution) {
-    answer += `✅ راهکار:\n${bestMatch.solution}\n`;
-  }
-
-  if (bestMatch.general) {
-    answer += `\n${bestMatch.general}\n`;
-  }
-
-  return answer;
+  let out=`🌱 ${best.topic}\n\n`;
+  if(best.symptoms) out+=`🔎 نشانه‌ها:\n${best.symptoms}\n\n`;
+  if(best.cause) out+=`⚠️ علت/توضیح:\n${best.cause}\n\n`;
+  if(best.general) out+=`${best.general}\n\n`;
+  if(best.solution) out+=`✅ راهکار کلی:\n${best.solution}\n`;
+  out+="\nℹ️ برای تصمیم درباره سم، کود یا درمان، برچسب ثبت‌شده، شرایط مزرعه و نظر کارشناس محلی را هم بررسی کنید.";
+  return out.trim();
 }
 
 export default findOfflineAnswer;
+export { findOfflineAnswer };
+window.YarKeshavarzOffline = { findOfflineAnswer };
