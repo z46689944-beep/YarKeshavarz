@@ -1,10 +1,9 @@
-یار کشاورز — نسخه V3 CLEAN
+یار کشاورز — Final Clean Offline
 
-اجرای وب:
-1) همه فایل‌های این پوشه را در ریشه GitHub Pages قرار بده.
-2) index.html نقطه شروع برنامه است.
-3) نسخه فعال برنامه فقط از app.js، keshavar-yar.js و land-edit.js استفاده می‌کند.
-4) فایل‌های نسخه‌های قدیمی داخل پوشه legacy نگهداری شده‌اند و در برنامه لود نمی‌شوند.
+نقطه شروع برنامه: index.html
+دستیار آفلاین: offline/offline-ai.js
+بانک دانش: offline/agriculture-db.js
+کش آفلاین: sw.js
+اتصال آنلاین آینده: worker/index.js
 
-نسخه داده: 3.0
-کلید LocalStorage: yk-v3-clean
+برای GitHub Pages، محتوای همین پوشه را در ریشه شاخه main قرار دهید.

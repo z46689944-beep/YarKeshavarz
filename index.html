@@ -895,7 +895,7 @@ function landThumb(l){
 }
 
 function landCard(l){let t=totals(l.id);return `<article class="card"><div class="row land-title-row"><div class="land-title-wrap">${landThumb(l)}<div class="land-title-text"><h3>${esc(l.name)}</h3><span class="badge">${l.ownership==='rent'?'اجاره‌ای':'مالک'}</span></div></div><b>${n(l.area).toLocaleString('fa-IR')} هکتار</b></div><p class="muted small">${esc(l.region||'موقعیت ثبت نشده')} · ${esc(l.crop||'کشت ثبت نشده')}</p><div class="row small"><span>هزینه: ${money(t.cost)}</span><span>سود: ${money(t.profit)}</span></div><div class="actions"><button class="primary" onclick="openLand('${l.id}')">پرونده زمین</button><button class="secondary" onclick="weatherFor('${l.id}')">هوا</button></div></article>`}
-function home(){head('خانه');let t=totals(),area=state.lands.reduce((a,l)=>a+n(l.area),0);app.innerHTML=`<section class="hero" style="background-image:linear-gradient(180deg,rgba(0,45,32,.18),rgba(0,45,32,.72)),url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80');background-size:cover;background-position:center;background-repeat:no-repeat;"><h1>یار کشاورز</h1><p>مدیریت حرفه‌ای زمین، کشت، هزینه، انبار و آب‌وهوا</p></section><div class="grid"><div class="card"><span class="muted">زمین‌ها</span><div class="metric">${state.lands.length.toLocaleString('fa-IR')}</div></div><div class="card"><span class="muted">مساحت</span><div class="metric">${area.toLocaleString('fa-IR')}</div><span class="small muted">هکتار</span></div><div class="card"><span class="muted">هزینه</span><div class="metric">${money(t.cost)}</div></div><div class="card"><span class="muted">درآمد</span><div class="metric">${money(t.income)}</div></div></div><div id="homeWeather" class="home-weather"><div class="home-weather-head"><b>🌤️ آب‌وهوای امروز</b><span class="small muted">در حال دریافت…</span></div></div><div class="section"><h3>دسترسی سریع</h3></div><div class="quick"><button onclick="go('add')"><span class="qi">🌾</span>ثبت زمین</button><button onclick="go('measure')"><span class="qi">📐</span>اندازه‌گیری</button><button onclick="go('inventory')"><span class="qi">📦</span>انبار</button><button onclick="go('equipment')"><span class="qi">🚜</span>ادوات</button></div><div class="section"><h3>زمین‌های اخیر</h3><button class="secondary" onclick="go('lands')">همه</button></div><div class="list">${state.lands.slice(0,3).map(landCard).join('')||'<div class="card empty">هنوز زمینی ثبت نشده است.</div>'}</div>`;loadHomeWeather()}
+function home(){head('خانه');let t=totals(),area=state.lands.reduce((a,l)=>a+n(l.area),0);app.innerHTML=`<section class="hero" style="background-image:linear-gradient(180deg,rgba(0,45,32,.18),rgba(0,45,32,.72)),url('wheat-hero.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;"><h1>یار کشاورز</h1><p>مدیریت حرفه‌ای زمین، کشت، هزینه، انبار و آب‌وهوا</p></section><div class="grid"><div class="card"><span class="muted">زمین‌ها</span><div class="metric">${state.lands.length.toLocaleString('fa-IR')}</div></div><div class="card"><span class="muted">مساحت</span><div class="metric">${area.toLocaleString('fa-IR')}</div><span class="small muted">هکتار</span></div><div class="card"><span class="muted">هزینه</span><div class="metric">${money(t.cost)}</div></div><div class="card"><span class="muted">درآمد</span><div class="metric">${money(t.income)}</div></div></div><div id="homeWeather" class="home-weather"><div class="home-weather-head"><b>🌤️ آب‌وهوای امروز</b><span class="small muted">در حال دریافت…</span></div></div><div class="section"><h3>دسترسی سریع</h3></div><div class="quick"><button onclick="go('add')"><span class="qi">🌾</span>ثبت زمین</button><button onclick="go('measure')"><span class="qi">📐</span>اندازه‌گیری</button><button onclick="go('inventory')"><span class="qi">📦</span>انبار</button><button onclick="go('equipment')"><span class="qi">🚜</span>ادوات</button></div><div class="section"><h3>زمین‌های اخیر</h3><button class="secondary" onclick="go('lands')">همه</button></div><div class="list">${state.lands.slice(0,3).map(landCard).join('')||'<div class="card empty">هنوز زمینی ثبت نشده است.</div>'}</div>`;loadHomeWeather()}
 function lands(){head('زمین‌ها');app.innerHTML=`<div class="section"><h2>زمین‌های من</h2><button class="primary" onclick="go('add')">＋ زمین جدید</button></div><div class="list">${state.lands.map(landCard).join('')||'<div class="card empty">هنوز زمینی ثبت نشده است.</div>'}</div>`}
 function add(){
 head('ثبت زمین');
@@ -1510,10 +1510,10 @@ async function yarSearchImages(q){
   }
   return [];
 }
-  async function yarOfflineAnswer(question){
+  async function yarOfflineAnswer(question, id=null){
   try{
     const mod = await import('./offline/offline-ai.js');
-    return mod.findOfflineAnswer(question);
+    return mod.findOfflineAnswer(question, yarAiContext(id));
   }catch(e){
     return '🌱 پاسخ آفلاین در دسترس نیست. فایل‌های پوشه offline را بررسی کنید.';
   }
@@ -1592,7 +1592,7 @@ async function yarSend(){
   if(k>=0){
     yarMessages[k]={
       role:'bot',
-      text:await yarOfflineAnswer(q)
+      text:await yarOfflineAnswer(q,id)
     };
   }
   saveYarChat();
@@ -1601,7 +1601,7 @@ async function yarSend(){
   }
 
   if(!endpoint || endpoint.includes('REPLACE-WITH-YOUR-WORKER')){
-    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q)};
+    const k=yarMessages.findIndex(m=>m.pending);if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q,id)};
     saveYarChat();yarRender();if(i){i.value='';i.focus()}return;
   }
 
@@ -1630,7 +1630,7 @@ const d=await r.json().catch(()=>({}));
 if(k>=0){
   yarMessages[k]={
     role:'bot',
-    text:await yarOfflineAnswer(q)
+    text:await yarOfflineAnswer(q,id)
   };
 }
   }
@@ -1720,6 +1720,11 @@ document.getElementById('backup').onclick=backup;document.getElementById('restor
 document.addEventListener('click',e=>{let b=e.target.closest('[data-r]');if(b)go(b.dataset.r)});
 document.getElementById('restore').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{state={...base,...JSON.parse(r.result)};save();toast('پشتیبان بازیابی شد');go('home')}catch{toast('فایل پشتیبان معتبر نیست')}};r.readAsText(f)};
 window.go=go;window.openLand=openLand;window.weatherFor=weatherFor;window.editLand=editLand;go('home');
+
+// Offline-first: cache the application shell when the browser supports service workers.
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
 </script>
 
 <div id="funShell" class="fun-shell" aria-hidden="true">
