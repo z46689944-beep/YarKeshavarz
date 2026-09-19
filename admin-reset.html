@@ -30,8 +30,8 @@ button{width:100%;padding:15px;border:0;border-radius:14px;background:#063f31;co
 </div>
 <script>
 (function(){
-  var PIN='yk-admin-pin-v1';
-  localStorage.removeItem(PIN);
+  var PIN='yk-admin-pin-v1'; var PIN2='yk-admin-pin-v2';
+  localStorage.removeItem(PIN); localStorage.removeItem(PIN2);
   sessionStorage.removeItem('yk-admin-auth');
   function hash(v){
     return crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)).then(function(b){
@@ -46,10 +46,10 @@ button{width:100%;padding:15px;border:0;border-radius:14px;background:#063f31;co
     if(a.length<4){msg.textContent='رمز باید حداقل ۴ کاراکتر باشد.';return;}
     if(a!==b){msg.textContent='دو رمز یکسان نیستند.';return;}
     hash(a).then(function(v){
-      localStorage.setItem(PIN,v);
+      localStorage.setItem(PIN,v); localStorage.setItem(PIN2,v);
       sessionStorage.removeItem('yk-admin-auth');
       msg.textContent='رمز جدید ذخیره شد. در حال بازگشت...';
-      setTimeout(function(){location.href='./admin.html?v=15';},500);
+      setTimeout(function(){location.href='./admin.html?v='+Date.now();},500);
     });
   });
 })();
