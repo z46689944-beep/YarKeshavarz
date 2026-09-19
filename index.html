@@ -774,6 +774,168 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
 </style>
 </head>
 <body>
+  <!-- ===== YAR KESHAVARZ MODE SELECTOR ===== -->
+<div id="modeSelector" class="mode-selector">
+  <div class="mode-card">
+    <div class="mode-logo">🌱</div>
+
+    <h1>یار کشاورز</h1>
+    <p>قبل از شروع، حالت موردنظر خودت را انتخاب کن</p>
+
+    <div class="mode-options">
+
+      <button class="mode-option online"
+              onclick="selectYarMode('online')">
+        <span class="mode-icon">☁️</span>
+        <b>یار کشاورز آنلاین</b>
+        <small>هوش مصنوعی، آب‌وهوا و امکانات آنلاین</small>
+      </button>
+
+      <button class="mode-option offline"
+              onclick="selectYarMode('offline')">
+        <span class="mode-icon">📴</span>
+        <b>یار کشاورز آفلاین</b>
+        <small>دانش کشاورزی بدون اینترنت</small>
+      </button>
+
+    </div>
+
+    <div class="mode-note">
+      🔒 اطلاعات و گفت‌وگوی دو حالت از هم جدا هستند.
+    </div>
+  </div>
+</div>
+
+<style>
+.mode-selector{
+  position:fixed;
+  inset:0;
+  z-index:99999999;
+  background:
+    linear-gradient(145deg,#073b2b,#0d5b40 55%,#17664b);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  direction:rtl;
+}
+
+.mode-card{
+  width:min(520px,100%);
+  background:rgba(255,255,255,.96);
+  border-radius:30px;
+  padding:24px 18px;
+  text-align:center;
+  box-shadow:0 25px 70px rgba(0,0,0,.28);
+}
+
+.mode-logo{
+  width:72px;
+  height:72px;
+  margin:0 auto 10px;
+  border-radius:23px;
+  display:grid;
+  place-items:center;
+  font-size:42px;
+  background:#e8f4ed;
+}
+
+.mode-card h1{
+  margin:5px 0;
+  color:#0b3d2e;
+  font-size:27px;
+}
+
+.mode-card>p{
+  margin:0 0 20px;
+  color:#71817a;
+  font-size:12px;
+}
+
+.mode-options{
+  display:grid;
+  gap:12px;
+}
+
+.mode-option{
+  width:100%;
+  min-height:105px;
+  border:1.5px solid #dbe8e1;
+  border-radius:21px;
+  padding:14px;
+  display:grid;
+  grid-template-columns:58px 1fr;
+  grid-template-rows:auto auto;
+  align-items:center;
+  text-align:right;
+  background:#fff;
+  color:#17352b;
+  box-shadow:0 8px 22px rgba(13,55,40,.08);
+}
+
+.mode-option:active{
+  transform:scale(.98);
+}
+
+.mode-icon{
+  grid-row:1/3;
+  width:50px;
+  height:50px;
+  border-radius:17px;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+}
+
+.mode-option.online .mode-icon{
+  background:#e8f3ed;
+}
+
+.mode-option.offline .mode-icon{
+  background:#edf1f5;
+}
+
+.mode-option b{
+  font-size:15px;
+}
+
+.mode-option small{
+  margin-top:3px;
+  color:#71817a;
+  font-size:10px;
+  line-height:1.7;
+}
+
+.mode-note{
+  margin-top:16px;
+  padding:10px;
+  border-radius:14px;
+  background:#f2f8f5;
+  color:#557066;
+  font-size:10px;
+  line-height:1.7;
+}
+</style>
+
+<script>
+function selectYarMode(mode){
+
+  if(mode === 'offline'){
+    window.location.href =
+      'https://z46689944-beep.github.io/YarKeshavarz-Offline/';
+    return;
+  }
+
+  const selector = document.getElementById('modeSelector');
+
+  if(selector){
+    selector.style.display = 'none';
+  }
+
+  sessionStorage.setItem('yk-selected-mode','online');
+}
+</script>
+<!-- ===== END YAR KESHAVARZ MODE SELECTOR ===== -->
 <header class="top"><div class="brand"><div class="logo">🌾</div><div><b>یار کشاورز</b><small id="pageTitle">خانه</small></div></div><button id="backup">↥</button></header>
 <main id="app"></main>
 <nav class="bottom"><button data-r="home">⌂<span>خانه</span></button><button data-r="news">▤<span>اخبار</span></button><button data-r="game">🎮<span>سرگرمی</span></button><button data-r="yar" onclick="yarLandMode=false;selected=null;go('yar')">✦<span>کشاورزیار</span></button><button data-r="ads">◈<span>تبلیغات</span></button><button data-r="account">●<span>اکانت</span></button></nav>
