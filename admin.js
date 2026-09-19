@@ -1,5 +1,5 @@
 (()=>{
-const PIN='yk-admin-pin-v1', PIN2='yk-admin-pin-v2', KNOW='yk-admin-knowledge-v1', LAND='yk-v3-clean', CHAT='yk-yar-chat-v4';
+const PIN='yk-admin-pin-v1', KNOW='yk-admin-knowledge-v1', LAND='yk-v3-clean', CHAT='yk-yar-chat-v4';
 const WORKER='https://yarkeshavarz-ai-v4.z46689944.workers.dev';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}};
@@ -29,7 +29,14 @@ $('#clearKnowledge').onclick=()=>{if(confirm('همه دانش‌های مدیر�
 $('#changePin').onclick=async()=>{const old=prompt('رمز فعلی را وارد کنید');if(!old)return;if(await hash(old)!==localStorage.getItem(PIN))return alert('رمز فعلی نادرست است.');const n=prompt('رمز جدید حداقل ۴ رقم/حرف');if(n&&n.length>=4)localStorage.setItem(PIN,await hash(n));alert('رمز تغییر کرد.')};$('#logout').onclick=()=>{sessionStorage.removeItem('yk-admin-auth');location.reload()}}
 
 async function recoverPin(){
-  location.href='./admin-reset.html?v='+Date.now();
+  const ok=confirm('این کار فقط رمز مدیریت همین دستگاه را پاک می‌کند.
+زمین‌ها، اطلاعات مالی، دانش و چت‌های برنامه حذف نمی‌شوند.
+ادامه می‌دهید؟');
+  if(!ok)return;
+  localStorage.removeItem(PIN);
+  sessionStorage.removeItem('yk-admin-auth');
+  alert('رمز مدیریت پاک شد. اکنون می‌توانید رمز جدید بسازید.');
+  location.reload();
 }
 
 // Always make the top-right exit button work, including on the login screen.
@@ -40,41 +47,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(rec) rec.onclick=recoverPin;
 });
 
-async function boot(){
-  const stored=localStorage.getItem(PIN2)||localStorage.getItem(PIN);
-  if(!stored){
-    $('#loginHint').textContent='برای اولین ورود یک رمز حداقل ۴ رقمی بسازید.';
-    $('#pin2').hidden=false;
-  }else{
-    $('#pin2').hidden=true;
-  }
-
-  $('#loginForm').onsubmit=async e=>{
-    e.preventDefault();
-    const p=$('#pin').value;
-    const current=localStorage.getItem(PIN2)||localStorage.getItem(PIN);
-
-    if(!current){
-      if(p!==$('#pin2').value||p.length<4){
-        return $('#loginError').textContent='دو رمز یکسان نیستند یا کوتاه است.';
-      }
-      const v=await hash(p);
-      localStorage.setItem(PIN,v);
-      localStorage.setItem(PIN2,v);
-      sessionStorage.setItem('yk-admin-auth','1');
-      setup();
-      return;
-    }
-
-    if(await hash(p)!==current){
-      return $('#loginError').textContent='رمز نادرست است.';
-    }
-
-    sessionStorage.setItem('yk-admin-auth','1');
-    setup();
-  };
-
-  if(sessionStorage.getItem('yk-admin-auth')==='1') setup();
-}
-boot();
+async function boot(){const stored=localStorage.getItem(PIN);if(!stored){$('#loginHint').textContent='برای اولین ورود یک رمز حداقل ۴ رقمی بسازید.';$('#pin2').hidden=false}else $('#pin2').hidden=true;$('#loginForm').onsubmit=async e=>{e.preventDefault();const p=$('#pin').value;if(!stored){if(p!==$('#pin2').value||p.length<4)return $('#loginError').textContent='دو رمز یکسان نیستند یا کوتاه است.';localStorage.setItem(PIN,await hash(p));sessionStorage.setItem('yk-admin-auth','1');setup()}else{if(await hash(p)!==stored)return $('#loginError').textContent='رمز نادرست است.';sessionStorage.setItem('yk-admin-auth','1');setup()}};if(sessionStorage.getItem('yk-admin-auth')==='1')setup()}boot();
 })();
