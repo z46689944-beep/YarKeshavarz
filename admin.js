@@ -8,4 +8,12 @@ async function recoverPin(){
   location.reload();
 }
 
+// Always make the top-right exit button work, including on the login screen.
+document.addEventListener('DOMContentLoaded',()=>{
+  const out=$('#logout');
+  if(out) out.onclick=()=>{sessionStorage.removeItem('yk-admin-auth'); location.href='./';};
+  const rec=$('#recoverPin');
+  if(rec) rec.onclick=recoverPin;
+});
+
 async function boot(){const stored=localStorage.getItem(PIN);if(!stored){$('#loginHint').textContent='برای اولین ورود یک رمز حداقل ۴ رقمی بسازید.';$('#pin2').hidden=false}else $('#pin2').hidden=true;$('#loginForm').onsubmit=async e=>{e.preventDefault();const p=$('#pin').value;if(!stored){if(p!==$('#pin2').value||p.length<4)return $('#loginError').textContent='دو رمز یکسان نیستند یا کوتاه است.';localStorage.setItem(PIN,await hash(p));sessionStorage.setItem('yk-admin-auth','1');setup()}else{if(await hash(p)!==stored)return $('#loginError').textContent='رمز نادرست است.';sessionStorage.setItem('yk-admin-auth','1');setup()}};if(sessionStorage.getItem('yk-admin-auth')==='1')setup()}boot();\n})();
