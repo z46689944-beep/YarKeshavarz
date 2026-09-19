@@ -236,6 +236,30 @@ export default {
       );
     }
 
+    // Anonymous user presence: no chat text is collected. Requires a KV binding named USER_STATS.
+    if (request.method === 'POST' && new URL(request.url).pathname === '/presence') {
+      if (!env.USER_STATS) return json({configured:false},200,origin);
+      try {
+        const body = await request.json();
+        const userId = String(body?.userId || '').slice(0,80);
+        if (!userId) return json({error:'missing_user_id'},400,origin);
+        const now = Date.now();
+        await env.USER_STATS.put('u:'+userId, String(now));
+        return json({ok:true,configured:true},200,origin);
+      } catch { return json({error:'invalid_presence'},400,origin); }
+    }
+
+    if (request.method === 'GET' && new URL(request.url).pathname === '/presence/stats') {
+      if (!env.USER_STATS) return json({configured:false},200,origin);
+      try {
+        const list = await env.USER_STATS.list({prefix:'u:', limit:1000});
+        const cutoff = Date.now() - 15*60*1000;
+        let active = 0;
+        for (const k of list.keys) { const v = await env.USER_STATS.get(k.name); if (Number(v) >= cutoff) active++; }
+        return json({configured:true,totalUsers:list.keys.length,activeUsers:active,windowMinutes:15},200,origin);
+      } catch { return json({configured:false,error:'stats_unavailable'},200,origin); }
+    }
+
     // Only POST is allowed for AI requests
     if (request.method !== 'POST') {
       return json(
