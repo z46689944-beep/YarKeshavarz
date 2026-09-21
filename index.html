@@ -774,171 +774,10 @@ hr{border:0!important;border-top:1px solid var(--line)!important}
 </style>
 </head>
 <body>
-  <!-- ===== YAR KESHAVARZ MODE SELECTOR ===== -->
-<div id="modeSelector" class="mode-selector">
-  <div class="mode-card">
-    <div class="mode-logo">🌱</div>
 
-    <h1>یار کشاورز</h1>
-    <p>قبل از شروع، حالت موردنظر خودت را انتخاب کن</p>
-
-    <div class="mode-options">
-
-      <button class="mode-option online"
-              onclick="selectYarMode('online')">
-        <span class="mode-icon">☁️</span>
-        <b>یار کشاورز آنلاین</b>
-        <small>هوش مصنوعی، آب‌وهوا و امکانات آنلاین</small>
-      </button>
-
-      <button class="mode-option offline"
-              onclick="selectYarMode('offline')">
-        <span class="mode-icon">📴</span>
-        <b>یار کشاورز آفلاین</b>
-        <small>دانش کشاورزی بدون اینترنت</small>
-      </button>
-
-    </div>
-
-    <div class="mode-note">
-      🔒 اطلاعات و گفت‌وگوی دو حالت از هم جدا هستند.
-    </div>
-  </div>
-</div>
-
-<style>
-.mode-selector{
-  position:fixed;
-  inset:0;
-  z-index:99999999;
-  background:
-    linear-gradient(145deg,#073b2b,#0d5b40 55%,#17664b);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-  direction:rtl;
-}
-
-.mode-card{
-  width:min(520px,100%);
-  background:rgba(255,255,255,.96);
-  border-radius:30px;
-  padding:24px 18px;
-  text-align:center;
-  box-shadow:0 25px 70px rgba(0,0,0,.28);
-}
-
-.mode-logo{
-  width:72px;
-  height:72px;
-  margin:0 auto 10px;
-  border-radius:23px;
-  display:grid;
-  place-items:center;
-  font-size:42px;
-  background:#e8f4ed;
-}
-
-.mode-card h1{
-  margin:5px 0;
-  color:#0b3d2e;
-  font-size:27px;
-}
-
-.mode-card>p{
-  margin:0 0 20px;
-  color:#71817a;
-  font-size:12px;
-}
-
-.mode-options{
-  display:grid;
-  gap:12px;
-}
-
-.mode-option{
-  width:100%;
-  min-height:105px;
-  border:1.5px solid #dbe8e1;
-  border-radius:21px;
-  padding:14px;
-  display:grid;
-  grid-template-columns:58px 1fr;
-  grid-template-rows:auto auto;
-  align-items:center;
-  text-align:right;
-  background:#fff;
-  color:#17352b;
-  box-shadow:0 8px 22px rgba(13,55,40,.08);
-}
-
-.mode-option:active{
-  transform:scale(.98);
-}
-
-.mode-icon{
-  grid-row:1/3;
-  width:50px;
-  height:50px;
-  border-radius:17px;
-  display:grid;
-  place-items:center;
-  font-size:28px;
-}
-
-.mode-option.online .mode-icon{
-  background:#e8f3ed;
-}
-
-.mode-option.offline .mode-icon{
-  background:#edf1f5;
-}
-
-.mode-option b{
-  font-size:15px;
-}
-
-.mode-option small{
-  margin-top:3px;
-  color:#71817a;
-  font-size:10px;
-  line-height:1.7;
-}
-
-.mode-note{
-  margin-top:16px;
-  padding:10px;
-  border-radius:14px;
-  background:#f2f8f5;
-  color:#557066;
-  font-size:10px;
-  line-height:1.7;
-}
-</style>
-
-<script>
-function selectYarMode(mode){
-
-  if(mode === 'offline'){
-    window.location.href =
-      'https://z46689944-beep.github.io/YarKeshavarz-Offline/';
-    return;
-  }
-
-  const selector = document.getElementById('modeSelector');
-
-  if(selector){
-    selector.style.display = 'none';
-  }
-
-  sessionStorage.setItem('yk-selected-mode','online');
-}
-</script>
-<!-- ===== END YAR KESHAVARZ MODE SELECTOR ===== -->
 <header class="top"><div class="brand"><div class="logo">🌾</div><div><b>یار کشاورز</b><small id="pageTitle">خانه</small></div></div><button id="backup">↥</button></header>
 <main id="app"></main>
-<nav class="bottom"><button data-r="home">⌂<span>خانه</span></button><button data-r="news">▤<span>اخبار</span></button><button data-r="game">🎮<span>سرگرمی</span></button><button data-r="yar" onclick="yarLandMode=false;selected=null;go('yar')">✦<span>کشاورزیار</span></button><button data-r="ads">◈<span>تبلیغات</span></button><button data-r="account">●<span>اکانت</span></button></nav>
+<nav class="bottom"><button data-r="home">⌂<span>خانه</span></button><button data-r="news">▤<span>اخبار</span></button><button data-r="game">🎮<span>سرگرمی</span></button><button data-r="yar">✦<span>کشاورزیار</span></button><button data-r="ads">◈<span>تبلیغات</span></button><button data-r="account">●<span>اکانت</span></button></nav>
 <input id="restore" type="file" accept="application/json" hidden>
 <script src="./presence.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1519,6 +1358,10 @@ try{
   yarMessages=_clean.slice(-60);
 }catch(e){}
 let yarLandMode=false;
+let yarMode=(()=>{try{return localStorage.getItem('yk-yar-mode')==='offline'?'offline':'online'}catch(e){return 'online'}})();
+function yarSetMode(mode){yarMode=mode==='offline'?'offline':'online';try{localStorage.setItem('yk-yar-mode',yarMode)}catch(e){};yar()}
+function yarSelectLand(id){if(!id){yarLandMode=false;selected=null}else{yarLandMode=true;selected=id;try{localStorage.setItem('yk-last-land',id)}catch(e){}}yar()}
+function yarLandOptions(){return (state.lands||[]).length?(state.lands||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name||'زمین بدون نام')+'</option>').join(''):'<option value="">هنوز زمینی ثبت نشده</option>'}
 const YAR_AI_ENDPOINT='https://yarkeshavarz-ai-v4.z46689944.workers.dev';
 function saveYarChat(){try{const clean=[];for(const m of yarMessages){const last=clean[clean.length-1];if(last&&last.role===m.role&&String(last.text||'')===String(m.text||'')&&!m.image&&!last.image)continue;clean.push(m)}yarMessages=clean.slice(-60);localStorage.setItem(YAR_CHAT_KEY,JSON.stringify(yarMessages))}catch(e){}}
 function yarNum(x){return Number(x||0).toLocaleString('fa-IR',{maximumFractionDigits:2})}
@@ -1531,8 +1374,26 @@ function yarLandPhotos(id){
 function yarAiContext(id){
   const c=yarContext(id), l=c.l||null;
   const tx=l?(state.transactions||[]).filter(x=>x.landId===l.id).slice(-30):[];
+  const cultivation=l?{
+    status:l.cultivationStatus||'active',
+    cultivationId:l.activeCultivationId||'legacy',
+    crop:l.crop||'',
+    variety:l.cropVariety||'',
+    plantDate:l.plantDate||'',
+    notes:l.cropNotes||'',
+    lastHarvestDate:l.lastHarvestDate||''
+  }:null;
+  const cultivationHistory=l&&Array.isArray(l.cultivationArchive)
+    ?l.cultivationArchive.slice(-20).map(a=>({
+      year:a.year||'',crop:a.crop||'',variety:a.variety||'',area:a.area||0,
+      plantDate:a.plantDate||'',harvestDate:a.harvestDate||'',cost:a.cost||0,
+      income:a.income||0,profit:a.profit||0,notes:a.notes||''
+    }))
+    :[];
   return {
     land:l?{id:l.id,name:l.name,area:l.area,region:l.region,ownership:l.ownership,soil:l.soil,water:l.water,irrigation:l.irrigation,crop:l.crop,notes:l.notes,rentAmount:l.rentAmount}:null,
+    cultivation,
+    cultivationHistory,
     economics:l?{cost:c.t?.cost||0,income:c.t?.income||0,profit:c.t?.profit||0}:c?{cost:c.cost||0,income:c.income||0,profit:c.profit||0}:null,
     inventory:(state.inventory||[]).slice(0,80).map(x=>({name:x.name,qty:x.qty,unit:x.unit,category:x.category})),
     weather:l?.weather||null,
@@ -1722,6 +1583,15 @@ async function yarSend(){
     saveYarChat();yarRender();if(i){i.value='';i.focus()}return;
   }
 
+  if(image && yarMode==='offline'){
+    yarAddImageMessage(image,question);
+    if(i)i.value='';
+    yarRemovePhoto();
+    yarMessages.push({role:'bot',text:'📴 حالت آفلاین فعاله. تحلیل تصویری به اتصال هوش مصنوعی آنلاین نیاز دارد؛ اما بر اساس اطلاعات همین زمین و سؤال متنی راهنمایی‌ات می‌کنم.'});
+    saveYarChat();yarRender();
+    return;
+  }
+
   if(image){
     const analysisId=yarRecordImageAnalysis(id,{image,question,status:'در انتظار تحلیل',result:'در انتظار تحلیل',action:'در انتظار پیشنهاد'});
     yarAddImageMessage(image,question);if(i)i.value='';yarRemovePhoto();
@@ -1750,6 +1620,12 @@ async function yarSend(){
   yarMessages.push({role:'bot',text:'در حال بررسی سؤال توسط کشاورزیار…',pending:true});
   if(i){i.value='';i.focus()}
   yarRender();saveYarChat();
+  if(yarMode==='offline'){
+    const k=yarMessages.findIndex(m=>m.pending);
+    if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q,id)};
+    saveYarChat();yarRender();
+    return;
+  }
   if(!navigator.onLine){
   const k=yarMessages.findIndex(m=>m.pending);
   if(k>=0){
@@ -1837,8 +1713,18 @@ function yar(){
     <header class="yarpro-head">
       <button type="button" class="yarpro-switch" onclick="go('home')">✕</button>
       <div class="yarpro-brand"><div class="yarpro-avatar">✦</div><div><h2>کشاورزیار</h2><span>${l?'متخصص پرونده «'+esc(l.name)+'»':'دستیار هوشمند عمومی کشاورزی'}</span></div></div>
-      ${l?`<button class="yarpro-switch" onclick="yarLandMode=false;selected=null;go('yar')">عمومی</button>`:''}
+      ${l?`<button class="yarpro-switch" onclick="yarSelectLand('')">عمومی</button>`:''}
     </header>
+
+    <div class="yar-mode-panel">
+      <div class="yar-mode-title"><b>حالت کشاورزیار</b><span>${yarMode==='online'?'☁️ آنلاین':'📴 آفلاین'}</span></div>
+      <div class="yar-mode-buttons">
+        <button type="button" class="${yarMode==='online'?'active':''}" onclick="yarSetMode('online')">☁️ آنلاین</button>
+        <button type="button" class="${yarMode==='offline'?'active':''}" onclick="yarSetMode('offline')">📴 آفلاین</button>
+      </div>
+      <div class="yar-land-picker"><label for="yarLandSelect">پرونده زمین</label><select id="yarLandSelect" onchange="yarSelectLand(this.value)"><option value="">🌾 همه زمین‌ها / حالت عمومی</option>${yarLandOptions()}</select></div>
+      <div class="yar-mode-note">${yarMode==='online'?'هوش مصنوعی آنلاین + اطلاعات همین پرونده':'بانک دانش آفلاین + اطلاعات همین پرونده؛ بدون ارسال سؤال به اینترنت'}</div>
+    </div>
 
     <div id="yarChat" class="yarpro-chat"></div>
     <input id="yarPhotoInputGallery" type="file" accept="image/*" onchange="yarPhotoSelected(this)" hidden>
@@ -1854,6 +1740,8 @@ function yar(){
     </div>
     <div class="yarpro-hint">${l?'این گفت‌وگو به پرونده همین زمین متصل است.':'حالت عمومی فعال است؛ برای سؤال درباره یک قطعه، از داخل پرونده همان زمین وارد کشاورزیار شو.'}</div>
   </section>`;
+  const landSelect=document.getElementById('yarLandSelect');
+  if(landSelect)landSelect.value=l?.id||'';
   yarRender();
   yarBindInput();
 }
@@ -1906,6 +1794,7 @@ if('serviceWorker' in navigator){
 .expense-list{margin-top:12px;display:grid;gap:8px}.expense-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid #e7ece9}.expense-row-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.mini-btn{padding:6px 9px!important;font-size:12px!important}.expense-row-actions>b{white-space:nowrap}
   /* ===== KESHAVAR-YAR CLEAN FULLSCREEN ===== */
 
+.yar-mode-panel{margin:0;padding:10px 12px;background:#f7fbf8;border-bottom:1px solid #dfeae4;direction:rtl}.yar-mode-title{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:#24463a;margin-bottom:7px}.yar-mode-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.yar-mode-buttons button{border:1px solid #d8e6df;background:#fff;color:#48665b;border-radius:12px;padding:9px;font:800 12px inherit}.yar-mode-buttons button.active{background:#e8f7ef;border-color:#2d9b68;color:#176b43;box-shadow:0 4px 12px rgba(23,107,67,.08)}.yar-land-picker{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;margin-top:8px}.yar-land-picker label{font-size:11px;color:#6a7e75}.yar-land-picker select{min-width:0;border:1px solid #d8e6df;border-radius:12px;background:#fff;padding:9px 10px;font:700 12px inherit;color:#24463a}.yar-mode-note{margin-top:7px;font-size:10px;color:#71837b;line-height:1.7}
 /* خود صفحه کشاورزیار */
 .yar-final.yarpro{
   margin:0!important;
