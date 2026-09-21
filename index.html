@@ -1745,7 +1745,50 @@ function yar(){
   yarRender();
   yarBindInput();
 }
-function yarRender(){const b=document.getElementById('yarChat');if(!b)return;b.innerHTML=yarMessages.map(m=>{const imgs=Array.isArray(m.images)&&m.images.length?`<div class="yar-image-results">${m.images.slice(0,6).map(x=>`<figure class="yar-image-card"><img src="${esc(x.thumb||x.url||'')}" alt="${esc(x.title||'تصویر کشاورزی')}" loading="lazy" referrerpolicy="no-referrer"><figcaption>${esc(x.title||'تصویر کشاورزی')}</figcaption></figure>`).join('')}</div>`:'';return `<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}${imgs}</div></div>`}).join('');b.scrollTop=b.scrollHeight}
+
+function yarOfflineKnowledgeHtml(){
+  const l=yarLand();
+  const crop=(l?.crop||'').trim();
+  const subject=crop?` ${esc(crop)}`:'';
+  const items=[
+    ['📘','معرفی محصول',`معرفی کوتاه${subject||' محصول'}، نام علمی، کاربرد و نکات اصلی.`,`معرفی محصول${subject}`],
+    ['🌱','کاشت و تکثیر','روش کاشت، زمان مناسب، فاصله و روش‌های تکثیر.','کاشت و تکثیر'],
+    ['💧','آبیاری','نیاز آبی، زمان‌بندی و نکات مدیریت آب.','آبیاری'],
+    ['🧪','تغذیه و کود','اصول تغذیه، کوددهی و نکات مصرف.','تغذیه و کود'],
+    ['🌿','داشت و مراقبت','مراقبت‌های دوره رشد و عملیات مزرعه.','داشت و مراقبت'],
+    ['🐛','آفات','شناخت آفات و نشانه‌های رایج خسارت.','آفات'],
+    ['🦠','بیماری‌ها','نشانه‌ها، عوامل احتمالی و مدیریت کلی بیماری‌ها.','بیماری‌ها'],
+    ['🌾','برداشت','زمان برداشت و نکات مهم هنگام برداشت.','برداشت'],
+    ['📦','پس از برداشت و انبار','خشک‌کردن، نگهداری و مدیریت انبار.','پس از برداشت و انبار'],
+    ['🪨','خاک و شرایط زمین','خاک، زهکشی و شرایط مناسب رشد.','خاک و شرایط زمین'],
+    ['🌡️','اقلیم و دما','دما، اقلیم و شرایط محیطی موردنیاز.','اقلیم و دما'],
+    ['💰','اقتصاد و عملکرد','هزینه، عملکرد و نکات اقتصادی کشت.','اقتصاد و عملکرد'],
+    ['⚠️','ریسک‌ها','ریسک‌های مهم و نکات احتیاطی در کشت.','ریسک‌ها']
+  ];
+  return `<section class="yar-offline-guide" aria-label="راهنمای آفلاین کشاورزیار">
+    <div class="yar-offline-guide-head">
+      <div><b>📚 بانک دانش آفلاین</b><small>${crop?`برای محصول «${esc(crop)}» آماده است.`:'نام محصول را در سؤال بنویس تا پاسخ دقیق‌تر شود.'}</small></div>
+      <span>📴 آفلاین</span>
+    </div>
+    <div class="yar-offline-intro">
+      <button type="button" onclick="yarOfflineTopic('معرفی محصول')">
+        <span>📘</span><div><b>معرفی محصول</b><small>${crop?`معرفی ${esc(crop)}`:'نام محصول را بنویس'}</small></div><i>‹</i>
+      </button>
+    </div>
+    <div class="yar-offline-accordion">
+      ${items.slice(1).map(x=>`<details><summary><span class="yo-icon">${x[0]}</span><b>${x[1]}</b><em>⌄</em></summary><div class="yo-body"><span>${x[2]}</span><button type="button" onclick="yarOfflineTopic('${x[3]}')">پرسش درباره ${x[1]} ←</button></div></details>`).join('')}
+    </div>
+  </section>`;
+}
+function yarOfflineTopic(topic){
+  const l=yarLand();
+  let q=topic;
+  if(topic==='معرفی محصول' && l?.crop) q=`معرفی محصول ${l.crop}`;
+  else if(topic!=='معرفی محصول' && l?.crop) q=`${topic} ${l.crop}`;
+  yarAsk(q);
+}
+
+function yarRender(){const b=document.getElementById('yarChat');if(!b)return;const guide=yarMode==='offline'?yarOfflineKnowledgeHtml():'';b.innerHTML=guide+yarMessages.map(m=>{const imgs=Array.isArray(m.images)&&m.images.length?`<div class="yar-image-results">${m.images.slice(0,6).map(x=>`<figure class="yar-image-card"><img src="${esc(x.thumb||x.url||'')}" alt="${esc(x.title||'تصویر کشاورزی')}" loading="lazy" referrerpolicy="no-referrer"><figcaption>${esc(x.title||'تصویر کشاورزی')}</figcaption></figure>`).join('')}</div>`:'';return `<div class="yar-msg ${m.role==='user'?'user':'bot'}"><div>${m.image?`<img class="yar-msg-image" src="${esc(m.image)}" alt="عکس ارسالی">`:''}${m.text?`<span>${esc(m.text).replace(/\n/g,'<br>')}</span>`:''}${imgs}</div></div>`}).join('');b.scrollTop=b.scrollHeight}
 function yarAsk(q){const i=document.getElementById('yarInput');if(i){i.value=q;yarSend()}}
 function yarBindInput(){const i=document.getElementById('yarInput');if(!i||i.dataset.bound==='1')return;i.dataset.bound='1';i.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const f=i.closest('form');if(f)f.requestSubmit();else yarSend();}})}
 function yarFocusInput(){const i=document.getElementById('yarInput');if(!i)return;i.focus();try{i.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}
@@ -2119,20 +2162,183 @@ html.yk-font-large{font-size:108%}
 </style>
 
 
-<!-- YAR MODE PANEL VISIBILITY FIX -->
-<style id="yar-mode-panel-fix">
+<style id="yar-v2-layout-and-offline-fix">
+/* V2: کشاورزیار — هدر، اسکرول واقعی، حالت آفلاین آکاردئونی */
+.yar-final{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  flex-direction:column!important;
+  background:#eef5f1!important;
+}
+.yar-final .yarpro-head{
+  position:relative!important;
+  inset:auto!important;
+  flex:0 0 auto!important;
+  z-index:10000010!important;
+  display:flex!important;
+  min-height:58px!important;
+  height:58px!important;
+  padding:9px 12px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  color:#17362a!important;
+  box-shadow:0 2px 12px rgba(13,55,40,.08)!important;
+  box-sizing:border-box!important;
+}
+.yar-final .yarpro-head > .yarpro-switch:first-child{
+  display:grid!important;
+  place-items:center!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  flex:0 0 36px!important;
+  padding:0!important;
+  margin:0!important;
+  background:#17664b!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:10px!important;
+  font-size:21px!important;
+  line-height:1!important;
+  z-index:10000011!important;
+}
+.yar-final .yarpro-brand{color:#17362a!important}
+.yar-final .yarpro-brand h2{color:#123b2b!important;font-size:18px!important}
+.yar-final .yarpro-brand span{color:#62736b!important}
+.yar-final .yarpro-head .yarpro-switch:not(:first-child){
+  background:#eef6f1!important;color:#17664b!important;border:1px solid #d8e7df!important;
+}
+
+/* پنل حالت همیشه زیر هدر و داخل جریان صفحه */
 .yar-final .yar-mode-panel{
   position:relative!important;
-  z-index:10000001!important;
+  z-index:10000009!important;
+  flex:0 0 auto!important;
   display:block!important;
   visibility:visible!important;
   opacity:1!important;
   width:100%!important;
   box-sizing:border-box!important;
+  background:#f7fbf8!important;
+  border-bottom:1px solid #dfeae4!important;
+  padding:10px 12px!important;
 }
+
+/* فقط چت اسکرول شود؛ دیگر روی پنل یا فرم سوار نمی‌شود */
 .yar-final .yarpro-chat{
   position:relative!important;
-  z-index:1!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  flex:1 1 auto!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  margin:0!important;
+  padding:10px 8px 12px!important;
+  box-sizing:border-box!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#eef5f1!important;
+  -webkit-overflow-scrolling:touch!important;
+  scroll-behavior:auto!important;
+}
+
+/* فرم ثابت بالای نوار ابزار */
+.yar-final .yarpro-form.yar-final-form{
+  position:fixed!important;
+  left:6px!important;
+  right:6px!important;
+  bottom:76px!important;
+  top:auto!important;
+  z-index:10000020!important;
+}
+
+/* نوار ابزار پنج‌تایی */
+.yar-final .yar-final-tools{
+  position:fixed!important;
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  z-index:10000021!important;
+}
+
+/* راهنمای آفلاین */
+.yar-offline-guide{
+  direction:rtl;
+  color:#17362a;
+  padding:4px 2px 12px;
+}
+.yar-offline-guide-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:11px 12px;
+  margin-bottom:8px;
+  background:#fff;
+  border:1px solid #dce9e2;
+  border-radius:16px;
+  box-shadow:0 5px 16px rgba(20,70,50,.06);
+}
+.yar-offline-guide-head b{display:block;font-size:13px}
+.yar-offline-guide-head small{display:block;margin-top:3px;font-size:10px;color:#718079;line-height:1.6}
+.yar-offline-guide-head>span{
+  padding:5px 8px;border-radius:10px;background:#e8f5ed;color:#17664b;font-size:10px;font-weight:800;white-space:nowrap;
+}
+.yar-offline-intro button{
+  width:100%;display:flex;align-items:center;gap:9px;text-align:right;
+  border:1px solid #bfe0ce;background:#eaf7ef;color:#17362a;border-radius:16px;padding:12px;
+  box-shadow:0 6px 18px rgba(20,100,65,.08);
+}
+.yar-offline-intro button>span{font-size:24px}
+.yar-offline-intro button div{flex:1}
+.yar-offline-intro button b{display:block;font-size:13px}
+.yar-offline-intro button small{display:block;margin-top:3px;font-size:10px;color:#61746a}
+.yar-offline-intro button i{font-style:normal;font-size:22px;color:#17664b}
+.yar-offline-accordion{display:grid;gap:7px;margin-top:8px}
+.yar-offline-accordion details{
+  background:#fff;border:1px solid #dce8e1;border-radius:15px;overflow:hidden;
+  box-shadow:0 3px 12px rgba(20,70,50,.04);
+}
+.yar-offline-accordion summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 12px;font-size:12px;color:#24463a;
+}
+.yar-offline-accordion summary::-webkit-details-marker{display:none}
+.yar-offline-accordion .yo-icon{font-size:19px;width:26px;text-align:center}
+.yar-offline-accordion summary b{flex:1}
+.yar-offline-accordion summary em{font-style:normal;color:#789087;font-size:15px;transition:transform .15s}
+.yar-offline-accordion details[open] summary em{transform:rotate(180deg)}
+.yo-body{
+  padding:0 12px 11px 47px;font-size:10px;color:#687a72;line-height:1.8;
+}
+.yo-body button{
+  margin-top:7px;border:1px solid #cfe3d8;background:#f2f8f4;color:#17664b;border-radius:10px;padding:7px 9px;font:800 10px inherit;
+}
+@media(max-width:420px){
+  .yar-final .yarpro-head{height:56px;min-height:56px;padding:8px 10px!important}
+  .yar-final .yarpro-head > .yarpro-switch:first-child{width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important;flex-basis:34px!important}
+  .yar-final .yarpro-brand h2{font-size:16px!important}
+  .yar-final .yarpro-brand span{font-size:10px!important}
+  .yar-final .yar-mode-panel{padding:9px 10px!important}
+  .yar-final .yarpro-chat{padding:8px 6px 12px!important}
 }
 </style>
 
