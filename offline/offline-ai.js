@@ -19,13 +19,85 @@ function managerKnowledge(){
   } catch { return []; }
 }
 
-function findOfflineAnswer(question){
+function fmtDate(v){
+  if(!v) return "ثبت نشده";
+  return String(v);
+}
+
+function landContextAnswer(question, context){
   const q=normalize(question);
-  if(!q) return "ðŸŒ± Ø³Ø¤Ø§Ù„ Ú©Ø´Ø§ÙˆØ±Ø²ÛŒ Ø±Ø§ Ø¨Ù†ÙˆÛŒØ³ÛŒØ¯.";
+  const land=context?.land;
+  if(!land) return null;
+
+  const cultivation=context?.cultivation || {};
+  const history=Array.isArray(context?.cultivationHistory)
+    ? context.cultivationHistory
+    : [];
+
+  const wantsHistory =
+    /سابقه|پارسال|سال قبل|قبلا|قبلی|کشت قبلی|چه کاشتم|کاشته بودم/.test(q);
+
+  if(wantsHistory){
+    if(!history.length){
+      return `🌾 سابقه کشت برای «${land.name||"این زمین"}» در اطلاعات آفلاین ثبت نشده است.`;
+    }
+
+    const rows=history.slice().reverse().map((x,i)=>{
+      const crop=x.crop||"محصول ثبت نشده";
+      const variety=x.variety?` (${x.variety})`:"";
+      const year=x.year?` — سال ${x.year}`:"";
+      const area=x.area?` — ${x.area} هکتار`:"";
+      return `${i+1}. ${crop}${variety}${year}${area}`;
+    }).join("\n");
+
+    return `🌾 سابقه کشت «${land.name||"این زمین"}»:\n\n${rows}`;
+  }
+
+  if(/محصول فعلی|الان چی کاشتم|چی کاشتم|محصول این زمین/.test(q)){
+    const crop=cultivation.crop||land.crop;
+    if(crop){
+      return `🌱 محصول فعلی این زمین: ${crop}${cultivation.variety?` — رقم ${cultivation.variety}`:""}\n📅 تاریخ کشت: ${fmtDate(cultivation.plantDate)}\n📌 وضعیت: ${cultivation.status||"ثبت نشده"}`;
+    }
+    return "🌱 برای این زمین هنوز محصول فعلی ثبت نشده است.";
+  }
+
+  if(/خاک|نوع خاک/.test(q) && land.soil){
+    return `🪨 نوع خاک ثبت‌شده برای «${land.name||"این زمین"}»: ${land.soil}`;
+  }
+
+  if(/آب|آبیاری|منبع آب/.test(q)){
+    const parts=[];
+    if(land.water) parts.push(`منبع/وضعیت آب: ${land.water}`);
+    if(land.irrigation) parts.push(`روش آبیاری: ${land.irrigation}`);
+    return parts.length ? `💧 اطلاعات آب این زمین:\n\n${parts.join("\n")}` : null;
+  }
+
+  if(/منطقه|آدرس|روستا|موقعیت/.test(q) && land.region){
+    return `📍 منطقه ثبت‌شده این زمین: ${land.region}`;
+  }
+
+  if(/مساحت|متراژ|چند هکتار/.test(q) && land.area){
+    return `📐 مساحت «${land.name||"این زمین"}»: ${land.area} هکتار`;
+  }
+
+  return null;
+}
+
+function findOfflineAnswer(question, context=null){
+  const direct=landContextAnswer(question, context);
+  if(direct) return direct;
+
+  const q=normalize(question);
+  if(!q) return "🌱 سؤال کشاورزی را بنویسید.";
 
   const qt=tokens(q);
   let best=null, bestScore=0;
-  const db=[...agricultureDB, ...managerKnowledge().map(x=>({topic:x.title,keywords:x.keywords||[],general:x.answer,solution:""}))];
+  const db=[...agricultureDB, ...managerKnowledge().map(x=>({
+    topic:x.title,
+    keywords:x.keywords||[],
+    general:x.answer,
+    solution:""
+  }))];
 
   for(const item of db){
     let score=0;
@@ -43,19 +115,18 @@ function findOfflineAnswer(question){
   }
 
   if(!best || bestScore<2){
-    return "ðŸŒ± ÛŒØ§Ø± Ú©Ø´Ø§ÙˆØ±Ø² Ø¢ÙÙ„Ø§ÛŒÙ†\n\nØ¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ø³Ø¤Ø§Ù„ Ø¯Ø± Ø¨Ø§Ù†Ú© Ø¢ÙÙ„Ø§ÛŒÙ† Ù¾Ø§Ø³Ø® Ú©Ø§ÙÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ú©Ø±Ø¯Ù….\nÙ†Ø§Ù… Ù…Ø­ØµÙˆÙ„ + Ù†Ø´Ø§Ù†Ù‡ ÛŒØ§ Ù…ÙˆØ¶ÙˆØ¹ Ø±Ø§ Ø¯Ù‚ÛŒÙ‚â€ŒØªØ± Ø¨Ù†ÙˆÛŒØ³ÛŒØ¯Ø› Ù…Ø«Ù„Ø§Ù‹ Â«Ú¯ÙˆØ¬Ù‡ØŒ Ø¨Ø±Ú¯ Ø²Ø±Ø¯Â» ÛŒØ§ Â«Ú¯Ù†Ø¯Ù…ØŒ Ø³Ù† Ú¯Ù†Ø¯Ù…Â».";
+    return "🌱 یار کشاورز آفلاین\n\nبرای این سؤال در بانک آفلاین پاسخ کافی پیدا نکردم.\nنام محصول + نشانه یا موضوع را دقیق‌تر بنویسید؛ مثلاً «گوجه، برگ زرد» یا «گندم، سن گندم».";
   }
 
-  let out=`ðŸŒ± ${best.topic}\n\n`;
-  if(best.symptoms) out+=`ðŸ”Ž Ù†Ø´Ø§Ù†Ù‡â€ŒÙ‡Ø§:\n${best.symptoms}\n\n`;
-  if(best.cause) out+=`âš ï¸ Ø¹Ù„Øª/ØªÙˆØ¶ÛŒØ­:\n${best.cause}\n\n`;
+  let out=`🌱 ${best.topic}\n\n`;
+  if(best.symptoms) out+=`🔎 نشانه‌ها:\n${best.symptoms}\n\n`;
+  if(best.cause) out+=`⚠️ علت/توضیح:\n${best.cause}\n\n`;
   if(best.general) out+=`${best.general}\n\n`;
-  if(best.solution) out+=`âœ… Ø±Ø§Ù‡Ú©Ø§Ø± Ú©Ù„ÛŒ:\n${best.solution}\n`;
-  out+="\nâ„¹ï¸ Ø¨Ø±Ø§ÛŒ ØªØµÙ…ÛŒÙ… Ø¯Ø±Ø¨Ø§Ø±Ù‡ Ø³Ù…ØŒ Ú©ÙˆØ¯ ÛŒØ§ Ø¯Ø±Ù…Ø§Ù†ØŒ Ø¨Ø±Ú†Ø³Ø¨ Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡ØŒ Ø´Ø±Ø§ÛŒØ· Ù…Ø²Ø±Ø¹Ù‡ Ùˆ Ù†Ø¸Ø± Ú©Ø§Ø±Ø´Ù†Ø§Ø³ Ù…Ø­Ù„ÛŒ Ø±Ø§ Ù‡Ù… Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯.";
+  if(best.solution) out+=`✅ راهکار کلی:\n${best.solution}\n`;
+  out+="\nℹ️ برای تصمیم درباره سم، کود یا درمان، شرایط مزرعه و برچسب ثبت‌شده محصول را هم بررسی کنید.";
   return out.trim();
 }
 
 export default findOfflineAnswer;
 export { findOfflineAnswer };
 window.YarKeshavarzOffline = { findOfflineAnswer };
-    
