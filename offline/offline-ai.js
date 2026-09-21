@@ -269,3 +269,61 @@ if(typeof window!=="undefined"){
     findCropProfileAnswer
   };
 }
+
+
+/* UI bridge: turn offline crop-profile text into structured product cards.
+   Kept here so the offline knowledge engine stays unchanged. */
+(function installYarProductCards(){
+  if(typeof window==='undefined') return;
+  if(window.__YK_PRODUCT_CARDS_V1__) return;
+  const escHtml=(v)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const sectionRe=/^(🌤️|🌱|🌾|💧|🧪|🌿|🐛|🦠|🧺|📦|💰|⚠️)\s+(.+)$/;
+  function cardHtml(text){
+    const raw=String(text||'').replace(/\r/g,'').trim();
+    if(!raw || !/ℹ️\s*این شناسنامه/.test(raw)) return null;
+    const lines=raw.split('\n').map(x=>x.trim()).filter(Boolean);
+    const sections=[]; let title='', intro=[], current=null;
+    for(const line of lines){
+      const m=line.match(sectionRe);
+      if(m){ current={icon:m[1],title:m[2],items:[]}; sections.push(current); continue; }
+      if(!title && /^🌱\s+/.test(line)){ title=line.replace(/^🌱\s+/,''); continue; }
+      if(!current) intro.push(line); else current.items.push(line);
+    }
+    if(sections.length<2) return null;
+    const introHtml=intro.length?'<div class="yk-product-intro">'+intro.map(x=>'<p>'+escHtml(x)+'</p>').join('')+'</div>':'';
+    const cards=sections.map(s=>{
+      const body=s.items.map(line=>{
+        const safe=escHtml(line);
+        return /^•/.test(line)?'<div class="yk-product-line">'+safe+'</div>':'<p class="yk-product-text">'+safe+'</p>';
+      }).join('');
+      return '<section class="yk-product-card"><h3><span>'+s.icon+'</span>'+escHtml(s.title)+'</h3><div class="yk-product-body">'+body+'</div></section>';
+    }).join('');
+    return '<div class="yk-product-profile"><div class="yk-product-head"><div class="yk-product-mark">🌱</div><div><h2>'+escHtml(title||'شناسنامه محصول')+'</h2><span>راهنمای آفلاین کشاورزی</span></div></div>'+introHtml+'<div class="yk-product-grid">'+cards+'</div></div>';
+  }
+  function install(){
+    if(window.__YK_PRODUCT_CARDS_V1__) return true;
+    if(typeof window.yarRender!=='function') return false;
+    const original=window.yarRender;
+    window.yarRender=function(){
+      original.apply(this,arguments);
+      const root=document.getElementById('yarChat');
+      if(!root) return;
+      root.querySelectorAll('.yar-msg.bot').forEach(msg=>{
+        if(msg.dataset.productCard==='1') return;
+        const span=msg.querySelector(':scope > div > span');
+        if(!span) return;
+        const card=cardHtml(span.textContent||'');
+        if(card){ span.outerHTML=card; msg.dataset.productCard='1'; }
+      });
+    };
+    const style=document.createElement('style');
+    style.id='yk-product-cards-v1';
+    style.textContent='.yk-product-profile{width:100%;box-sizing:border-box;color:#173f32}.yk-product-head{display:flex;align-items:center;gap:11px;padding:12px 13px;margin-bottom:10px;border-radius:18px;background:linear-gradient(135deg,#e9f7ef,#f8fcfa);border:1px solid #cfe5d9}.yk-product-mark{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#176b4d;color:#fff;font-size:24px;flex:0 0 44px}.yk-product-head h2{margin:0;font-size:18px;color:#14583f;font-weight:900}.yk-product-head span{display:block;margin-top:3px;font-size:9px;color:#789087}.yk-product-intro{padding:10px 12px;margin-bottom:10px;border-radius:15px;background:#f7fbf8;border:1px solid #e0eee6;font-size:11px;line-height:1.9;color:#35594b}.yk-product-intro p{margin:0}.yk-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.yk-product-card{margin:0;padding:0;overflow:hidden;border:1px solid #dcebe3;border-radius:16px;background:#fff;box-shadow:0 3px 10px rgba(20,70,50,.06)}.yk-product-card h3{display:flex;align-items:center;gap:7px;margin:0;padding:9px 10px;font-size:11px;color:#14583f;background:#eef8f2;border-bottom:1px solid #e0eee6;font-weight:900}.yk-product-card h3 span{font-size:17px}.yk-product-body{padding:9px 10px;font-size:9.5px;line-height:1.9;color:#34574a}.yk-product-body p{margin:0 0 5px}.yk-product-line{margin:0 0 5px;padding:5px 7px;border-radius:9px;background:#f7faf8}@media(max-width:520px){.yk-product-grid{grid-template-columns:1fr}.yk-product-head h2{font-size:17px}.yk-product-body{font-size:10px}}';
+    document.head.appendChild(style);
+    window.__YK_PRODUCT_CARDS_V1__=true;
+    return true;
+  }
+  if(!install()){
+    let n=0; const timer=setInterval(()=>{if(install()||++n>20) clearInterval(timer)},250);
+  }
+})();
