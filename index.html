@@ -1811,9 +1811,41 @@ if(k>=0){
   saveYarChat();yarRender();if(i){i.value='';i.focus()}
 }
 
-function yarAnalyzeLand(id){
+async function yarAnalyzeLand(id){
   const l=yarLand(id);if(!l)return;
-  yarLandMode=true; selected=id;localStorage.setItem('yk-last-land',id);yarMessages.push({role:'user',text:'تحلیل وضعیت فعلی این زمین را بده'});yarMessages.push({role:'bot',text:yarAnalysisText(id)});saveYarChat();go('yar');
+  yarLandMode=true;
+  selected=id;
+  localStorage.setItem('yk-last-land',id);
+  /* Use the same unified chat pipeline as normal questions. The old implementation
+     bypassed offline-ai.js and therefore never reached the universal farm planner. */
+  const q='تحلیل کامل وضعیت این زمین را انجام بده؛ محصول، مساحت، زمان تقریبی کاشت، بذر موردنیاز، آبیاری، عملکرد، هزینه، درآمد و سود/زیان تقریبی را بررسی کن و موجودی مرتبط را هم تطبیق بده.';
+  yarMessages.push({role:'user',text:q});
+  yarMessages.push({role:'bot',text:'در حال تحلیل کامل پرونده زمین…',pending:true});
+  saveYarChat();
+  go('yar');
+  try{
+    const answer=await (yarMode==='offline' || !navigator.onLine
+      ? yarOfflineAnswer(q,id)
+      : (async()=>{
+          const endpoint=String(YAR_AI_ENDPOINT||'').trim();
+          if(!endpoint || endpoint.includes('REPLACE-WITH-YOUR-WORKER')) return yarOfflineAnswer(q,id);
+          const r=await fetch(endpoint,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({message:q,mode:'land',context:yarAiContext(id),history:yarMessages.slice(-12).map(m=>({role:m.role,text:String(m.text||'').slice(0,4000)}))})
+          });
+          const d=await r.json().catch(()=>({}));
+          if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
+          return d.answer||d.reply||await yarOfflineAnswer(q,id);
+        })());
+    const k=yarMessages.findIndex(m=>m.pending);
+    if(k>=0)yarMessages[k]={role:'bot',text:answer};
+  }catch(e){
+    const k=yarMessages.findIndex(m=>m.pending);
+    if(k>=0)yarMessages[k]={role:'bot',text:await yarOfflineAnswer(q,id)};
+  }
+  saveYarChat();
+  yarRender();
 }
 
 function yarPriorityPlan(id){
