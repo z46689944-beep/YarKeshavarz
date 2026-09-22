@@ -996,7 +996,7 @@ function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt
 function toast(x){alert(x)}
 function head(x){title.textContent=x}
 function totals(id){let t=state.transactions.filter(x=>!id||x.landId===id),c=t.filter(x=>x.type==='expense').reduce((a,x)=>a+n(x.amount),0),i=t.filter(x=>x.type==='income').reduce((a,x)=>a+n(x.amount),0);return{cost:c,income:i,profit:i-c}}
-function go(r){if(r==='measure'&&!measureReturn){selected=null;measureReturn='add'}route=r;window.scrollTo({top:0,left:0,behavior:'instant'});if(r==='home')home();else if(r==='lands')lands();else if(r==='add')add();else if(r==='measure')measure();else if(r==='inventory')inventory();else if(r==='weather')weather();else if(r==='equipment')equipment();else if(r==='calculator'){toast('محاسبه‌گر برآورد از نسخه نهایی حذف شده است');go('home')}else if(r==='cultivation')cultivation();else if(r==='profile')profile();else if(r==='account')account();else if(r==='settings')settings();else if(r==='manager')managerChat();else if(r==='ads')ads();else if(r==='news')news();else if(r==='yar')yar();else if(r==='game')game();else home();document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.r===r))}
+function go(r){if(r==='measure'&&!measureReturn){selected=null;measureReturn='add'}route=r;window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;if(r==='home')home();else if(r==='lands')lands();else if(r==='add')add();else if(r==='measure')measure();else if(r==='inventory')inventory();else if(r==='weather')weather();else if(r==='equipment')equipment();else if(r==='calculator'){toast('محاسبه‌گر برآورد از نسخه نهایی حذف شده است');go('home')}else if(r==='cultivation')cultivation();else if(r==='profile')profile();else if(r==='account')account();else if(r==='settings')settings();else if(r==='manager')managerChat();else if(r==='ads')ads();else if(r==='news')news();else if(r==='yar')yar();else if(r==='game')game();else home();document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.r===r))}
 function landThumb(l){
   const ps=l&&l.measurement&&Array.isArray(l.measurement.points)?l.measurement.points:[];
   let poly='38,62 72,30 126,24 178,43 196,84 160,106 94,104 48,86';
@@ -1938,8 +1938,9 @@ function yarCropAdvisorRenderPlan(l,p,r){
     html+=`<div class="yca-grid">`;
     if(n.seed)html+=item('🌾','بذر/حبه در هکتار',`${yarNum(n.seed[0])} تا ${yarNum(n.seed[1])} ${n.seedUnit||'کیلوگرم در هکتار'}`);
     if(r.seed)html+=item('📦','مقدار کل برای این زمین',`${yarNum(r.seed[0])} تا ${yarNum(r.seed[1])} ${String(r.seedUnit||'').replace('کل زمین','برای کل زمین')}`);
-    if(r.plantingWindow)html+=item('📅','بازه تقریبی کاشت',r.plantingWindow.join(' تا '));
-    if(n.durationMonths)html+=item('🗓️','بازه تقریبی برداشت',`حدود ${n.durationMonths[0]} تا ${n.durationMonths[1]} ماه پس از کاشت؛ رقم و منطقه می‌تواند آن را تغییر دهد.`);
+    if(r.plantingWindow)html+=item('📅','تاریخ تقریبی کاشت',r.plantingWindow.join(' تا '));
+    if(r.harvestDates)html+=item('🗓️','برداشت تقریبی',`${r.harvestDates.from} تا ${r.harvestDates.to}`);
+    else if(n.durationMonths)html+=item('🗓️','بازه تقریبی برداشت',`حدود ${n.durationMonths[0]} تا ${n.durationMonths[1]} ماه پس از کاشت؛ رقم و منطقه می‌تواند آن را تغییر دهد.`);
     if(r.irrigations)html+=item('💧','تعداد تقریبی آبیاری',`${r.irrigations[0]} تا ${r.irrigations[1]} نوبت`);
     if(r.interval)html+=item('🚿','فاصله تقریبی آبیاری',`هر ${r.interval[0]} تا ${r.interval[1]} روز؛ با بارش، بافت خاک و مرحله رشد اصلاح شود.`);
     if(r.yield)html+=item('📊','عملکرد تقریبی کل',`${yarNum(r.yield[0])} تا ${yarNum(r.yield[1])} ${r.yieldUnit||'تن'}`);
