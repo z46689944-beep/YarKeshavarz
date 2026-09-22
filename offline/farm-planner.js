@@ -17,12 +17,22 @@ function areaHa(land){return Math.max(0,Number(land?.area)||0)}
 function rangeMul(r,a){return [r[0]*a,r[1]*a]}
 function fmt(x){return Number(x||0).toLocaleString('fa-IR',{maximumFractionDigits:2})}
 function money(x){return Math.round(x||0).toLocaleString('fa-IR')+' تومان'}
-function zoneOf(region=''){
+function zoneOf(region='',lat=null){
   const r=norm(region);
+  if(/مازندران|گیلان|رشت|ساری|شمال|مرطوب/.test(r))return 'humid';
   if(/سرد|کوهستان|آذربایجان|اردبیل|همدان|کردستان|کرمانشاه|چهارمحال|زنجان|قزوین|البرز|دماوند|خراسان شمالی/.test(r))return 'cold';
   if(/گرمسیر|گرم|خوزستان|بوشهر|هرمزگان|میناب|جنوب کرمان|سیستان|بلوچستان|جنوب/.test(r))return 'warm';
-  if(/مازندران|گیلان|رشت|ساری|شمال|مرطوب/.test(r))return 'humid';
+  if(Number(lat)>=36)return 'cold';
+  if(Number(lat)<=29.5)return 'warm';
   return 'temperate';
+}
+const PERSIAN_MONTHS=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+function harvestDates(windowRange,duration){
+  if(!windowRange)return null;
+  const start=PERSIAN_MONTHS.indexOf(windowRange[0])+1;
+  if(!start)return null;
+  const add=(start+(Number(duration?.[1])||4)-1);
+  return {from:PERSIAN_MONTHS[(add-1)%12],to:PERSIAN_MONTHS[(add+1)%12]};
 }
 function cropFromContext(context){return normalizeCropName(context?.cultivation?.crop||context?.land?.crop||context?.l?.crop||context?.crop||'')}
 export function inventoryRelevance(crop,inventory=[]){
@@ -36,8 +46,8 @@ export function buildFarmPlan(context={}){
   if(!crop)return {ok:false,status:'missing_crop',crop:'',area,message:'محصول این زمین ثبت نشده است؛ بنابراین عددی برای بذر، آبیاری، هزینه یا درآمد به محصولی که وجود ندارد نسبت نمی‌دهم.'};
   const p=profileFor(crop);
   if(!p.numeric)return {ok:false,status:'profile_missing',crop,area,qualitative:p.qualitative,message:`برای «${crop}» شناسنامه کیفی موجود است، اما پروفایل عددی محلی/معتبر در موتور فعلی ثبت نشده؛ عدد ساختگی ارائه نمی‌کنم.`};
-  const n=p.numeric,zone=zoneOf(land.region),seed=rangeMul(n.seed,area),irrig=[n.irrigations[0],n.irrigations[1]],y=rangeMul(n.yield,area),revenue=[y[0]*1000*n.price[0],y[1]*1000*n.price[1]],cost=rangeMul(n.cost,area),profit=[revenue[0]-cost[1],revenue[1]-cost[0]],win=n.window?.[zone]||n.window?.temperate||null;
-  return {ok:true,status:'ready',crop,area,zone,seed,seedUnit:n.seedUnit,irrigations:irrig,interval:n.interval,yield:y,yieldUnit:n.yieldUnit,price:n.price,cost,revenue,profit,plantingWindow:win,estimated:!!n.estimated,estimateScope:n.estimateScope||''};
+  const n=p.numeric,zone=zoneOf(land.region,land.lat),seed=rangeMul(n.seed,area),irrig=[n.irrigations[0],n.irrigations[1]],y=rangeMul(n.yield,area),revenue=[y[0]*1000*n.price[0],y[1]*1000*n.price[1]],cost=rangeMul(n.cost,area),profit=[revenue[0]-cost[1],revenue[1]-cost[0]],win=n.window?.[zone]||n.window?.temperate||null;
+  return {ok:true,status:'ready',crop,area,zone,seed,seedUnit:n.seedUnit,irrigations:irrig,interval:n.interval,yield:y,yieldUnit:n.yieldUnit,price:n.price,cost,revenue,profit,plantingWindow:win,harvestDates:harvestDates(win,n.durationMonths),estimated:!!n.estimated,estimateScope:n.estimateScope||''};
 }
 export function farmPlanText(context={}){
   const r=buildFarmPlan(context);
