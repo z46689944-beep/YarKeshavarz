@@ -5,6 +5,7 @@ import {extractEntities} from "./intent-engine.js";
 import {remember,contextHint} from "./context-engine.js";
 import {getWeatherAdvice} from "./weather-advisor.js";
 import buildRegionalAdvice from "./regional-crop-calendar.js";
+import {buildFarmPlan,farmPlanText} from "./farm-planner.js";
 
 const KNOWLEDGE_KEY="yk-admin-knowledge-v1";
 
@@ -291,6 +292,16 @@ export async function findCropProfileAnswer(question,entities,context={}){
     }
   }catch{}
 
+  const farmPlan=buildFarmPlan(context);
+  if(farmPlan.ok){
+    const planItems=[];
+    if(farmPlan.planting) planItems.push(["تاریخ کاشت تقریبی",[farmPlan.planting.window]]);
+    if(farmPlan.seed) planItems.push(["بذر کل زمین",[`${fmtNum(farmPlan.seed.range[0])} تا ${fmtNum(farmPlan.seed.range[1])} ${farmPlan.seed.unit}`]]);
+    if(farmPlan.irrigation) planItems.push(["تعداد نوبت آبیاری",[`${fmtNum(farmPlan.irrigation.count[0])} تا ${fmtNum(farmPlan.irrigation.count[1])} نوبت در فصل؛ فاصله حدود ${fmtNum(farmPlan.irrigation.interval[0])} تا ${fmtNum(farmPlan.irrigation.interval[1])} روز`]]);
+    if(farmPlan.economics?.actual) planItems.push(["اقتصاد ثبت‌شده",[`${fmtNum(farmPlan.economics.cost)} تومان هزینه | ${fmtNum(farmPlan.economics.income)} تومان درآمد | ${fmtNum(farmPlan.economics.profit)} تومان سود/زیان`]]);
+    else if(farmPlan.economics) planItems.push(["برآورد اقتصادی",[`${fmtNum(farmPlan.economics.cost[0])} تا ${fmtNum(farmPlan.economics.cost[1])} تومان هزینه | ${fmtNum(farmPlan.economics.income[0])} تا ${fmtNum(farmPlan.economics.income[1])} تومان درآمد ناخالص`]]);
+    if(planItems.length) payload.sections.push({title:"برنامه عددی همین زمین",icon:"📊",items:planItems});
+  }
   payload.contextNote=`این شناسنامه با پرونده واقعی${l?` «${l.name||"زمین انتخاب‌شده"}»`:" کشاورزیار"} تطبیق داده شده است؛ توصیه نهایی باید با مرحله رشد، آزمون خاک/آب، رقم و شرایط روز مزرعه کنترل شود.`;
   return PROFILE_UI_MARKER+JSON.stringify(payload);
 }
@@ -346,12 +357,16 @@ async function contextAnswer(q,context){
   const ecoQ=hasAny(q,["هزینه","درآمد","سود","زیان","اقتصاد","خرج","صرفه","فروش","خرید"]);
   const landQ=hasAny(q,["زمینم","زمین","مساحت","خاک","آب","آبیاری","منطقه","روستا","شهر","رقم","تاریخ کاشت","مرحله رشد"]);
   const weatherQ=hasAny(q,["هوا","آب و هوا","بارندگی","باران","دما","باد","یخبندان","گرما","سرما","رطوبت"]);
-  const planQ=hasAny(q,["چه کار کنم","الان چه کار","قدم بعدی","برنامه","برنامه امروز","پیشنهاد بده","راهنمایی کن","تصمیم","بهتره"]);
+  const planQ=hasAny(q,["چه کار کنم","الان چه کار","قدم بعدی","برنامه","برنامه امروز","پیشنهاد بده","راهنمایی کن","تصمیم","بهتره","تاریخ کاشت","زمان کاشت","کی بکارم","بذر","چقدر بذر","چند نوبت آبیاری","نوبت آبیاری","خرج تقریبی","هزینه تقریبی","درآمد تقریبی","سود تقریبی"]);
   const crop= cultivation.crop || land?.crop || "";
 
   const lines=[];
   const title=land?`🧠 تحلیل پرونده «${land.name||"زمین انتخاب‌شده"}»`:`🧠 تحلیل کشاورزیار`;
   lines.push(title);
+  if(planQ && land && (cultivation.crop||land.crop)){
+    const planText=farmPlanText(context);
+    if(planText) lines.push("📊 برنامه عددی مزرعه:\n"+planText);
+  }
 
   if(landQ){
     lines.push(landSummary(context));
@@ -412,6 +427,8 @@ export async function findOfflineAnswer(question="",context={}){
   }
   if(/(تاریخ کاشت|زمان کاشت|کی بکار|کی بکارم|الان بکار|الان بکارم|وقت کاشت|بازه کاشت|تقویم کشت|تقویم کاشت|برنامه کشت|پیشنهاد کشت|پیشنهاد کاشت|چه موقع بکار)/.test(q)){
     let regional=buildRegionalAdvice(context);
+    const plan=farmPlanText(context);
+    if(plan && !/برای برنامه عددی/.test(plan)) regional+="\n\n📊 برآورد عددی زمین:\n"+plan;
     const weather=await getWeatherAdvice(context);
     if(weather) regional+=weather.text;
     remember("user",question,context?.l?{land:context.l}:{});
