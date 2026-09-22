@@ -1670,7 +1670,7 @@ async function yarSearchImages(q){
   }
   return [];
 }
-  async function yarOfflineAnswer(question, id=null){
+  async async function yarOfflineAnswer(question, id=null){
   try{
     const mod = await import('./offline/offline-ai.js');
     const ctx = yarAiContext(id);
