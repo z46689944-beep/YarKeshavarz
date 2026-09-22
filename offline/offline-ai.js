@@ -175,6 +175,45 @@ function fullProfileAnswer(profile){
   return a.trim();
 }
 
+const PROFILE_UI_MARKER="__YK_CROP_PROFILE_V1__";
+
+function profileValue(profile,key){
+  const v=profile?.[key];
+  if(Array.isArray(v)) return v;
+  if(v===undefined||v===null||v==="") return null;
+  return [String(v)];
+}
+function profilePayload(profile, focus="general"){
+  const name=cropNameOf(profile);
+  const sections=[];
+  const add=(title,icon,items)=>{
+    const out=[];
+    for(const [label,key] of items){
+      const v=profileValue(profile,key);
+      if(v===null) continue;
+      out.push([label,v]);
+    }
+    if(out.length) sections.push({title,icon,items:out});
+  };
+  if(focus==="planting") add("کاشت و تکثیر","🌾",[["فصل مناسب","season"],["دوره رشد/رسیدگی","growthDays"],["تکثیر","propagation"],["روش و عمق کاشت","planting"]]);
+  else if(focus==="irrigation") add("آبیاری","💧",[["مدیریت آب","irrigation"],["مراحل حساس","irrigationStages"]]);
+  else if(focus==="fertilizer") add("تغذیه و کود","🧪",[["تغذیه","nutrition"],["راهنمای کود","fertilizer"]]);
+  else if(focus==="pest") add("آفات","🐛",[["آفات مهم","pests"]]);
+  else if(focus==="disease") add("بیماری‌ها","🦠",[["بیماری‌های مهم","diseases"]]);
+  else if(focus==="harvest") add("برداشت و پس از برداشت","🧺",[["برداشت","harvest"],["پس از برداشت","postHarvest"],["انبارداری","storage"]]);
+  else if(focus==="soil") add("خاک و شرایط محیطی","🌱",[["خاک","soil"],["pH","ph"],["EC/شوری","ec"],["اقلیم","climate"]]);
+  else add("اطلاعات محصول","📋",[["اقلیم","climate"],["خاک","soil"],["کاشت","planting"],["آبیاری","irrigation"],["داشت","care"],["برداشت","harvest"]]);
+  return {
+    name,
+    scientificName:profile?.scientificName||profile?.scientific||"",
+    summary:profile?.summary||profile?.description||`شناسنامه پایه آفلاین ${name}`,
+    sections
+  };
+}
+function profileMarker(profile,focus="general"){
+  return PROFILE_UI_MARKER+JSON.stringify(profilePayload(profile,focus));
+}
+
 export function findCropProfileAnswer(question,entities){
   const cropName=entities?.crop?.crop;
   if(!cropName)return null;
@@ -183,46 +222,19 @@ export function findCropProfileAnswer(question,entities){
     Object.entries(cropProfiles).find(([name,p])=>
       name===cropName||(p.aliases||[]).some(a=>normalize(a)===normalize(cropName))
     )?.[1];
-
   if(!profile)return null;
 
   const q=normalize(question);
   const intent=entities?.intent?.id||"general";
-  const name=cropNameOf(profile);
-
   if(intent==="definition"||intent==="general"||q===normalize(profile.aliases?.[0]||"")){
-    return fullProfileAnswer(profile);
+    return profileMarker(profile,"general");
   }
-
-  let a=`🌱 ${name}\n\n`;
-
-  if(intent==="planting")a+=section("کاشت و تکثیر","🌾",[
-    ["فصل مناسب","season"],["دوره رشد/رسیدگی","growthDays"],
-    ["تکثیر","propagation"],["روش و عمق کاشت","planting"]
-  ],profile);
-  else if(intent==="irrigation")a+=section("آبیاری","💧",[
-    ["مدیریت آب","irrigation"],["مراحل حساس","irrigationStages"]
-  ],profile);
-  else if(intent==="fertilizer")a+=section("تغذیه و کود","🧪",[
-    ["تغذیه","nutrition"],["راهنمای کود","fertilizer"]
-  ],profile);
-  else if(intent==="pest")a+=section("آفات","🐛",[["آفات مهم","pests"]],profile);
-  else if(intent==="disease")a+=section("بیماری‌ها","🦠",[["بیماری‌های مهم","diseases"]],profile);
-  else if(intent==="harvest")a+=section("برداشت و پس از برداشت","🧺",[
-    ["برداشت","harvest"],["پس از برداشت","postHarvest"],["انبارداری","storage"]
-  ],profile);
-  else if(intent==="soil")a+=section("خاک و شرایط محیطی","🌱",[
-    ["خاک","soil"],["pH","ph"],["EC/شوری","ec"],["اقلیم","climate"]
-  ],profile);
-  else a+=section("اطلاعات محصول","📋",[
-    ["اقلیم","climate"],["خاک","soil"],["کاشت","planting"],
-    ["آبیاری","irrigation"],["داشت","care"],["برداشت","harvest"]
-  ],profile);
-
-  a+="ℹ️ این شناسنامه، راهنمای پایه آفلاین است؛ تاریخ کاشت، مقدار آب، کود و سایر اعداد باید با رقم، منطقه، آزمون خاک/آب و شرایط واقعی مزرعه تطبیق داده شوند.";
-  return a.trim();
+  const focusMap={
+    planting:"planting", irrigation:"irrigation", fertilizer:"fertilizer",
+    pest:"pest", disease:"disease", harvest:"harvest", soil:"soil"
+  };
+  return profileMarker(profile,focusMap[intent]||"general");
 }
-
 
 function fmtNum(v){
   const n=Number(v);
