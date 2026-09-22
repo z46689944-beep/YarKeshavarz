@@ -1531,6 +1531,7 @@ function yarAiContext(id){
     cultivationHistory,
     economics:l?{cost:c.t?.cost||0,income:c.t?.income||0,profit:c.t?.profit||0}:c?{cost:c.cost||0,income:c.income||0,profit:c.profit||0}:null,
     inventory:(state.inventory||[]).slice(0,80).map(x=>({name:x.name,qty:x.qty,unit:x.unit,category:x.category})),
+    equipment:(state.equipment||[]).slice(0,50).map(x=>({name:x.name,type:x.type,model:x.model,status:x.status,icon:x.icon})),
     weather:l?.weather||null,
     recentTransactions:tx.map(x=>({type:x.type,amount:x.amount,category:x.category,note:x.note,date:x.date})),
     otherLands:(state.lands||[]).filter(x=>!id||x.id!==id).slice(0,30).map(x=>({id:x.id,name:x.name,area:x.area,crop:x.crop,region:x.region}))
