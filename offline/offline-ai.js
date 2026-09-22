@@ -223,10 +223,78 @@ export function findCropProfileAnswer(question,entities){
   return a.trim();
 }
 
+
+function fmtNum(v){
+  const n=Number(v);
+  return Number.isFinite(n)?n.toLocaleString("fa-IR"):"-";
+}
+function inventorySummary(items=[]){
+  if(!Array.isArray(items)||!items.length)return "📦 در پرونده انبار موردی ثبت نشده است.";
+  return "📦 موجودی ثبت‌شده:\n"+items.slice(0,30).map(x=>{
+    const name=x?.name||"بدون نام", qty=x?.qty??"-", unit=x?.unit||"";
+    const cat=x?.category?` (${x.category})`:"";
+    return `• ${name}: ${fmtNum(qty)} ${unit}${cat}`.trim();
+  }).join("\n");
+}
+function equipmentSummary(items=[]){
+  if(!Array.isArray(items)||!items.length)return "🚜 در پرونده تجهیزات/ادوات موردی ثبت نشده است.";
+  return "🚜 تجهیزات و ادوات ثبت‌شده:\n"+items.slice(0,30).map(x=>{
+    const name=x?.name||"بدون نام";
+    const parts=[x?.type,x?.model,x?.status].filter(Boolean);
+    return `• ${name}${parts.length?" — "+parts.join(" | "):""}`;
+  }).join("\n");
+}
+function economicsSummary(e){
+  if(!e)return "💰 اطلاعات اقتصادی برای این پرونده ثبت نشده است.";
+  return `💰 اقتصاد پرونده:\n• هزینه: ${fmtNum(e.cost)} تومان\n• درآمد: ${fmtNum(e.income)} تومان\n• سود/زیان: ${fmtNum(e.profit)} تومان`;
+}
+function landSummary(c){
+  const l=c?.land||c?.l;
+  if(!l)return "🌾 هنوز پرونده زمین مشخصی انتخاب نشده است.";
+  const rows=[
+    ["نام",l.name],["مساحت",l.area?`${fmtNum(l.area)} هکتار`:null],
+    ["منطقه",l.region],["خاک",l.soil],["منبع آب",l.water],
+    ["آبیاری",l.irrigation],["محصول",l.crop],["مالکیت",l.ownership]
+  ].filter(x=>x[1]!==undefined&&x[1]!==null&&String(x[1]).trim()!=="");
+  return "🌾 مشخصات پرونده زمین:\n"+rows.map(x=>`• ${x[0]}: ${x[1]}`).join("\n");
+}
+function hasAny(q,words){
+  return words.some(w=>contains(q,w));
+}
+async function contextAnswer(q,context){
+  const stock=context?.inventory||context?.stock||[];
+  const equipment=context?.equipment||[];
+  const economics=context?.economics||context?.t;
+  const land=context?.land||context?.l;
+  const invQ=hasAny(q,["انبار","موجودی","موجودی انبار","چه کود","چه بذر","چه سم","نهاده"]);
+  const eqQ=hasAny(q,["ادوات","تجهیزات","ماشین","تراکتور","سمپاش","کمباین"]);
+  const ecoQ=hasAny(q,["هزینه","درآمد","سود","زیان","اقتصاد","خرج"]);
+  const landQ=hasAny(q,["زمینم","زمین","مساحت","خاک","آب","آبیاری","منطقه","روستا","شهر","رقم محصول"]);
+  const weatherQ=hasAny(q,["هوا","آب و هوا","بارندگی","باران","دما","باد","یخبندان","گرما"]);
+  if(invQ && eqQ)return inventorySummary(stock)+"\n\n"+equipmentSummary(equipment);
+  if(invQ)return inventorySummary(stock);
+  if(eqQ)return equipmentSummary(equipment);
+  if(ecoQ)return economicsSummary(economics);
+  if(landQ && land)return landSummary(context);
+  if(weatherQ){
+    const weather=await getWeatherAdvice(context);
+    if(weather)return "🌦️ وضعیت هوا برای این پرونده:\n"+weather.text.trim();
+    if(context?.weather)return `🌦️ داده آب‌وهوا:\n${JSON.stringify(context.weather)}`;
+    return "🌦️ برای این پرونده داده آب‌وهوا در دسترس نیست.";
+  }
+  return null;
+}
+
 export async function findOfflineAnswer(question="",context={}){
   const q=normalize(question);
   if(!q)return "🌱 سؤال کشاورزی‌ات را بنوی.";
   if(isSmallTalk(q))return smallTalkAnswer(q);
+  const ctxAnswer=await contextAnswer(q,context);
+  if(ctxAnswer){
+    remember("user",question,context?.l?{land:context.l}:{})
+    remember("bot",ctxAnswer,context?.l?{land:context.l}:{});
+    return ctxAnswer;
+  }
   if(/(تاریخ کاشت|زمان کاشت|کی بکار|کی بکارم|الان بکار|الان بکارم|وقت کاشت|بازه کاشت|تقویم کشت|تقویم کاشت|برنامه کشت|پیشنهاد کشت|پیشنهاد کاشت|چه موقع بکار)/.test(q)){
     let regional=buildRegionalAdvice(context);
     const weather=await getWeatherAdvice(context);
