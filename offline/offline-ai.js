@@ -214,8 +214,8 @@ function profileMarker(profile,focus="general"){
   return PROFILE_UI_MARKER+JSON.stringify(profilePayload(profile,focus));
 }
 
-export function findCropProfileAnswer(question,entities){
-  const cropName=entities?.crop?.crop;
+export async function findCropProfileAnswer(question,entities,context={}){
+  const cropName=entities?.crop?.crop || context?.cultivation?.crop || context?.land?.crop || context?.l?.crop;
   if(!cropName)return null;
 
   const profile=cropProfiles[cropName]||
@@ -226,14 +226,73 @@ export function findCropProfileAnswer(question,entities){
 
   const q=normalize(question);
   const intent=entities?.intent?.id||"general";
-  if(intent==="definition"||intent==="general"||q===normalize(profile.aliases?.[0]||"")){
-    return profileMarker(profile,"general");
-  }
   const focusMap={
     planting:"planting", irrigation:"irrigation", fertilizer:"fertilizer",
     pest:"pest", disease:"disease", harvest:"harvest", soil:"soil"
   };
-  return profileMarker(profile,focusMap[intent]||"general");
+  const focus=(intent==="definition"||intent==="general"||q===normalize(profile.aliases?.[0]||""))
+    ?"general":(focusMap[intent]||"general");
+
+  const payload=profilePayload(profile,focus);
+  const l=context?.land||context?.l;
+  const stock=context?.inventory||context?.stock||[];
+  const equipment=context?.equipment||[];
+  const economics=context?.economics||context?.t||null;
+
+  if(l){
+    const landItems=[];
+    for(const [label,value] of [
+      ["زمین",l.name],["مساحت",l.area?`${fmtNum(l.area)} هکتار`:null],
+      ["منطقه",l.region],["خاک",l.soil],["منبع آب",l.water],["آبیاری",l.irrigation],
+      ["رقم",context?.cultivation?.variety||l.cropVariety],["تاریخ کاشت",context?.cultivation?.plantDate||l.plantDate]
+    ]) if(value!==undefined&&value!==null&&String(value).trim()!="") landItems.push([label,[String(value)]]);
+    if(landItems.length) payload.sections.push({title:"پرونده همین زمین",icon:"🗺️",items:landItems});
+  }
+
+  const cropWords=[normalize(cropName),...(profile.aliases||[]).map(normalize)];
+  const relevantStock=stock.filter(x=>{
+    const text=normalize(`${x?.name||""} ${x?.category||""}`);
+    return cropWords.some(w=>w&&text.includes(w)) || /کود|بذر|سم|نهاده|گوگرد|ریز مغذی|ازت|فسفر|پتاس/.test(text);
+  }).slice(0,12);
+  if(relevantStock.length){
+    payload.sections.push({title:"انبار مرتبط با این محصول",icon:"📦",items:relevantStock.map(x=>[
+      x?.name||"نهاده",[`${fmtNum(x?.qty)} ${x?.unit||""}${x?.category?` — ${x.category}`:""}`.trim()]
+    ])});
+  }
+
+  if(equipment.length){
+    const relevantEq=equipment.filter(x=>/تراکتور|سمپاش|کمباین|دروگر|کولتیواتور|روتیواتور|بذرکار|خاکورز|ادوات|ماشین/.test(normalize(`${x?.name||""} ${x?.type||""}`))).slice(0,10);
+    if(relevantEq.length) payload.sections.push({title:"ادوات در دسترس",icon:"🚜",items:relevantEq.map(x=>[
+      x?.name||"تجهیز",[[x?.type,x?.model,x?.status].filter(Boolean).join(" | ")||"وضعیت ثبت نشده"]
+    ])});
+  }
+
+  if(economics){
+    payload.sections.push({title:"اقتصاد ثبت‌شده زمین",icon:"💰",items:[
+      ["هزینه",[`${fmtNum(economics.cost)} تومان`]],
+      ["درآمد",[`${fmtNum(economics.income)} تومان`]],
+      ["سود/زیان",[`${fmtNum(economics.profit)} تومان`]]
+    ]});
+  }
+
+  try{
+    const weather=await getWeatherAdvice(context);
+    if(weather?.data?.rows?.length){
+      const rows=weather.data.rows;
+      const hot=Math.max(...rows.map(x=>Number(x.tmax)||-99));
+      const cold=Math.min(...rows.map(x=>Number(x.tmin)||99));
+      const rain=rows.reduce((s,x)=>s+(Number(x.mm)||0),0);
+      payload.sections.push({title:"هوا و ریسک کوتاه‌مدت",icon:"🌦️",items:[
+        ["پیش‌بینی",[weather.data.place||"منطقه ثبت‌شده"]],
+        ["بازه دما",[`${cold} تا ${hot}°C`]],
+        ["بارش ۷ روز",[`${rain.toFixed(1)} میلی‌متر`]],
+        ["نتیجه عملی",[weather.data.notes?.join(" ")||"هشدار عمومی ثبت نشده است."]]
+      ]});
+    }
+  }catch{}
+
+  payload.contextNote=`این شناسنامه با پرونده واقعی${l?` «${l.name||"زمین انتخاب‌شده"}»`:" کشاورزیار"} تطبیق داده شده است؛ توصیه نهایی باید با مرحله رشد، آزمون خاک/آب، رقم و شرایط روز مزرعه کنترل شود.`;
+  return PROFILE_UI_MARKER+JSON.stringify(payload);
 }
 
 function fmtNum(v){
@@ -276,25 +335,69 @@ function hasAny(q,words){
 async function contextAnswer(q,context){
   const stock=context?.inventory||context?.stock||[];
   const equipment=context?.equipment||[];
-  const economics=context?.economics||context?.t;
-  const land=context?.land||context?.l;
-  const invQ=hasAny(q,["انبار","موجودی","موجودی انبار","چه کود","چه بذر","چه سم","نهاده"]);
-  const eqQ=hasAny(q,["ادوات","تجهیزات","ماشین","تراکتور","سمپاش","کمباین"]);
-  const ecoQ=hasAny(q,["هزینه","درآمد","سود","زیان","اقتصاد","خرج"]);
-  const landQ=hasAny(q,["زمینم","زمین","مساحت","خاک","آب","آبیاری","منطقه","روستا","شهر","رقم محصول"]);
-  const weatherQ=hasAny(q,["هوا","آب و هوا","بارندگی","باران","دما","باد","یخبندان","گرما"]);
-  if(invQ && eqQ)return inventorySummary(stock)+"\n\n"+equipmentSummary(equipment);
-  if(invQ)return inventorySummary(stock);
-  if(eqQ)return equipmentSummary(equipment);
-  if(ecoQ)return economicsSummary(economics);
-  if(landQ && land)return landSummary(context);
-  if(weatherQ){
-    const weather=await getWeatherAdvice(context);
-    if(weather)return "🌦️ وضعیت هوا برای این پرونده:\n"+weather.text.trim();
-    if(context?.weather)return `🌦️ داده آب‌وهوا:\n${JSON.stringify(context.weather)}`;
-    return "🌦️ برای این پرونده داده آب‌وهوا در دسترس نیست.";
+  const economics=context?.economics||context?.t||null;
+  const land=context?.land||context?.l||null;
+  const cultivation=context?.cultivation||{};
+  const history=context?.cultivationHistory||[];
+  const tx=context?.recentTransactions||[];
+
+  const invQ=hasAny(q,["انبار","موجودی","موجودی انبار","کود","بذر","سم","نهاده","چی دارم","چه دارم"]);
+  const eqQ=hasAny(q,["ادوات","تجهیزات","ماشین","تراکتور","سمپاش","کمباین","دروگر","بذرکار","روتیواتور"]);
+  const ecoQ=hasAny(q,["هزینه","درآمد","سود","زیان","اقتصاد","خرج","صرفه","فروش","خرید"]);
+  const landQ=hasAny(q,["زمینم","زمین","مساحت","خاک","آب","آبیاری","منطقه","روستا","شهر","رقم","تاریخ کاشت","مرحله رشد"]);
+  const weatherQ=hasAny(q,["هوا","آب و هوا","بارندگی","باران","دما","باد","یخبندان","گرما","سرما","رطوبت"]);
+  const planQ=hasAny(q,["چه کار کنم","الان چه کار","قدم بعدی","برنامه","برنامه امروز","پیشنهاد بده","راهنمایی کن","تصمیم","بهتره"]);
+  const crop= cultivation.crop || land?.crop || "";
+
+  const lines=[];
+  const title=land?`🧠 تحلیل پرونده «${land.name||"زمین انتخاب‌شده"}»`:`🧠 تحلیل کشاورزیار`;
+  lines.push(title);
+
+  if(landQ){
+    lines.push(landSummary(context));
   }
-  return null;
+  if(invQ){
+    lines.push(inventorySummary(stock));
+    if(stock.length && crop) {
+      const useful=stock.filter(x=>/کود|بذر|سم|نهاده|گوگرد|ازت|فسفر|پتاس|ریز/.test(normalize(`${x?.name||""} ${x?.category||""}`))).slice(0,8);
+      if(useful.length) lines.push(`🎯 برای ${crop} از اقلام ثبت‌شده، این موارد بیشترین ارتباط را دارند:\n`+useful.map(x=>`• ${x.name}: ${fmtNum(x.qty)} ${x.unit||""}`).join("\n"));
+    }
+  }
+  if(eqQ) lines.push(equipmentSummary(equipment));
+  if(ecoQ){
+    lines.push(economicsSummary(economics));
+    if(tx.length){
+      const recent=tx.slice(-8).map(x=>`• ${x.date||"بدون تاریخ"} — ${x.type||"عملیات"} — ${fmtNum(x.amount)} تومان${x.category?` — ${x.category}`:""}`).join("\n");
+      lines.push(`🧾 آخرین تراکنش‌های ثبت‌شده:\n${recent}`);
+    }
+  }
+  if(history.length && hasAny(q,["سال قبل","سال گذشته","سابقه","تاریخچه","قبلی","عملکرد"])){ 
+    lines.push(`📚 سابقه کشت:\n${history.slice(-6).map(x=>`• ${x.year||"سال نامشخص"}: ${x.crop||"-"}${x.variety?` (${x.variety})`:""} | هزینه ${fmtNum(x.cost)} | درآمد ${fmtNum(x.income)} | سود ${fmtNum(x.profit)}`).join("\n")}`);
+  }
+
+  let weather=null;
+  if(weatherQ||planQ||invQ||eqQ||crop){
+    try{weather=await getWeatherAdvice(context)}catch{}
+    if(weatherQ&&weather) lines.push(weather.text.trim());
+  }
+
+  if(planQ && land){
+    const actions=[];
+    if(!land.crop) actions.push("🌱 محصول و مرحله رشد را ثبت کن؛ بدون آن برنامه عملی دقیق محدود می‌شود.");
+    if(!land.soil) actions.push("🪨 نوع خاک یا نتیجه آزمون خاک را ثبت کن.");
+    if(!land.water||!land.irrigation) actions.push("💧 منبع آب و روش آبیاری را مشخص کن تا مدیریت آب قابل تنظیم باشد.");
+    if(weather?.data?.notes?.length) actions.push(...weather.data.notes);
+    if(stock.length) actions.push(`📦 قبل از خرید نهاده، موجودی ثبت‌شده را با نیاز مرحله رشد ${crop||"محصول"} تطبیق بده.`);
+    if(equipment.length) actions.push("🚜 برنامه عملیات را با ادوات موجود و وضعیت ثبت‌شده آن‌ها هماهنگ کن.");
+    if(economics) actions.push(`💰 سود/زیان فعلی ثبت‌شده ${fmtNum(economics.profit)} تومان است؛ خرید جدید را با این عدد و هزینه‌های عملیات مقایسه کن.`);
+    if(actions.length) lines.push("🎯 قدم‌های پیشنهادی:\n"+actions.slice(0,7).map(x=>`• ${x}`).join("\n"));
+  }
+
+  // A context-aware response should only fire when the question clearly asks about the farm dossier.
+  const explicitContext=invQ||eqQ||ecoQ||landQ||weatherQ||planQ;
+  if(!explicitContext)return null;
+  if(lines.length<=1)return "🌱 برای تحلیل دقیق‌تر، یک زمین را انتخاب کن تا پرونده، انبار، ادوات، اقتصاد و آب‌وهوا را هم‌زمان بررسی کنم.";
+  return lines.join("\n\n");
 }
 
 export async function findOfflineAnswer(question="",context={}){
@@ -318,7 +421,7 @@ export async function findOfflineAnswer(question="",context={}){
 
   const entities=extractEntities(q);
   const e=contextHint(entities,q);
-  const prof=findCropProfileAnswer(q,e);
+  const prof=await findCropProfileAnswer(q,e,context);
 
   if(prof){
     remember("user",question,e);
