@@ -5,7 +5,7 @@ import {extractEntities} from "./intent-engine.js";
 import {remember,contextHint} from "./context-engine.js";
 import {getWeatherAdvice} from "./weather-advisor.js";
 import buildRegionalAdvice from "./regional-crop-calendar.js";
-import {buildFarmPlan,farmPlanText} from "./farm-planner.js";
+import {buildFarmPlan, farmPlanText, normalizeCropName, inventoryRelevance} from "./farm-planner.js";
 
 const KNOWLEDGE_KEY="yk-admin-knowledge-v1";
 
@@ -176,259 +176,79 @@ function fullProfileAnswer(profile){
   return a.trim();
 }
 
-const PROFILE_UI_MARKER="__YK_CROP_PROFILE_V1__";
-
-function profileValue(profile,key){
-  const v=profile?.[key];
-  if(Array.isArray(v)) return v;
-  if(v===undefined||v===null||v==="") return null;
-  return [String(v)];
-}
-function profilePayload(profile, focus="general"){
-  const name=cropNameOf(profile);
-  const sections=[];
-  const add=(title,icon,items)=>{
-    const out=[];
-    for(const [label,key] of items){
-      const v=profileValue(profile,key);
-      if(v===null) continue;
-      out.push([label,v]);
-    }
-    if(out.length) sections.push({title,icon,items:out});
-  };
-  if(focus==="planting") add("کاشت و تکثیر","🌾",[["فصل مناسب","season"],["دوره رشد/رسیدگی","growthDays"],["تکثیر","propagation"],["روش و عمق کاشت","planting"]]);
-  else if(focus==="irrigation") add("آبیاری","💧",[["مدیریت آب","irrigation"],["مراحل حساس","irrigationStages"]]);
-  else if(focus==="fertilizer") add("تغذیه و کود","🧪",[["تغذیه","nutrition"],["راهنمای کود","fertilizer"]]);
-  else if(focus==="pest") add("آفات","🐛",[["آفات مهم","pests"]]);
-  else if(focus==="disease") add("بیماری‌ها","🦠",[["بیماری‌های مهم","diseases"]]);
-  else if(focus==="harvest") add("برداشت و پس از برداشت","🧺",[["برداشت","harvest"],["پس از برداشت","postHarvest"],["انبارداری","storage"]]);
-  else if(focus==="soil") add("خاک و شرایط محیطی","🌱",[["خاک","soil"],["pH","ph"],["EC/شوری","ec"],["اقلیم","climate"]]);
-  else add("اطلاعات محصول","📋",[["اقلیم","climate"],["خاک","soil"],["کاشت","planting"],["آبیاری","irrigation"],["داشت","care"],["برداشت","harvest"]]);
-  return {
-    name,
-    scientificName:profile?.scientificName||profile?.scientific||"",
-    summary:profile?.summary||profile?.description||`شناسنامه پایه آفلاین ${name}`,
-    sections
-  };
-}
-function profileMarker(profile,focus="general"){
-  return PROFILE_UI_MARKER+JSON.stringify(profilePayload(profile,focus));
-}
-
-export async function findCropProfileAnswer(question,entities,context={}){
-  const cropName=entities?.crop?.crop || context?.cultivation?.crop || context?.land?.crop || context?.l?.crop;
+export function findCropProfileAnswer(question,entities){
+  const cropName=entities?.crop?.crop;
   if(!cropName)return null;
 
   const profile=cropProfiles[cropName]||
     Object.entries(cropProfiles).find(([name,p])=>
       name===cropName||(p.aliases||[]).some(a=>normalize(a)===normalize(cropName))
     )?.[1];
+
   if(!profile)return null;
 
   const q=normalize(question);
   const intent=entities?.intent?.id||"general";
-  const focusMap={
-    planting:"planting", irrigation:"irrigation", fertilizer:"fertilizer",
-    pest:"pest", disease:"disease", harvest:"harvest", soil:"soil"
-  };
-  const focus=(intent==="definition"||intent==="general"||q===normalize(profile.aliases?.[0]||""))
-    ?"general":(focusMap[intent]||"general");
+  const name=cropNameOf(profile);
 
-  const payload=profilePayload(profile,focus);
-  const l=context?.land||context?.l;
-  const stock=context?.inventory||context?.stock||[];
-  const equipment=context?.equipment||[];
-  const economics=context?.economics||context?.t||null;
-
-  if(l){
-    const landItems=[];
-    for(const [label,value] of [
-      ["زمین",l.name],["مساحت",l.area?`${fmtNum(l.area)} هکتار`:null],
-      ["منطقه",l.region],["خاک",l.soil],["منبع آب",l.water],["آبیاری",l.irrigation],
-      ["رقم",context?.cultivation?.variety||l.cropVariety],["تاریخ کاشت",context?.cultivation?.plantDate||l.plantDate]
-    ]) if(value!==undefined&&value!==null&&String(value).trim()!="") landItems.push([label,[String(value)]]);
-    if(landItems.length) payload.sections.push({title:"پرونده همین زمین",icon:"🗺️",items:landItems});
+  if(intent==="definition"||intent==="general"||q===normalize(profile.aliases?.[0]||"")){
+    return fullProfileAnswer(profile);
   }
 
-  const cropWords=[normalize(cropName),...(profile.aliases||[]).map(normalize)];
-  const relevantStock=stock.filter(x=>{
-    const text=normalize(`${x?.name||""} ${x?.category||""}`);
-    return cropWords.some(w=>w&&text.includes(w)) || /کود|بذر|سم|نهاده|گوگرد|ریز مغذی|ازت|فسفر|پتاس/.test(text);
-  }).slice(0,12);
-  if(relevantStock.length){
-    payload.sections.push({title:"انبار مرتبط با این محصول",icon:"📦",items:relevantStock.map(x=>[
-      x?.name||"نهاده",[`${fmtNum(x?.qty)} ${x?.unit||""}${x?.category?` — ${x.category}`:""}`.trim()]
-    ])});
-  }
+  let a=`🌱 ${name}\n\n`;
 
-  if(equipment.length){
-    const relevantEq=equipment.filter(x=>/تراکتور|سمپاش|کمباین|دروگر|کولتیواتور|روتیواتور|بذرکار|خاکورز|ادوات|ماشین/.test(normalize(`${x?.name||""} ${x?.type||""}`))).slice(0,10);
-    if(relevantEq.length) payload.sections.push({title:"ادوات در دسترس",icon:"🚜",items:relevantEq.map(x=>[
-      x?.name||"تجهیز",[[x?.type,x?.model,x?.status].filter(Boolean).join(" | ")||"وضعیت ثبت نشده"]
-    ])});
-  }
+  if(intent==="planting")a+=section("کاشت و تکثیر","🌾",[
+    ["فصل مناسب","season"],["دوره رشد/رسیدگی","growthDays"],
+    ["تکثیر","propagation"],["روش و عمق کاشت","planting"]
+  ],profile);
+  else if(intent==="irrigation")a+=section("آبیاری","💧",[
+    ["مدیریت آب","irrigation"],["مراحل حساس","irrigationStages"]
+  ],profile);
+  else if(intent==="fertilizer")a+=section("تغذیه و کود","🧪",[
+    ["تغذیه","nutrition"],["راهنمای کود","fertilizer"]
+  ],profile);
+  else if(intent==="pest")a+=section("آفات","🐛",[["آفات مهم","pests"]],profile);
+  else if(intent==="disease")a+=section("بیماری‌ها","🦠",[["بیماری‌های مهم","diseases"]],profile);
+  else if(intent==="harvest")a+=section("برداشت و پس از برداشت","🧺",[
+    ["برداشت","harvest"],["پس از برداشت","postHarvest"],["انبارداری","storage"]
+  ],profile);
+  else if(intent==="soil")a+=section("خاک و شرایط محیطی","🌱",[
+    ["خاک","soil"],["pH","ph"],["EC/شوری","ec"],["اقلیم","climate"]
+  ],profile);
+  else a+=section("اطلاعات محصول","📋",[
+    ["اقلیم","climate"],["خاک","soil"],["کاشت","planting"],
+    ["آبیاری","irrigation"],["داشت","care"],["برداشت","harvest"]
+  ],profile);
 
-  if(economics){
-    payload.sections.push({title:"اقتصاد ثبت‌شده زمین",icon:"💰",items:[
-      ["هزینه",[`${fmtNum(economics.cost)} تومان`]],
-      ["درآمد",[`${fmtNum(economics.income)} تومان`]],
-      ["سود/زیان",[`${fmtNum(economics.profit)} تومان`]]
-    ]});
-  }
-
-  try{
-    const weather=await getWeatherAdvice(context);
-    if(weather?.data?.rows?.length){
-      const rows=weather.data.rows;
-      const hot=Math.max(...rows.map(x=>Number(x.tmax)||-99));
-      const cold=Math.min(...rows.map(x=>Number(x.tmin)||99));
-      const rain=rows.reduce((s,x)=>s+(Number(x.mm)||0),0);
-      payload.sections.push({title:"هوا و ریسک کوتاه‌مدت",icon:"🌦️",items:[
-        ["پیش‌بینی",[weather.data.place||"منطقه ثبت‌شده"]],
-        ["بازه دما",[`${cold} تا ${hot}°C`]],
-        ["بارش ۷ روز",[`${rain.toFixed(1)} میلی‌متر`]],
-        ["نتیجه عملی",[weather.data.notes?.join(" ")||"هشدار عمومی ثبت نشده است."]]
-      ]});
-    }
-  }catch{}
-
-  const farmPlan=buildFarmPlan(context);
-  if(farmPlan.ok){
-    const planItems=[];
-    if(farmPlan.planting) planItems.push(["تاریخ کاشت تقریبی",[farmPlan.planting.window]]);
-    if(farmPlan.seed) planItems.push(["بذر کل زمین",[`${fmtNum(farmPlan.seed.range[0])} تا ${fmtNum(farmPlan.seed.range[1])} ${farmPlan.seed.unit}`]]);
-    if(farmPlan.irrigation) planItems.push(["تعداد نوبت آبیاری",[`${fmtNum(farmPlan.irrigation.count[0])} تا ${fmtNum(farmPlan.irrigation.count[1])} نوبت در فصل؛ فاصله حدود ${fmtNum(farmPlan.irrigation.interval[0])} تا ${fmtNum(farmPlan.irrigation.interval[1])} روز`]]);
-    if(farmPlan.economics?.actual) planItems.push(["اقتصاد ثبت‌شده",[`${fmtNum(farmPlan.economics.cost)} تومان هزینه | ${fmtNum(farmPlan.economics.income)} تومان درآمد | ${fmtNum(farmPlan.economics.profit)} تومان سود/زیان`]]);
-    else if(farmPlan.economics) planItems.push(["برآورد اقتصادی",[`${fmtNum(farmPlan.economics.cost[0])} تا ${fmtNum(farmPlan.economics.cost[1])} تومان هزینه | ${fmtNum(farmPlan.economics.income[0])} تا ${fmtNum(farmPlan.economics.income[1])} تومان درآمد ناخالص`]]);
-    if(planItems.length) payload.sections.push({title:"برنامه عددی همین زمین",icon:"📊",items:planItems});
-  }
-  payload.contextNote=`این شناسنامه با پرونده واقعی${l?` «${l.name||"زمین انتخاب‌شده"}»`:" کشاورزیار"} تطبیق داده شده است؛ توصیه نهایی باید با مرحله رشد، آزمون خاک/آب، رقم و شرایط روز مزرعه کنترل شود.`;
-  return PROFILE_UI_MARKER+JSON.stringify(payload);
-}
-
-function fmtNum(v){
-  const n=Number(v);
-  return Number.isFinite(n)?n.toLocaleString("fa-IR"):"-";
-}
-function inventorySummary(items=[]){
-  if(!Array.isArray(items)||!items.length)return "📦 در پرونده انبار موردی ثبت نشده است.";
-  return "📦 موجودی ثبت‌شده:\n"+items.slice(0,30).map(x=>{
-    const name=x?.name||"بدون نام", qty=x?.qty??"-", unit=x?.unit||"";
-    const cat=x?.category?` (${x.category})`:"";
-    return `• ${name}: ${fmtNum(qty)} ${unit}${cat}`.trim();
-  }).join("\n");
-}
-function equipmentSummary(items=[]){
-  if(!Array.isArray(items)||!items.length)return "🚜 در پرونده تجهیزات/ادوات موردی ثبت نشده است.";
-  return "🚜 تجهیزات و ادوات ثبت‌شده:\n"+items.slice(0,30).map(x=>{
-    const name=x?.name||"بدون نام";
-    const parts=[x?.type,x?.model,x?.status].filter(Boolean);
-    return `• ${name}${parts.length?" — "+parts.join(" | "):""}`;
-  }).join("\n");
-}
-function economicsSummary(e){
-  if(!e)return "💰 اطلاعات اقتصادی برای این پرونده ثبت نشده است.";
-  return `💰 اقتصاد پرونده:\n• هزینه: ${fmtNum(e.cost)} تومان\n• درآمد: ${fmtNum(e.income)} تومان\n• سود/زیان: ${fmtNum(e.profit)} تومان`;
-}
-function landSummary(c){
-  const l=c?.land||c?.l;
-  if(!l)return "🌾 هنوز پرونده زمین مشخصی انتخاب نشده است.";
-  const rows=[
-    ["نام",l.name],["مساحت",l.area?`${fmtNum(l.area)} هکتار`:null],
-    ["منطقه",l.region],["خاک",l.soil],["منبع آب",l.water],
-    ["آبیاری",l.irrigation],["محصول",l.crop],["مالکیت",l.ownership]
-  ].filter(x=>x[1]!==undefined&&x[1]!==null&&String(x[1]).trim()!=="");
-  return "🌾 مشخصات پرونده زمین:\n"+rows.map(x=>`• ${x[0]}: ${x[1]}`).join("\n");
-}
-function hasAny(q,words){
-  return words.some(w=>contains(q,w));
-}
-async function contextAnswer(q,context){
-  const stock=context?.inventory||context?.stock||[];
-  const equipment=context?.equipment||[];
-  const economics=context?.economics||context?.t||null;
-  const land=context?.land||context?.l||null;
-  const cultivation=context?.cultivation||{};
-  const history=context?.cultivationHistory||[];
-  const tx=context?.recentTransactions||[];
-
-  const invQ=hasAny(q,["انبار","موجودی","موجودی انبار","کود","بذر","سم","نهاده","چی دارم","چه دارم"]);
-  const eqQ=hasAny(q,["ادوات","تجهیزات","ماشین","تراکتور","سمپاش","کمباین","دروگر","بذرکار","روتیواتور"]);
-  const ecoQ=hasAny(q,["هزینه","درآمد","سود","زیان","اقتصاد","خرج","صرفه","فروش","خرید"]);
-  const landQ=hasAny(q,["زمینم","زمین","مساحت","خاک","آب","آبیاری","منطقه","روستا","شهر","رقم","تاریخ کاشت","مرحله رشد"]);
-  const weatherQ=hasAny(q,["هوا","آب و هوا","بارندگی","باران","دما","باد","یخبندان","گرما","سرما","رطوبت"]);
-  const planQ=hasAny(q,["چه کار کنم","الان چه کار","قدم بعدی","برنامه","برنامه امروز","پیشنهاد بده","راهنمایی کن","تصمیم","بهتره","تاریخ کاشت","زمان کاشت","کی بکارم","بذر","چقدر بذر","چند نوبت آبیاری","نوبت آبیاری","خرج تقریبی","هزینه تقریبی","درآمد تقریبی","سود تقریبی"]);
-  const crop= cultivation.crop || land?.crop || "";
-
-  const lines=[];
-  const title=land?`🧠 تحلیل پرونده «${land.name||"زمین انتخاب‌شده"}»`:`🧠 تحلیل کشاورزیار`;
-  lines.push(title);
-  if(planQ && land && (cultivation.crop||land.crop)){
-    const planText=farmPlanText(context);
-    if(planText) lines.push("📊 برنامه عددی مزرعه:\n"+planText);
-  }
-
-  if(landQ){
-    lines.push(landSummary(context));
-  }
-  if(invQ){
-    lines.push(inventorySummary(stock));
-    if(stock.length && crop) {
-      const useful=stock.filter(x=>/کود|بذر|سم|نهاده|گوگرد|ازت|فسفر|پتاس|ریز/.test(normalize(`${x?.name||""} ${x?.category||""}`))).slice(0,8);
-      if(useful.length) lines.push(`🎯 برای ${crop} از اقلام ثبت‌شده، این موارد بیشترین ارتباط را دارند:\n`+useful.map(x=>`• ${x.name}: ${fmtNum(x.qty)} ${x.unit||""}`).join("\n"));
-    }
-  }
-  if(eqQ) lines.push(equipmentSummary(equipment));
-  if(ecoQ){
-    lines.push(economicsSummary(economics));
-    if(tx.length){
-      const recent=tx.slice(-8).map(x=>`• ${x.date||"بدون تاریخ"} — ${x.type||"عملیات"} — ${fmtNum(x.amount)} تومان${x.category?` — ${x.category}`:""}`).join("\n");
-      lines.push(`🧾 آخرین تراکنش‌های ثبت‌شده:\n${recent}`);
-    }
-  }
-  if(history.length && hasAny(q,["سال قبل","سال گذشته","سابقه","تاریخچه","قبلی","عملکرد"])){ 
-    lines.push(`📚 سابقه کشت:\n${history.slice(-6).map(x=>`• ${x.year||"سال نامشخص"}: ${x.crop||"-"}${x.variety?` (${x.variety})`:""} | هزینه ${fmtNum(x.cost)} | درآمد ${fmtNum(x.income)} | سود ${fmtNum(x.profit)}`).join("\n")}`);
-  }
-
-  let weather=null;
-  if(weatherQ||planQ||invQ||eqQ||crop){
-    try{weather=await getWeatherAdvice(context)}catch{}
-    if(weatherQ&&weather) lines.push(weather.text.trim());
-  }
-
-  if(planQ && land){
-    const actions=[];
-    if(!land.crop) actions.push("🌱 محصول و مرحله رشد را ثبت کن؛ بدون آن برنامه عملی دقیق محدود می‌شود.");
-    if(!land.soil) actions.push("🪨 نوع خاک یا نتیجه آزمون خاک را ثبت کن.");
-    if(!land.water||!land.irrigation) actions.push("💧 منبع آب و روش آبیاری را مشخص کن تا مدیریت آب قابل تنظیم باشد.");
-    if(weather?.data?.notes?.length) actions.push(...weather.data.notes);
-    if(stock.length) actions.push(`📦 قبل از خرید نهاده، موجودی ثبت‌شده را با نیاز مرحله رشد ${crop||"محصول"} تطبیق بده.`);
-    if(equipment.length) actions.push("🚜 برنامه عملیات را با ادوات موجود و وضعیت ثبت‌شده آن‌ها هماهنگ کن.");
-    if(economics) actions.push(`💰 سود/زیان فعلی ثبت‌شده ${fmtNum(economics.profit)} تومان است؛ خرید جدید را با این عدد و هزینه‌های عملیات مقایسه کن.`);
-    if(actions.length) lines.push("🎯 قدم‌های پیشنهادی:\n"+actions.slice(0,7).map(x=>`• ${x}`).join("\n"));
-  }
-
-  // A context-aware response should only fire when the question clearly asks about the farm dossier.
-  const explicitContext=invQ||eqQ||ecoQ||landQ||weatherQ||planQ;
-  if(!explicitContext)return null;
-  if(lines.length<=1)return "🌱 برای تحلیل دقیق‌تر، یک زمین را انتخاب کن تا پرونده، انبار، ادوات، اقتصاد و آب‌وهوا را هم‌زمان بررسی کنم.";
-  return lines.join("\n\n");
+  a+="ℹ️ این شناسنامه، راهنمای پایه آفلاین است؛ تاریخ کاشت، مقدار آب، کود و سایر اعداد باید با رقم، منطقه، آزمون خاک/آب و شرایط واقعی مزرعه تطبیق داده شوند.";
+  return a.trim();
 }
 
 export async function findOfflineAnswer(question="",context={}){
   const q=normalize(question);
+  // Farm-file questions are handled by the product-independent planning layer.
+  // This runs before the generic knowledge search so land data, inventory and
+  // economics are not lost behind a generic crop answer.
+  if(context?.land || context?.l){
+    const farmIntent=/(برنامه عددی|برنامه کشت|برنامه مزرعه|تحلیل پرونده|تحلیل زمین|وضعیت زمین|بذر.*مقدار|مقدار بذر|چند کیلو بذر|چند نوبت آبیاری|تعداد آبیاری|هزینه.*درآمد|درآمد.*هزینه|سود.*زمین|موجودی.*زمین|نیاز.*موجودی)/.test(q);
+    if(farmIntent){
+      const plan=farmPlanText({...context,inventory:context.inventory||context.stock||[]});
+      const land=context.land||context.l;
+      const crop=normalizeCropName(context?.cultivation?.crop||land?.crop||'');
+      let out=`📋 تحلیل پرونده «${land?.name||'زمین'}»\n\n${plan}`;
+      if(!crop){
+        out+=`\n\n🌱 محصول ثبت‌شده: ندارد.\n• موجودی مرتبط با محصول نمایش داده نمی‌شود تا از نسبت‌دادن کود یا بذر به «هیچی» جلوگیری شود.`;
+      }else{
+        const rel=inventoryRelevance(crop,context.inventory||context.stock||[]);
+        if(rel.length && !plan.includes('اقلام مرتبط')) out+=`\n\n📦 اقلامی که برای «${crop}» قابل بررسی‌اند:\n`+rel.map(x=>`• ${x.name||'قلم'}: ${x.qty||0} ${x.unit||''}`).join('\n');
+      }
+      return out.trim();
+    }
+  }
   if(!q)return "🌱 سؤال کشاورزی‌ات را بنوی.";
   if(isSmallTalk(q))return smallTalkAnswer(q);
-  const ctxAnswer=await contextAnswer(q,context);
-  if(ctxAnswer){
-    remember("user",question,context?.l?{land:context.l}:{})
-    remember("bot",ctxAnswer,context?.l?{land:context.l}:{});
-    return ctxAnswer;
-  }
   if(/(تاریخ کاشت|زمان کاشت|کی بکار|کی بکارم|الان بکار|الان بکارم|وقت کاشت|بازه کاشت|تقویم کشت|تقویم کاشت|برنامه کشت|پیشنهاد کشت|پیشنهاد کاشت|چه موقع بکار)/.test(q)){
     let regional=buildRegionalAdvice(context);
-    const plan=farmPlanText(context);
-    if(plan && !/برای برنامه عددی/.test(plan)) regional+="\n\n📊 برآورد عددی زمین:\n"+plan;
     const weather=await getWeatherAdvice(context);
     if(weather) regional+=weather.text;
     remember("user",question,context?.l?{land:context.l}:{});
@@ -438,7 +258,7 @@ export async function findOfflineAnswer(question="",context={}){
 
   const entities=extractEntities(q);
   const e=contextHint(entities,q);
-  const prof=await findCropProfileAnswer(q,e,context);
+  const prof=findCropProfileAnswer(q,e);
 
   if(prof){
     remember("user",question,e);
