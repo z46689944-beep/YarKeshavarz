@@ -1531,7 +1531,6 @@ function yarAiContext(id){
     cultivationHistory,
     economics:l?{cost:c.t?.cost||0,income:c.t?.income||0,profit:c.t?.profit||0}:c?{cost:c.cost||0,income:c.income||0,profit:c.profit||0}:null,
     inventory:(state.inventory||[]).slice(0,80).map(x=>({name:x.name,qty:x.qty,unit:x.unit,category:x.category})),
-    equipment:(state.equipment||[]).slice(0,50).map(x=>({name:x.name,type:x.type,model:x.model,status:x.status,icon:x.icon})),
     weather:l?.weather||null,
     recentTransactions:tx.map(x=>({type:x.type,amount:x.amount,category:x.category,note:x.note,date:x.date})),
     otherLands:(state.lands||[]).filter(x=>!id||x.id!==id).slice(0,30).map(x=>({id:x.id,name:x.name,area:x.area,crop:x.crop,region:x.region}))
@@ -1670,12 +1669,10 @@ async function yarSearchImages(q){
   }
   return [];
 }
-  async async function yarOfflineAnswer(question, id=null){
+  async function yarOfflineAnswer(question, id=null){
   try{
     const mod = await import('./offline/offline-ai.js');
-    const ctx = yarAiContext(id);
-    ctx.history = yarMessages.slice(-12).map(m=>({role:m.role,text:String(m.text||'').slice(0,2500)}));
-    return await mod.findOfflineAnswer(question, ctx);
+    return mod.findOfflineAnswer(question, yarAiContext(id));
   }catch(e){
     return '🌱 پاسخ آفلاین در دسترس نیست. فایل‌های پوشه offline را بررسی کنید.';
   }
@@ -1943,14 +1940,13 @@ function yarRender(){
         <div class="yk-crop-intro"><div class="yk-crop-intro-icon">🌱</div><div><h3>${escHtml(p.name)}</h3>${p.scientificName?`<div class="yk-crop-scientific">🔬 ${escHtml(p.scientificName)}</div>`:''}<p>${escHtml(p.summary||'')}</p></div></div>
         <div class="yk-crop-hint">برای دیدن جزئیات هر موضوع، روی همان بخش بزن.</div>
         <div class="yk-crop-sections">${sections}</div>
-        ${p.contextNote?`<div class="yk-crop-context">🧠 ${escHtml(p.contextNote)}</div>`:''}
         <div class="yk-crop-note">ℹ️ این شناسنامه راهنمای پایه آفلاین است؛ اعداد و توصیه‌ها باید با شرایط واقعی مزرعه تطبیق داده شوند.</div>
       </div>`;
     }catch(e){return null}
   };
   if(!document.getElementById('yk-crop-render-style')){
     const st=document.createElement('style');st.id='yk-crop-render-style';st.textContent=`
-      .yk-crop-profile{direction:rtl;color:#17362a}.yk-crop-intro{display:flex;gap:12px;padding:14px;background:linear-gradient(135deg,#eef8f2,#fff);border:1px solid #dbe9e1;border-radius:18px;margin-bottom:9px}.yk-crop-intro-icon{width:45px;height:45px;flex:0 0 45px;border-radius:14px;display:grid;place-items:center;background:#e2f2e8;font-size:24px}.yk-crop-intro h3{margin:0 0 4px;color:#145b40;font-size:16px}.yk-crop-intro p{margin:5px 0 0;font-size:11px;line-height:1.9;color:#4d6258}.yk-crop-scientific{font-size:10px;color:#6b7b73}.yk-crop-hint{font-size:10px;color:#6b7b73;background:#f5f8f6;border-radius:12px;padding:9px 11px;margin:7px 0}.yk-crop-sections{display:grid;gap:7px}.yk-crop-section{background:#fff;border:1px solid #dce8e1;border-radius:15px;overflow:hidden;box-shadow:0 4px 13px rgba(13,55,40,.05)}.yk-crop-section summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 11px;font-weight:800;color:#173f32}.yk-crop-section summary::-webkit-details-marker{display:none}.yk-crop-icon{width:31px;height:31px;flex:0 0 31px;border-radius:10px;background:#eaf4ee;display:grid;place-items:center;font-size:17px}.yk-crop-title{flex:1;font-size:11px}.yk-crop-chevron{font-size:17px;color:#6d8177}.yk-crop-section[open] summary{background:#f4f9f6}.yk-crop-body{padding:0 11px 10px;border-top:1px solid #edf2ef}.yk-crop-item{padding:9px 2px;border-bottom:1px dashed #e5ece8}.yk-crop-item:last-child{border-bottom:0}.yk-crop-item>b{display:block;font-size:10px;color:#25624b;margin-bottom:4px}.yk-crop-item p,.yk-crop-item ul{margin:0;font-size:10px;line-height:1.9;color:#334c41}.yk-crop-item ul{padding-right:18px}.yk-crop-context{margin-top:9px;padding:11px 12px;border-radius:14px;background:#eef7f1;border:1px solid #d4e7da;color:#24553f;font-size:10px;line-height:1.9}.yk-crop-note{margin-top:9px;padding:10px 11px;border-radius:13px;background:#fffaf0;border:1px solid #eee0bd;color:#6b6042;font-size:9px;line-height:1.8}
+      .yk-crop-profile{direction:rtl;color:#17362a}.yk-crop-intro{display:flex;gap:12px;padding:14px;background:linear-gradient(135deg,#eef8f2,#fff);border:1px solid #dbe9e1;border-radius:18px;margin-bottom:9px}.yk-crop-intro-icon{width:45px;height:45px;flex:0 0 45px;border-radius:14px;display:grid;place-items:center;background:#e2f2e8;font-size:24px}.yk-crop-intro h3{margin:0 0 4px;color:#145b40;font-size:16px}.yk-crop-intro p{margin:5px 0 0;font-size:11px;line-height:1.9;color:#4d6258}.yk-crop-scientific{font-size:10px;color:#6b7b73}.yk-crop-hint{font-size:10px;color:#6b7b73;background:#f5f8f6;border-radius:12px;padding:9px 11px;margin:7px 0}.yk-crop-sections{display:grid;gap:7px}.yk-crop-section{background:#fff;border:1px solid #dce8e1;border-radius:15px;overflow:hidden;box-shadow:0 4px 13px rgba(13,55,40,.05)}.yk-crop-section summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 11px;font-weight:800;color:#173f32}.yk-crop-section summary::-webkit-details-marker{display:none}.yk-crop-icon{width:31px;height:31px;flex:0 0 31px;border-radius:10px;background:#eaf4ee;display:grid;place-items:center;font-size:17px}.yk-crop-title{flex:1;font-size:11px}.yk-crop-chevron{font-size:17px;color:#6d8177}.yk-crop-section[open] summary{background:#f4f9f6}.yk-crop-body{padding:0 11px 10px;border-top:1px solid #edf2ef}.yk-crop-item{padding:9px 2px;border-bottom:1px dashed #e5ece8}.yk-crop-item:last-child{border-bottom:0}.yk-crop-item>b{display:block;font-size:10px;color:#25624b;margin-bottom:4px}.yk-crop-item p,.yk-crop-item ul{margin:0;font-size:10px;line-height:1.9;color:#334c41}.yk-crop-item ul{padding-right:18px}.yk-crop-note{margin-top:9px;padding:10px 11px;border-radius:13px;background:#fffaf0;border:1px solid #eee0bd;color:#6b6042;font-size:9px;line-height:1.8}
     `;document.head.appendChild(st);
   }
   b.innerHTML=yarMessages.map(m=>{
