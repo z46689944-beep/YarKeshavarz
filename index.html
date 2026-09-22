@@ -1867,6 +1867,97 @@ function yarPriorityPlan(id){
   return out.slice(0,3);
 }
 
+/* V1: structured crop advisor — scenario planning without changing the land record. */
+let yarCropAdvisorState={landId:'',crop:'',profiles:null,profile:null,plan:null};
+function yarCropEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function yarCropLandSummary(l){if(!l)return '';return `${yarNum(l.area)} هکتار | ${l.soil?yarCropEsc(l.soil):'خاک ثبت نشده'} | ${l.water?yarCropEsc(l.water):'آب ثبت نشده'} | ${l.irrigation?yarCropEsc(l.irrigation):'آبیاری ثبت نشده'} | ${l.region?yarCropEsc(l.region):'منطقه ثبت نشده'}`}
+function yarCropProfileValue(v){if(Array.isArray(v))return v.join('، ');return String(v??'').trim();}
+function yarCropAdvisor(){
+  yarCropAdvisorState={landId:selected||'',crop:'',profiles:null,profile:null,plan:null};
+  head('مشاور کشت');
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+  const lands=Array.isArray(state.lands)?state.lands:[];
+  app.innerHTML=`<section class="yar-crop-advisor">
+    <header class="yca-head"><button type="button" class="yca-back" onclick="yarChat()">‹</button><div><h1>🌱 مشاور کشت</h1><p>یک زمین و سپس محصول موردنظر را انتخاب کن.</p></div></header>
+    <div class="yca-body">
+      <div class="yca-step"><span>۱</span><div><b>انتخاب زمین</b><small>فقط نام زمین‌ها نمایش داده می‌شود.</small></div></div>
+      <div class="yca-land-list" id="ycaLandList">${lands.length?lands.map(l=>`<button type="button" class="yca-land-row ${String(l.id)===String(yarCropAdvisorState.landId)?'active':''}" onclick="yarCropAdvisorSelectLand('${yarCropEsc(l.id)}')"><span>🌾</span><b>${yarCropEsc(l.name||'زمین بدون نام')}</b><i>›</i></button>`).join(''):`<div class="yca-empty">هنوز زمینی ثبت نشده است.</div>`}</div>
+      <div id="ycaSelected" class="yca-selected"></div>
+      <div id="ycaCropBox"></div>
+      <div id="ycaPlan"></div>
+    </div>
+  </section>`;
+  if(yarCropAdvisorState.landId) yarCropAdvisorSelectLand(yarCropAdvisorState.landId);
+}
+function yarCropAdvisorSelectLand(id){
+  const l=yarLand(id);if(!l)return;
+  yarCropAdvisorState.landId=l.id;yarCropAdvisorState.crop='';yarCropAdvisorState.profile=null;yarCropAdvisorState.plan=null;
+  document.querySelectorAll('.yca-land-row').forEach(b=>b.classList.toggle('active',String(b.getAttribute('onclick')||'').includes(String(l.id))));
+  const box=document.getElementById('ycaSelected');
+  if(box)box.innerHTML=`<div class="yca-land-detail"><div><b>${yarCropEsc(l.name||'زمین بدون نام')}</b><p>${yarCropLandSummary(l)}</p></div><span>✓</span></div>`;
+  const cb=document.getElementById('ycaCropBox');
+  if(cb)cb.innerHTML=`<div class="yca-step"><span>۲</span><div><b>انتخاب محصول</b><small>این انتخاب فقط برای برنامه‌ریزی است و محصول ثبت‌شده زمین را تغییر نمی‌دهد.</small></div></div><div class="yca-crop-select"><select id="ycaCropSelect" onchange="yarCropAdvisorSelectCrop(this.value)"><option value="">در حال بارگذاری محصولات…</option></select></div>`;
+  yarCropAdvisorLoadProfiles();
+}
+async function yarCropAdvisorLoadProfiles(){
+  try{
+    const mod=await import('./offline/crop-profiles.js');
+    const profiles=mod.profiles||{};yarCropAdvisorState.profiles=profiles;
+    const names=Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'fa'));
+    const sel=document.getElementById('ycaCropSelect');if(!sel)return;
+    sel.innerHTML=`<option value="">محصول را انتخاب کن…</option>`+names.map(n=>`<option value="${yarCropEsc(n)}">${yarCropEsc(n)}</option>`).join('');
+    if(yarCropAdvisorState.crop)sel.value=yarCropAdvisorState.crop;
+  }catch(e){
+    const sel=document.getElementById('ycaCropSelect');if(sel)sel.innerHTML='<option value="">فهرست محصولات در دسترس نیست</option>';
+  }
+}
+function yarCropAdvisorSelectCrop(crop){
+  yarCropAdvisorState.crop=String(crop||'').trim();yarCropAdvisorState.plan=null;
+  const p=yarCropAdvisorState.profiles?.[yarCropAdvisorState.crop]||null;yarCropAdvisorState.profile=p;
+  const l=yarLand(yarCropAdvisorState.landId),box=document.getElementById('ycaPlan');if(!l||!box)return;
+  if(!p){box.innerHTML='';return;}
+  const numeric=p.numeric||null;
+  let html=`<div class="yca-preview"><div><b>${yarCropEsc(yarCropAdvisorState.crop)}</b><small>${yarCropEsc(p.scientificName||'')} ${p.summary?'· '+yarCropEsc(p.summary):''}</small></div><span>${numeric?'🟢 برنامه عددی':'🟡 برنامه کیفی'}</span></div>`;
+  html+=`<button type="button" class="yca-generate" onclick="yarCropAdvisorPlan()">📋 تولید برنامه کشت برای «${yarCropEsc(yarCropAdvisorState.crop)}»</button>`;
+  box.innerHTML=html;
+}
+function yarCropAdvisorPlan(){
+  const l=yarLand(yarCropAdvisorState.landId),crop=yarCropAdvisorState.crop,p=yarCropAdvisorState.profile;if(!l||!crop||!p)return;
+  const context={land:l,cultivation:{crop},inventory:state.inventory||[],stock:state.inventory||[]};
+  import('./offline/farm-planner.js').then(mod=>{
+    const plan=mod.buildFarmPlan(context);yarCropAdvisorState.plan=plan;yarCropAdvisorRenderPlan(l,p,plan);
+  }).catch(()=>yarCropAdvisorRenderPlan(l,p,{ok:false,status:'planner_error',message:'موتور برنامه‌ریزی در دسترس نیست.'}));
+}
+function yarCropAdvisorRenderPlan(l,p,r){
+  const box=document.getElementById('ycaPlan');if(!box)return;
+  const item=(icon,title,value)=>`<div class="yca-info-card"><span>${icon}</span><div><b>${title}</b><p>${yarCropEsc(value||'اطلاعات ثبت نشده')}</p></div></div>`;
+  let html=`<div class="yca-result-head"><div><span>برنامه کشت سناریویی</span><h2>🌱 ${yarCropEsc(yarCropAdvisorState.crop)}</h2><p>زمین «${yarCropEsc(l.name||'بدون نام')}» · ${yarNum(l.area)} هکتار</p></div><button type="button" onclick="yarCropAdvisor()">تغییر</button></div>`;
+  html+=`<div class="yca-context"><b>پرونده زمین</b><span>${yarCropLandSummary(l)}</span></div>`;
+  if(r.ok){
+    const n=p.numeric||{};
+    html+=`<div class="yca-grid">`;
+    if(n.seed)html+=item('🌾','بذر/حبه در هکتار',`${yarNum(n.seed[0])} تا ${yarNum(n.seed[1])} ${n.seedUnit||'کیلوگرم در هکتار'}`);
+    if(r.seed)html+=item('📦','مقدار کل برای این زمین',`${yarNum(r.seed[0])} تا ${yarNum(r.seed[1])} ${String(r.seedUnit||'').replace('کل زمین','برای کل زمین')}`);
+    if(r.plantingWindow)html+=item('📅','بازه تقریبی کاشت',r.plantingWindow.join(' تا '));
+    if(n.durationMonths)html+=item('🗓️','بازه تقریبی برداشت',`حدود ${n.durationMonths[0]} تا ${n.durationMonths[1]} ماه پس از کاشت؛ رقم و منطقه می‌تواند آن را تغییر دهد.`);
+    if(r.irrigations)html+=item('💧','تعداد تقریبی آبیاری',`${r.irrigations[0]} تا ${r.irrigations[1]} نوبت`);
+    if(r.interval)html+=item('🚿','فاصله تقریبی آبیاری',`هر ${r.interval[0]} تا ${r.interval[1]} روز؛ با بارش، بافت خاک و مرحله رشد اصلاح شود.`);
+    if(r.yield)html+=item('📊','عملکرد تقریبی کل',`${yarNum(r.yield[0])} تا ${yarNum(r.yield[1])} ${r.yieldUnit||'تن'}`);
+    if(r.cost)html+=item('💰','هزینه تقریبی کل',`${yarMoney(r.cost[0])} تا ${yarMoney(r.cost[1])}`);
+    if(r.revenue)html+=item('💵','درآمد تقریبی کل',`${yarMoney(r.revenue[0])} تا ${yarMoney(r.revenue[1])}`);
+    if(r.profit)html+=item('📈','سود/زیان تقریبی',`${yarMoney(r.profit[0])} تا ${yarMoney(r.profit[1])}`);
+    html+='</div>';
+  }else if(r.status==='profile_missing'){
+    html+=`<div class="yca-warning">🟡 برای این محصول شناسنامه کیفی موجود است، اما پروفایل عددی محلی/معتبر ثبت نشده؛ عدد ساختگی نمایش داده نمی‌شود.</div>`;
+  }else if(r.status==='planner_error'){
+    html+=`<div class="yca-warning">🔴 ${yarCropEsc(r.message)}</div>`;
+  }
+  const sections=[['🌡️','اقلیم',p.climate],['🪨','خاک',p.soil],['🧭','روش کشت',p.planting],['💧','آب و آبیاری',p.irrigation],['🧪','تغذیه',p.nutrition],['🐛','آفات',p.pests],['🦠','بیماری‌ها',p.diseases],['🌾','برداشت',p.harvest],['📦','انبارمانی',p.storage],['⚠️','ریسک‌های مهم',p.risks]];
+  html+=`<div class="yca-section-title">راهنمای مدیریت محصول</div><div class="yca-info-list">${sections.filter(x=>x[2]).map(x=>item(x[0],x[1],yarCropProfileValue(x[2]))).join('')}</div>`;
+  html+=`<div class="yca-note">ℹ️ این برنامه یک سناریوی برنامه‌ریزی است. اطلاعات زمین از پرونده انتخاب‌شده گرفته شده، اما انتخاب «${yarCropEsc(yarCropAdvisorState.crop)}» محصول زمین را ثبت یا جایگزین نمی‌کند. برای تاریخ و مقدار دقیق، رقم، آزمایش خاک، کیفیت آب و توصیه محلی باید بررسی شود.</div>`;
+  box.innerHTML=html;window.scrollTo({top:0,left:0,behavior:'instant'});
+}
+
 function yar(){
   yarChatActive=false;
   head('کشاورزیار');
@@ -1943,9 +2034,8 @@ function yarChat(){
 
     <div class="yar-final-tools" aria-label="ابزارهای کشاورزیار">
       <button type="button" onclick="${l?`yarAnalyzeLand('${l.id}')`:`yarAsk('اطلاعات و وضعیت مزرعه را بررسی کن')`}"><span>🌾</span><b>تحلیل مزرعه</b></button>
-      <button type="button" onclick="yarAsk('برای کشت چه پیشنهادی داری؟')"><span>🌱</span><b>مشاور کشت</b></button>
+      <button type="button" onclick="yarCropAdvisor()"><span>🌱</span><b>مشاور کشت</b></button>
       <button type="button" onclick="yarAsk('وضعیت انبار و نهاده را بررسی کن')"><span>📦</span><b>انبار و نهاده</b></button>
-      <button type="button" onclick="yarAsk('اقتصاد مزرعه و هزینه و درآمد را بررسی کن')"><span>💰</span><b>اقتصاد مزرعه</b></button>
       <button type="button" onclick="yarPickPhoto()"><span>📷</span><b>تحلیل عکس</b></button>
     </div>
     <div class="yarpro-hint">${l?'این گفت‌وگو به پرونده همین زمین متصل است.':yarMode==='online'?'حالت آنلاین فعال است. سؤال‌ها برای هوش مصنوعی آنلاین ارسال می‌شوند.':'حالت آفلاین فعال است؛ سؤال‌ها بدون ارسال به اینترنت در دستگاه بررسی می‌شوند.'}</div>
@@ -1995,7 +2085,21 @@ function yarRender(){
 }
 function yarAsk(q){const i=document.getElementById('yarInput');if(i){i.value=q;yarSend()}}
 function yarBindInput(){const i=document.getElementById('yarInput');if(!i||i.dataset.bound==='1')return;i.dataset.bound='1';i.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const f=i.closest('form');if(f)f.requestSubmit();else yarSend();}})}
-function yarFocusInput(){const i=document.getElementById('yarInput');if(!i)return;i.focus();try{i.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}}
+function yarFocusInput(){const i=document.getElementById('yarInput');if(!i)return;i.focus({preventScroll:true});setTimeout(()=>{const b=document.getElementById('yarChat');if(b)b.scrollTop=b.scrollHeight},40)}
+(function(){
+  function yarViewportFix(){
+    const root=document.querySelector('.yar-final');if(!root)return;
+    const vv=window.visualViewport;
+    if(vv){
+      const keyboard=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+      root.style.setProperty('--yk-keyboard',keyboard+'px');
+      const chat=document.getElementById('yarChat');
+      if(chat&&keyboard>0)chat.scrollTop=chat.scrollHeight;
+    }
+  }
+  if(window.visualViewport){visualViewport.addEventListener('resize',yarViewportFix);visualViewport.addEventListener('scroll',yarViewportFix)}
+  window.addEventListener('resize',yarViewportFix);
+})();
 function yarClear(){yarMessages=[];saveYarChat();yarChatActive?yarChat():yar()}
 
 function game(){
@@ -2365,5 +2469,16 @@ html.yk-font-small{font-size:92%}
 html.yk-font-large{font-size:108%}
 </style>
 
+<style id="yar-keyboard-safe-v1">
+.yar-final .yarpro-form.yar-final-form{bottom:calc(76px + var(--yk-keyboard,0px))!important}
+.yar-final .yar-final-tools{bottom:var(--yk-keyboard,0px)!important}
+.yar-final .yarpro-chat{bottom:calc(144px + var(--yk-keyboard,0px))!important}
+</style>
+<style id="yar-crop-advisor-v1">
+.yar-crop-advisor{direction:rtl;min-height:100dvh;background:#eef5f1;padding:0 0 30px;box-sizing:border-box;color:#17362a}
+.yca-head{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(248,252,249,.96);border-bottom:1px solid #dce8e1;backdrop-filter:blur(14px)}
+.yca-back{width:38px;height:38px;border:1px solid #d7e5de;border-radius:12px;background:#fff;color:#185a41;font-size:27px;line-height:1;cursor:pointer}.yca-head h1{margin:0;font-size:19px}.yca-head p{margin:3px 0 0;font-size:10px;color:#74857d}.yca-body{max-width:720px;margin:auto;padding:14px 12px 34px}.yca-step{display:flex;align-items:center;gap:9px;margin:5px 0 9px}.yca-step>span{width:27px;height:27px;border-radius:9px;background:#176b49;color:#fff;display:grid;place-items:center;font-weight:900;font-size:12px}.yca-step b{display:block;font-size:13px}.yca-step small{display:block;color:#75867e;font-size:9px;margin-top:2px}.yca-land-list{display:grid;gap:7px}.yca-land-row{width:100%;display:flex;align-items:center;gap:10px;text-align:right;padding:12px 13px;border:1px solid #d9e6df;border-radius:15px;background:#fff;color:#17362a;cursor:pointer;box-shadow:0 3px 10px rgba(13,55,40,.04)}.yca-land-row span{width:34px;height:34px;border-radius:11px;background:#eaf4ee;display:grid;place-items:center;font-size:18px}.yca-land-row b{flex:1;font-size:12px}.yca-land-row i{font-style:normal;font-size:22px;color:#7c9187}.yca-land-row.active{border-color:#4ba57d;background:#f4faf7;box-shadow:0 5px 16px rgba(35,112,78,.1)}.yca-selected{margin-top:9px}.yca-land-detail{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid #cfe2d8;border-radius:15px;background:#f7fbf8}.yca-land-detail>div{flex:1}.yca-land-detail b{font-size:13px}.yca-land-detail p{margin:4px 0 0;font-size:9.5px;line-height:1.8;color:#63766d}.yca-land-detail>span{width:28px;height:28px;border-radius:50%;background:#dff1e7;color:#1b7650;display:grid;place-items:center;font-weight:900}.yca-crop-select select{width:100%;min-height:46px;border:1px solid #d4e2db;border-radius:13px;background:#fff;padding:8px 10px;color:#17362a;font-family:inherit;font-size:12px}.yca-preview{display:flex;align-items:center;gap:9px;margin-top:10px;padding:11px 12px;border:1px solid #dce8e1;border-radius:14px;background:#fff}.yca-preview>div{flex:1}.yca-preview b{display:block;font-size:13px}.yca-preview small{display:block;margin-top:4px;color:#71837a;font-size:9px;line-height:1.7}.yca-preview>span{font-size:9px;padding:5px 7px;border-radius:9px;background:#edf7f1;color:#287154;white-space:nowrap}.yca-generate{width:100%;margin-top:8px;min-height:45px;border:0;border-radius:13px;background:linear-gradient(135deg,#0d6547,#21835d);color:#fff;font-family:inherit;font-weight:800;cursor:pointer}.yca-result-head{display:flex;align-items:flex-start;gap:10px;margin-top:13px;padding:14px;border-radius:17px;background:#fff;border:1px solid #dce8e1}.yca-result-head>div{flex:1}.yca-result-head span{font-size:9px;color:#6d8077}.yca-result-head h2{margin:3px 0;font-size:18px}.yca-result-head p{margin:0;color:#71837a;font-size:9px}.yca-result-head button{border:1px solid #d5e3dc;background:#f7faf8;border-radius:10px;padding:7px 9px;color:#205f48;font-family:inherit}.yca-context{margin-top:8px;padding:9px 11px;background:#f7fbf8;border:1px dashed #cfe0d7;border-radius:12px}.yca-context b{display:block;font-size:10px}.yca-context span{display:block;margin-top:3px;font-size:9px;color:#687a72;line-height:1.8}.yca-grid,.yca-info-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.yca-info-card{display:flex;gap:8px;padding:10px;border:1px solid #dce8e1;border-radius:13px;background:#fff;min-width:0}.yca-info-card>span{font-size:19px}.yca-info-card div{min-width:0}.yca-info-card b{display:block;font-size:9px;color:#28644e}.yca-info-card p{margin:4px 0 0;font-size:9px;line-height:1.8;color:#3f574d;word-break:break-word}.yca-section-title{margin:14px 2px 6px;font-size:12px;font-weight:900;color:#245c47}.yca-warning,.yca-note{margin-top:9px;padding:10px 11px;border-radius:13px;font-size:9.5px;line-height:1.9}.yca-warning{background:#fff8e8;border:1px solid #eadcae;color:#6b5a24}.yca-note{background:#f3f7f5;border:1px solid #dce8e1;color:#667870}.yca-empty{padding:18px;text-align:center;background:#fff;border:1px dashed #ceddd5;border-radius:14px;color:#74857d;font-size:11px}
+@media(max-width:560px){.yca-grid,.yca-info-list{grid-template-columns:1fr}.yca-body{padding-left:9px;padding-right:9px}.yca-head{padding:10px 9px}}
+</style>
 </body>
 </html>
