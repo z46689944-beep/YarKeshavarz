@@ -13,7 +13,11 @@ export function normalizeCropName(value=''){
   const n=norm(value);
   if(PLACEHOLDERS.has(n)) return '';
   const hit=findCropProfile(value);
-  return hit?.name || Object.keys(cropProfiles).find(k=>norm(k)===n) || String(value).trim();
+  if(hit){
+    const canonical=Object.keys(cropProfiles).find(k=>cropProfiles[k]===hit);
+    if(canonical) return canonical;
+  }
+  return Object.keys(cropProfiles).find(k=>norm(k)===n) || String(value).trim();
 }
 
 function cropKey(value=''){
@@ -25,19 +29,15 @@ function cropKey(value=''){
   return aliases[norm(name)] || name;
 }
 
-// The first four numeric profiles are the project's existing conservative ranges.
-// New crops are added by data, not by changing the planner algorithms.
-const NUMERIC = {
-  'گندم':{seed:[100,170],seedUnit:'کیلوگرم (کل زمین)',irrigations:[4,8],interval:[12,22],yield:[3,6],yieldUnit:'تن (کل زمین)',price:[15000,25000],cost:[25000000,50000000],window:{cold:['شهریور','مهر'],temperate:['مهر','آبان'],warm:['آبان','آذر'],humid:['مهر','آبان']}},
-  'جو':{seed:[100,180],seedUnit:'کیلوگرم (کل زمین)',irrigations:[3,7],interval:[14,24],yield:[2.5,5.5],yieldUnit:'تن (کل زمین)',price:[13000,22000],cost:[22000000,45000000],window:{cold:['شهریور','مهر'],temperate:['مهر','آبان'],warm:['آبان','آذر'],humid:['مهر','آبان']}},
-  'سیب زمینی':{seed:[1800,3000],seedUnit:'کیلوگرم (کل زمین)',irrigations:[8,14],interval:[5,10],yield:[20,40],yieldUnit:'تن (کل زمین)',price:[9000,18000],cost:[90000000,170000000],window:{cold:['فروردین','اردیبهشت'],temperate:['اسفند','فروردین'],warm:['دی','بهمن'],humid:['اسفند','فروردین']}},
-  'ذرت':{seed:[18,30],seedUnit:'کیلوگرم (کل زمین)',irrigations:[8,14],interval:[5,10],yield:[6,12],yieldUnit:'تن (کل زمین)',price:[10000,18000],cost:[70000000,130000000],window:{cold:['اردیبهشت','خرداد'],temperate:['فروردین','اردیبهشت'],warm:['بهمن','اسفند'],humid:['فروردین','اردیبهشت']}}
-};
+// Numeric planning data lives inside each crop profile.
+// The planner algorithm below is product-independent: adding a crop means
+// adding/updating its profile data, not adding another crop-specific branch.
 
 function profileFor(crop){
   const key=cropKey(crop);
-  const p=NUMERIC[key];
-  return {key, numeric:p||null, qualitative:findCropProfile(crop)||null};
+  const qualitative=findCropProfile(crop)||null;
+  const p=qualitative?.numeric||null;
+  return {key, numeric:p, qualitative};
 }
 
 function areaHa(land){return Math.max(0,Number(land?.area)||0)}
