@@ -996,7 +996,7 @@ function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt
 function toast(x){alert(x)}
 function head(x){title.textContent=x}
 function totals(id){let t=state.transactions.filter(x=>!id||x.landId===id),c=t.filter(x=>x.type==='expense').reduce((a,x)=>a+n(x.amount),0),i=t.filter(x=>x.type==='income').reduce((a,x)=>a+n(x.amount),0);return{cost:c,income:i,profit:i-c}}
-function go(r){if(r==='measure'&&!measureReturn){selected=null;measureReturn='add'}route=r;window.scrollTo({top:0,left:0,behavior:'instant'});if(r==='home')home();else if(r==='lands')lands();else if(r==='add')add();else if(r==='measure')measure();else if(r==='inventory')inventory();else if(r==='weather')weather();else if(r==='equipment')equipment();else if(r==='calculator'){toast('محاسبه‌گر برآورد از نسخه نهایی حذف شده است');go('home')}else if(r==='cultivation')cultivation();else if(r==='profile')profile();else if(r==='account')account();else if(r==='settings')settings();else if(r==='manager')managerChat();else if(r==='ads')ads();else if(r==='news')news();else if(r==='yar')yar();else if(r==='game')game();else home();document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.r===r))}
+function go(r){if(r==='measure'&&!measureReturn){selected=null;measureReturn='add'}route=r;window.scrollTo({top:0,left:0,behavior:'instant'});document.documentElement.scrollTop=0;document.body.scrollTop=0;if(r==='home')home();else if(r==='lands')lands();else if(r==='add')add();else if(r==='measure')measure();else if(r==='inventory')inventory();else if(r==='weather')weather();else if(r==='equipment')equipment();else if(r==='calculator'){toast('محاسبه‌گر برآورد از نسخه نهایی حذف شده است');go('home')}else if(r==='cultivation')cultivation();else if(r==='profile')profile();else if(r==='account')account();else if(r==='settings')settings();else if(r==='manager')managerChat();else if(r==='ads')ads();else if(r==='news')news();else if(r==='yar')yar();else if(r==='game')game();else home();document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.r===r))}
 function landThumb(l){
   const ps=l&&l.measurement&&Array.isArray(l.measurement.points)?l.measurement.points:[];
   let poly='38,62 72,30 126,24 178,43 196,84 160,106 94,104 48,86';
@@ -1896,21 +1896,45 @@ function yarCropAdvisorSelectLand(id){
   const box=document.getElementById('ycaSelected');
   if(box)box.innerHTML=`<div class="yca-land-detail"><div><b>${yarCropEsc(l.name||'زمین بدون نام')}</b><p>${yarCropLandSummary(l)}</p></div><span>✓</span></div>`;
   const cb=document.getElementById('ycaCropBox');
-  if(cb)cb.innerHTML=`<div class="yca-step"><span>۲</span><div><b>انتخاب محصول</b><small>این انتخاب فقط برای برنامه‌ریزی است و محصول ثبت‌شده زمین را تغییر نمی‌دهد.</small></div></div><div class="yca-crop-select"><select id="ycaCropSelect" onchange="yarCropAdvisorSelectCrop(this.value)"><option value="">در حال بارگذاری محصولات…</option></select></div>`;
+  if(cb)cb.innerHTML=`<div class="yca-step"><span>۲</span><div><b>انتخاب محصول</b><small>اول دسته را انتخاب کن؛ بعد فقط محصولات همان دسته نمایش داده می‌شوند.</small></div></div><div id="ycaCategoryBox"></div><div id="ycaProductBox"></div>`;
   yarCropAdvisorLoadProfiles();
 }
 async function yarCropAdvisorLoadProfiles(){
   try{
-    const mod=await import('./offline/crop-profiles.js');
-    const profiles=mod.profiles||{};yarCropAdvisorState.profiles=profiles;
-    const names=Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'fa'));
-    const sel=document.getElementById('ycaCropSelect');if(!sel)return;
-    sel.innerHTML=`<option value="">محصول را انتخاب کن…</option>`+names.map(n=>`<option value="${yarCropEsc(n)}">${yarCropEsc(n)}</option>`).join('');
-    if(yarCropAdvisorState.crop)sel.value=yarCropAdvisorState.crop;
+    const [pm,rm]=await Promise.all([import('./offline/crop-profiles.js'),import('./offline/global-crop-registry.js')]);
+    yarCropAdvisorState.profiles=pm.profiles||{};yarCropAdvisorState.registry=rm.registry||{};
+    const groups=rm.GROUPS||{};
+    const icons={cereals:'🌾',vegetables:'🥬',orchards:'🌳',oilseeds:'🌻',pulses:'🫘',herbs_spices:'🌿',nuts:'🥜',tropical_arid:'🌴',forage:'🌱',industrial:'🏭',ornamentals:'🌸'};
+    const counts={};
+    Object.values(yarCropAdvisorState.registry).forEach(x=>counts[x.category]=(counts[x.category]||0)+1);
+    const cats=Object.entries(groups).filter(([k])=>Object.values(yarCropAdvisorState.registry).some(x=>x.category===k));
+    const box=document.getElementById('ycaCategoryBox');if(!box)return;
+    box.innerHTML='<div class="yca-category-grid">'+cats.map(([k,label])=>'<button type="button" class="yca-category-btn" onclick="yarCropAdvisorSelectCategory(\''+yarCropEsc(k)+'\')"><span>'+icons[k]+'</span><b>'+yarCropEsc(label)+'</b><small>'+String(counts[k]||0)+' محصول</small></button>').join('')+'</div>';
+    yarCropAdvisorRenderProducts();
   }catch(e){
-    const sel=document.getElementById('ycaCropSelect');if(sel)sel.innerHTML='<option value="">فهرست محصولات در دسترس نیست</option>';
+    const box=document.getElementById('ycaCategoryBox');if(box)box.innerHTML='<div class="yca-warning">فهرست دسته‌بندی محصولات در دسترس نیست.</div>';
   }
 }
+function yarCropAdvisorSelectCategory(category){
+  yarCropAdvisorState.category=String(category||'');yarCropAdvisorState.crop='';yarCropAdvisorState.profile=null;yarCropAdvisorState.plan=null;yarCropAdvisorState.query='';
+  document.querySelectorAll('.yca-category-btn').forEach(b=>b.classList.toggle('active',(b.getAttribute('onclick')||'').includes(String(category))));
+  yarCropAdvisorRenderProducts();
+}
+function yarCropAdvisorSearch(q){
+  yarCropAdvisorState.query=String(q||'');yarCropAdvisorRenderProducts();
+  const el=document.getElementById('ycaCropSearch');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}
+}
+function yarCropAdvisorRenderProducts(){
+  const box=document.getElementById('ycaProductBox');if(!box)return;
+  const reg=yarCropAdvisorState.registry||{},profiles=yarCropAdvisorState.profiles||{},cat=yarCropAdvisorState.category||'',q=String(yarCropAdvisorState.query||'').trim().toLowerCase();
+  if(!cat){box.innerHTML='<div class="yca-empty">⬆️ اول یکی از دسته‌های بالا را انتخاب کن.</div>';return;}
+  let names=Object.values(reg).filter(x=>x.category===cat).map(x=>x.name).filter(n=>profiles[n]);
+  if(q)names=names.filter(n=>n.toLowerCase().includes(q));
+  names.sort((x,y)=>x.localeCompare(y,'fa'));
+  box.innerHTML='<div class="yca-product-tools"><input id="ycaCropSearch" type="search" value="'+yarCropEsc(yarCropAdvisorState.query)+'" placeholder="🔎 جستجوی محصول..." oninput="yarCropAdvisorSearch(this.value)"><span>'+names.length+' محصول</span></div>'+
+    (names.length?'<div class="yca-product-list">'+names.map(n=>'<button type="button" class="yca-product-btn '+(n===yarCropAdvisorState.crop?'active':'')+'" onclick="yarCropAdvisorSelectCrop(\''+yarCropEsc(n)+'\')"><span>🌱</span><b>'+yarCropEsc(n)+'</b><i>›</i></button>').join('')+'</div>':'<div class="yca-empty">محصولی در این دسته پیدا نشد.</div>');
+}
+
 function yarCropAdvisorSelectCrop(crop){
   yarCropAdvisorState.crop=String(crop||'').trim();yarCropAdvisorState.plan=null;
   const p=yarCropAdvisorState.profiles?.[yarCropAdvisorState.crop]||null;yarCropAdvisorState.profile=p;
@@ -1938,8 +1962,9 @@ function yarCropAdvisorRenderPlan(l,p,r){
     html+=`<div class="yca-grid">`;
     if(n.seed)html+=item('🌾','بذر/حبه در هکتار',`${yarNum(n.seed[0])} تا ${yarNum(n.seed[1])} ${n.seedUnit||'کیلوگرم در هکتار'}`);
     if(r.seed)html+=item('📦','مقدار کل برای این زمین',`${yarNum(r.seed[0])} تا ${yarNum(r.seed[1])} ${String(r.seedUnit||'').replace('کل زمین','برای کل زمین')}`);
-    if(r.plantingWindow)html+=item('📅','بازه تقریبی کاشت',r.plantingWindow.join(' تا '));
-    if(n.durationMonths)html+=item('🗓️','بازه تقریبی برداشت',`حدود ${n.durationMonths[0]} تا ${n.durationMonths[1]} ماه پس از کاشت؛ رقم و منطقه می‌تواند آن را تغییر دهد.`);
+    if(r.plantingWindow)html+=item('📅','تاریخ تقریبی کاشت',r.plantingWindow.join(' تا '));
+    if(r.harvestDates)html+=item('🗓️','برداشت تقریبی',`${r.harvestDates.from} تا ${r.harvestDates.to}`);
+    else if(n.durationMonths)html+=item('🗓️','بازه تقریبی برداشت',`حدود ${n.durationMonths[0]} تا ${n.durationMonths[1]} ماه پس از کاشت؛ رقم و منطقه می‌تواند آن را تغییر دهد.`);
     if(r.irrigations)html+=item('💧','تعداد تقریبی آبیاری',`${r.irrigations[0]} تا ${r.irrigations[1]} نوبت`);
     if(r.interval)html+=item('🚿','فاصله تقریبی آبیاری',`هر ${r.interval[0]} تا ${r.interval[1]} روز؛ با بارش، بافت خاک و مرحله رشد اصلاح شود.`);
     if(r.yield)html+=item('📊','عملکرد تقریبی کل',`${yarNum(r.yield[0])} تا ${yarNum(r.yield[1])} ${r.yieldUnit||'تن'}`);
@@ -2469,6 +2494,36 @@ html.yk-font-small{font-size:92%}
 html.yk-font-large{font-size:108%}
 </style>
 
+<style id="yca-grouped-selection-v2">
+.yca-category-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:9px 0}
+.yca-category-btn{display:grid;grid-template-columns:36px 1fr;grid-template-rows:auto auto;align-items:center;gap:1px 8px;text-align:right;padding:10px;border:1px solid #d9e6df;border-radius:15px;background:#fff;color:#17362a;font-family:inherit}
+.yca-category-btn span{grid-row:1/3;font-size:25px;width:36px;height:36px;display:grid;place-items:center;background:#eef7f2;border-radius:11px}
+.yca-category-btn b{font-size:12px}.yca-category-btn small{font-size:9px;color:#71837a}.yca-category-btn.active{border-color:#4ba57d;background:#f2faf6}
+.yca-product-tools{display:flex;align-items:center;gap:7px;margin-top:9px}.yca-product-tools input{flex:1;min-width:0;height:43px;border:1px solid #d4e2db;border-radius:13px;background:#fff;padding:0 11px;color:#17362a;font-family:inherit;font-size:13px}.yca-product-tools>span{font-size:9px;color:#71837a;white-space:nowrap}
+.yca-product-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;max-height:310px;overflow:auto;padding:2px}
+.yca-product-btn{display:flex;align-items:center;gap:7px;text-align:right;padding:10px;border:1px solid #dce8e1;border-radius:13px;background:#fff;color:#17362a;font-family:inherit;min-height:46px}.yca-product-btn span{font-size:18px}.yca-product-btn b{flex:1;font-size:12px}.yca-product-btn i{font-style:normal;font-size:19px;color:#8a9b93}.yca-product-btn.active{border-color:#4ba57d;background:#f1faf5;color:#176b49}
+@media(max-width:430px){.yca-product-list{grid-template-columns:1fr}.yca-product-btn b{font-size:13px}}
+</style>
+
+<style id="yca-readable-font-v2">
+.yar-crop-advisor .yca-head h1{font-size:21px!important;line-height:1.6!important}
+.yar-crop-advisor .yca-head p{font-size:12px!important;line-height:1.8!important}
+.yar-crop-advisor .yca-step b{font-size:15px!important;line-height:1.7!important}
+.yar-crop-advisor .yca-step small{font-size:11.5px!important;line-height:1.9!important}
+.yar-crop-advisor .yca-land-detail b{font-size:15px!important}
+.yar-crop-advisor .yca-land-detail p{font-size:12px!important;line-height:2!important}
+.yar-crop-advisor .yca-category-btn b{font-size:13px!important}
+.yar-crop-advisor .yca-category-btn small{font-size:10px!important}
+.yar-crop-advisor .yca-product-tools input{font-size:14px!important}
+.yar-crop-advisor .yca-product-btn b{font-size:13px!important}
+.yar-crop-advisor .yca-preview b{font-size:15px!important}
+.yar-crop-advisor .yca-preview small{font-size:11.5px!important;line-height:1.9!important}
+.yar-crop-advisor .yca-generate{font-size:14px!important}
+.yar-crop-advisor .yca-info-card b{font-size:13px!important}
+.yar-crop-advisor .yca-info-card p{font-size:12px!important;line-height:2!important}
+.yar-crop-advisor .yca-note,.yar-crop-advisor .yca-warning{font-size:12px!important;line-height:2!important}
+</style>
+
 <style id="yar-keyboard-safe-v1">
 .yar-final .yarpro-form.yar-final-form{bottom:calc(76px + var(--yk-keyboard,0px))!important}
 .yar-final .yar-final-tools{bottom:var(--yk-keyboard,0px)!important}
@@ -2480,5 +2535,5 @@ html.yk-font-large{font-size:108%}
 .yca-back{width:38px;height:38px;border:1px solid #d7e5de;border-radius:12px;background:#fff;color:#185a41;font-size:27px;line-height:1;cursor:pointer}.yca-head h1{margin:0;font-size:19px}.yca-head p{margin:3px 0 0;font-size:10px;color:#74857d}.yca-body{max-width:720px;margin:auto;padding:14px 12px 34px}.yca-step{display:flex;align-items:center;gap:9px;margin:5px 0 9px}.yca-step>span{width:27px;height:27px;border-radius:9px;background:#176b49;color:#fff;display:grid;place-items:center;font-weight:900;font-size:12px}.yca-step b{display:block;font-size:13px}.yca-step small{display:block;color:#75867e;font-size:9px;margin-top:2px}.yca-land-list{display:grid;gap:7px}.yca-land-row{width:100%;display:flex;align-items:center;gap:10px;text-align:right;padding:12px 13px;border:1px solid #d9e6df;border-radius:15px;background:#fff;color:#17362a;cursor:pointer;box-shadow:0 3px 10px rgba(13,55,40,.04)}.yca-land-row span{width:34px;height:34px;border-radius:11px;background:#eaf4ee;display:grid;place-items:center;font-size:18px}.yca-land-row b{flex:1;font-size:12px}.yca-land-row i{font-style:normal;font-size:22px;color:#7c9187}.yca-land-row.active{border-color:#4ba57d;background:#f4faf7;box-shadow:0 5px 16px rgba(35,112,78,.1)}.yca-selected{margin-top:9px}.yca-land-detail{display:flex;align-items:center;gap:9px;padding:11px 12px;border:1px solid #cfe2d8;border-radius:15px;background:#f7fbf8}.yca-land-detail>div{flex:1}.yca-land-detail b{font-size:13px}.yca-land-detail p{margin:4px 0 0;font-size:9.5px;line-height:1.8;color:#63766d}.yca-land-detail>span{width:28px;height:28px;border-radius:50%;background:#dff1e7;color:#1b7650;display:grid;place-items:center;font-weight:900}.yca-crop-select select{width:100%;min-height:46px;border:1px solid #d4e2db;border-radius:13px;background:#fff;padding:8px 10px;color:#17362a;font-family:inherit;font-size:12px}.yca-preview{display:flex;align-items:center;gap:9px;margin-top:10px;padding:11px 12px;border:1px solid #dce8e1;border-radius:14px;background:#fff}.yca-preview>div{flex:1}.yca-preview b{display:block;font-size:13px}.yca-preview small{display:block;margin-top:4px;color:#71837a;font-size:9px;line-height:1.7}.yca-preview>span{font-size:9px;padding:5px 7px;border-radius:9px;background:#edf7f1;color:#287154;white-space:nowrap}.yca-generate{width:100%;margin-top:8px;min-height:45px;border:0;border-radius:13px;background:linear-gradient(135deg,#0d6547,#21835d);color:#fff;font-family:inherit;font-weight:800;cursor:pointer}.yca-result-head{display:flex;align-items:flex-start;gap:10px;margin-top:13px;padding:14px;border-radius:17px;background:#fff;border:1px solid #dce8e1}.yca-result-head>div{flex:1}.yca-result-head span{font-size:9px;color:#6d8077}.yca-result-head h2{margin:3px 0;font-size:18px}.yca-result-head p{margin:0;color:#71837a;font-size:9px}.yca-result-head button{border:1px solid #d5e3dc;background:#f7faf8;border-radius:10px;padding:7px 9px;color:#205f48;font-family:inherit}.yca-context{margin-top:8px;padding:9px 11px;background:#f7fbf8;border:1px dashed #cfe0d7;border-radius:12px}.yca-context b{display:block;font-size:10px}.yca-context span{display:block;margin-top:3px;font-size:9px;color:#687a72;line-height:1.8}.yca-grid,.yca-info-list{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.yca-info-card{display:flex;gap:8px;padding:10px;border:1px solid #dce8e1;border-radius:13px;background:#fff;min-width:0}.yca-info-card>span{font-size:19px}.yca-info-card div{min-width:0}.yca-info-card b{display:block;font-size:9px;color:#28644e}.yca-info-card p{margin:4px 0 0;font-size:9px;line-height:1.8;color:#3f574d;word-break:break-word}.yca-section-title{margin:14px 2px 6px;font-size:12px;font-weight:900;color:#245c47}.yca-warning,.yca-note{margin-top:9px;padding:10px 11px;border-radius:13px;font-size:9.5px;line-height:1.9}.yca-warning{background:#fff8e8;border:1px solid #eadcae;color:#6b5a24}.yca-note{background:#f3f7f5;border:1px solid #dce8e1;color:#667870}.yca-empty{padding:18px;text-align:center;background:#fff;border:1px dashed #ceddd5;border-radius:14px;color:#74857d;font-size:11px}
 @media(max-width:560px){.yca-grid,.yca-info-list{grid-template-columns:1fr}.yca-body{padding-left:9px;padding-right:9px}.yca-head{padding:10px 9px}}
 </style>
-<style id="yca-readable-font-v1">.yar-crop-advisor{font-size:14px!important}.yar-crop-advisor .yca-head h1{font-size:21px!important}.yar-crop-advisor .yca-head p{font-size:12px!important;line-height:1.7!important}.yar-crop-advisor .yca-step b{font-size:15px!important}.yar-crop-advisor .yca-step small{font-size:11px!important;line-height:1.8!important}.yar-crop-advisor .yca-land-row b{font-size:14px!important}.yar-crop-advisor .yca-land-detail b{font-size:15px!important}.yar-crop-advisor .yca-land-detail p{font-size:12px!important;line-height:2!important}.yar-crop-advisor .yca-crop-select select{font-size:14px!important}.yar-crop-advisor .yca-preview b{font-size:15px!important}.yar-crop-advisor .yca-preview small{font-size:11px!important;line-height:1.9!important}.yar-crop-advisor .yca-generate{font-size:14px!important}.yar-crop-advisor .yca-result-head h2{font-size:21px!important}.yar-crop-advisor .yca-result-head span,.yar-crop-advisor .yca-result-head p{font-size:11px!important}.yar-crop-advisor .yca-context b{font-size:12px!important}.yar-crop-advisor .yca-context span{font-size:11px!important;line-height:2!important}.yar-crop-advisor .yca-info-card{padding:12px!important}.yar-crop-advisor .yca-info-card>span{font-size:21px!important}.yar-crop-advisor .yca-info-card b{font-size:12px!important}.yar-crop-advisor .yca-info-card p{font-size:11.5px!important;line-height:2!important}.yar-crop-advisor .yca-section-title{font-size:14px!important}.yar-crop-advisor .yca-warning,.yar-crop-advisor .yca-note{font-size:11.5px!important;line-height:2!important}.yar-crop-advisor .yca-empty{font-size:13px!important}@media(max-width:560px){.yar-crop-advisor .yca-info-card p{font-size:11.5px!important}}</style></body>
+</body>
 </html>
